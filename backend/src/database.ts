@@ -1,15 +1,11 @@
-import { Client } from 'pg';
+import { Pool } from 'pg';
 
-const client = new Client({
-    user: 'your_username',
-    host: 'localhost',
-    database: 'mini_goal_tracker',
-    password: 'your_password',
-    port: 5432,
+const pool = new Pool({
+  user: 'your_db_user',
+  host: 'localhost',
+  database: 'mini_goal_tracker',
+  password: 'your_db_password',
+  port: 5432,
 });
 
-client.connect()
-    .then(() => console.log('Connected to the database'))
-    .catch(err => console.error('Connection error', err.stack));
-
-export default client;
+export default pool;

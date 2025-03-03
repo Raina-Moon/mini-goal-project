@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Pool } from 'pg';
 import { Goal } from '../models/goalModel';
+import { createGoal, updateGoal } from '../models/goalModel';
 
 export class GoalController {
     private db: Pool;
@@ -53,3 +54,23 @@ export class GoalController {
         }
     }
 }
+
+export const createGoalHandler = async (req: Request, res: Response) => {
+  try {
+    const goal = await createGoal(req.body);
+    res.status(201).json(goal);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateGoalHandler = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { completed } = req.body;
+    const goal = await updateGoal(parseInt(id), completed);
+    res.status(200).json(goal);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

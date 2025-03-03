@@ -1,15 +1,12 @@
 import express from 'express';
-import { json } from 'body-parser';
-import { setGoalRoutes } from './routes/goalRoutes';
-import { setPostRoutes } from './routes/postRoutes';
+import bodyParser from 'body-parser';
+import goalRoutes from './routes/goalRoutes';
+import postRoutes from './routes/postRoutes';
 
 const app = express();
 
-// Middleware
-app.use(json());
-
-// Routes
-setGoalRoutes(app);
-setPostRoutes(app);
+app.use(bodyParser.json());
+app.use('/api', goalRoutes);
+app.use('/api', postRoutes);
 
 export default app;
