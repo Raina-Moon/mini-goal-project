@@ -13,7 +13,7 @@ export const createPostHandler = [
       const post = await createPost({ goal_id, photo_url, badge, text });
       res.status(201).json(post);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   },
 ];
@@ -23,6 +23,6 @@ export const getAllPostsHandler = async (req: Request, res: Response) => {
     const posts = await getAllPosts();
     res.status(200).json(posts);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: (error as Error).message });
   }
 };
