@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const PostFeed: React.FC = () => {
-    const [posts, setPosts] = useState([]);
+    interface Post {
+        id: number;
+        content: string;
+        imageUrl?: string;
+    }
+
+    const [posts, setPosts] = useState<Post[]>([]);
 
     useEffect(() => {
         const fetchPosts = async () => {

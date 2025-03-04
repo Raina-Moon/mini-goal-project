@@ -1,39 +1,28 @@
 import { Request, Response } from 'express';
-import { Pool } from 'pg';
-import { Post } from '../models/postModel';
+import { createPost, getAllPosts } from '../models/postModel';
+import multer from 'multer';
 
-export class PostController {
-    private db: Pool;
+const upload = multer({ dest: 'uploads/' });
 
-    constructor(db: Pool) {
-        this.db = db;
+export const createPostHandler = [
+  upload.single('photo'),
+  async (req: Request, res: Response) => {
+    try {
+      const { goal_id, badge, text } = req.body;
+      const photo_url = req.file ? req.file.path : undefined;
+      const post = await createPost({ goal_id, photo_url, badge, text });
+      res.status(201).json(post);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
     }
+  },
+];
 
-    public async createPost(req: Request, res: Response): Promise<void> {
-        const { goalId, content, imageUrl }: Post = req.body;
-
-        try {
-            const result = await this.db.query(
-                'INSERT INTO posts (goalId, content, imageUrl) VALUES ($1, $2, $3) RETURNING *',
-                [goalId, content, imageUrl]
-            );
-            res.status(201).json(result.rows[0]);
-        } catch (error) {
-            res.status(500).json({ error: 'Failed to create post' });
-        }
-    }
-
-    public async getPosts(req: Request, res: Response): Promise<void> {
-        const { goalId } = req.params;
-
-        try {
-            const result = await this.db.query(
-                'SELECT * FROM posts WHERE goalId = $1',
-                [goalId]
-            );
-            res.status(200).json(result.rows);
-        } catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve posts' });
-        }
-    }
-}
+export const getAllPostsHandler = async (req: Request, res: Response) => {
+  try {
+    const posts = await getAllPosts();
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+};

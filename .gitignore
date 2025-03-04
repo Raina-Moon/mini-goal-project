@@ -1,0 +1,17 @@
+# Node.js 관련
+node_modules/
+**/node_modules/  
+package-lock.json
+**/package-lock.json  
+yarn.lock
+**/yarn.lock  
+.env
+**/.env  
+
+dist/
+**/dist/
+
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
