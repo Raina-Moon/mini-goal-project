@@ -9,6 +9,8 @@ Mini Goal Tracker is a **fullstack project** where users can set short-time goal
 - **State Management:** Zustand (or React hooks)
 - **Authentication:** JWT
 
+📌 **Project Documentation:** [Mini Goal Project Notion](https://www.notion.so/Mini-Goal-Project-From-Mar-3rd-1ad0d989af95804f8d7cd7c084aa71dd?pvs=4)
+
 ---
 
 ## 📂 Folder Structure
