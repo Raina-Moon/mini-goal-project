@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Mini Goal Tracker
 
-## Getting Started
+## 📌 Project Overview
+Mini Goal Tracker is a **fullstack project** where users can set short-time goals (e.g., reading for 10 minutes). If they switch apps or leave, they fail the session. Successful completions earn badges, which users can share.
 
-First, run the development server:
+- **Frontend:** Next.js (TypeScript, App Router)
+- **Backend:** Express.js (Node.js, TypeScript)
+- **Database:** PostgreSQL
+- **State Management:** Zustand (or React hooks)
+- **Authentication:** JWT
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 📂 Folder Structure
+```
+mini-goal-tracker/
+│── backend/              # Express.js backend
+│   ├── src/
+│   │   ├── routes/       # API routes (goal.ts, auth.ts)
+│   │   ├── db.ts         # PostgreSQL connection
+│   │   ├── server.ts     # Express server
+│   ├── .env              # Environment variables
+│   ├── package.json      # Backend dependencies
+│   ├── tsconfig.json     # TypeScript config
+│── frontend/             # Next.js frontend
+│   ├── src/
+│   │   ├── app/          # Next.js pages & layouts
+│   │   ├── components/   # Reusable UI components
+│   │   ├── utils/        # API functions
+│   ├── public/           # Static assets
+│   ├── package.json      # Frontend dependencies
+│   ├── tsconfig.json     # TypeScript config
+│── .gitignore            # Ignore node_modules, .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Setup Instructions
+### 1️⃣ Install Dependencies
+Clone the repository and install dependencies:
+```sh
+git clone https://github.com/your-repo/mini-goal-tracker.git
+cd mini-goal-tracker
+```
+#### **Backend**
+```sh
+cd backend
+npm install
+```
+#### **Frontend**
+```sh
+cd ../frontend
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2️⃣ Set Up Environment Variables
+Create a `.env` file in the `backend/` folder:
+```env
+PORT=5000
+DB_USER=your_username
+DB_HOST=localhost
+DB_NAME=mini_goal_tracker
+DB_PASS=your_password
+DB_PORT=5432
+JWT_SECRET=your_jwt_secret
+```
 
-## Learn More
+### 3️⃣ Run the Project
+#### **Start the Backend**
+```sh
+cd backend
+npm run dev
+```
+#### **Start the Frontend**
+```sh
+cd ../frontend
+npm run dev
+```
+Open **http://localhost:3000** in the browser.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📌 API Endpoints
+### **User Authentication**
+- `POST /api/auth/signup` → Register a new user
+- `POST /api/auth/login` → Authenticate user & issue JWT
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### **Goals Management**
+- `POST /api/goals` → Create a new goal
+- `GET /api/goals/:user_id` → Get user’s goals
+- `PATCH /api/goals/:id` → Update goal status
+- `DELETE /api/goals/:id` → Delete a goal
 
-## Deploy on Vercel
+### **Badges & Sharing**
+- `GET /api/badges` → Fetch earned badges
+- `POST /api/share` → Share achievements
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎨 Frontend Features
+✅ **Goal Form:** Users set up goals (title & duration)
+✅ **Timer Lock:** Prevents switching apps until time ends
+✅ **Goal Completion:** Tracks success/failure
+✅ **Badges & Sharing:** Reward system for completed goals
+✅ **Authentication:** Users can sign up & log in
+
+---
+
+## 🚀 Deployment
+### **Backend (Railway/Render)**
+1. Push backend to GitHub
+2. Deploy on Railway/Render
+3. Add environment variables
+
+### **Frontend (Vercel)**
+1. Push frontend to GitHub
+2. Deploy on Vercel
+3. Connect it to backend URL
+
+---
+
+## 🔥 Future Enhancements
+- **Social Features:** Leaderboards, friend challenges
+- **Real-time Tracking:** WebSockets for live goal updates
+- **Mobile Support:** PWA for better mobile experience
+
+---
+
+## 💡 Contributing
+1. Fork the repository
+2. Create a feature branch
+3. Commit changes
+4. Open a pull request
+
+🚀 **Happy Coding!** 😊
+
