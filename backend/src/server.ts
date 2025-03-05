@@ -1,12 +1,16 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import goalRoutes from "./routes/goals";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+//API routes
+app.use("/goals", goalRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running!");
