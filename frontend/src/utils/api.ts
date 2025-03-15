@@ -28,7 +28,7 @@ export const login = async (email: string, password: string) => {
   const userData = await res.json();
 
   localStorage.setItem("token", userData.token);
-  localStorage.setItem("userId", JSON.stringify(userData.userId));
+  localStorage.setItem("userId", JSON.stringify(userData.user.id));
   return userData;
 };
 
@@ -52,8 +52,8 @@ export const getStoredToken = () => {
 };
 
 // ✅ Get User Profile
-export const getProfile = async (token: string) => {
-  const res = await fetch("http://localhost:5000/api/auth/profile", {
+export const getProfile = async (token: string,userId:number) => {
+  const res = await fetch(`http://localhost:5000/api/auth/profile/${userId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
