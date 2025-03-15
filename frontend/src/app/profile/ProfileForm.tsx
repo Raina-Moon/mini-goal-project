@@ -1,10 +1,6 @@
 import React from 'react'
 
-interface ProfileFormProps {
-  username: string;
-}
-
-const ProfileForm: React.FC<ProfileFormProps> = ({ username }) => {
+const ProfileForm = ({ username }: {username : string}) => {
   return (
     <div>
       <h1>${username}'s Profile</h1>
