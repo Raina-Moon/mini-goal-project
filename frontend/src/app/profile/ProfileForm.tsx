@@ -1,9 +1,11 @@
+"use client";
+
 import React from 'react'
 
 const ProfileForm = ({ username }: {username : string}) => {
   return (
     <div>
-      <h1>${username}'s Profile</h1>
+      <h1>{username}'s Profile</h1>
       <form>
         <div>
           <label htmlFor="name">Name</label>
