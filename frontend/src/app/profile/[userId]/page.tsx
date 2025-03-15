@@ -29,7 +29,7 @@ const ProfilePage = () => {
         setUser(profileData);
       } catch (err) {
         console.error("Error fetching profile:", err);
-        router.push("/signup"); // 에러 시 리다이렉트
+        router.push("/signup"); // Redirect to signup if there's an error
       }
     };
 
