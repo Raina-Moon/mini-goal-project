@@ -72,19 +72,13 @@ router.post("/login", (async (
 }) as RequestHandler);
 
 // ✅ Get User Profile
-router.get("/profile", (async (req: Request, res: Response) => {
-  const token = req.headers.authorization?.split(" ")[1];
-
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+router.get("/profile/:userId", (async (req: Request, res: Response) => {
+  const {userId} = req.params;
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "default-secret"
-    ) as { userId: number };
     const result = await pool.query(
       "SELECT id, username, email FROM users WHERE id = $1",
-      [decoded.userId]
+      [userId]
     );
 
     if (result.rows.length === 0) {
@@ -95,6 +89,7 @@ router.get("/profile", (async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
-}) as RequestHandler);
+}) as RequestHandler);  
+ 
 
 export default router;
