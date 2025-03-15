@@ -1,9 +1,18 @@
-import React from 'react'
+'use client';
+
+import React, { useEffect, useState } from "react";
+import ProfileForm from "./ProfileForm";
+import { getStoredUser } from "@/utils/api";
 
 const page = () => {
-  return (
-    <div>page</div>
-  )
-}
+  const [user, setUser] = useState<any>(null);
 
-export default page
+  useEffect(() => {
+    const storedUser = getStoredUser();
+    setUser(storedUser)
+  },[]);
+
+  return <ProfileForm username={user.username} />;
+};
+
+export default page;
