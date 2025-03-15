@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import goalRoutes from "./routes/goals";
 import pool from "./db";
+import authRoutes from "./routes/auth";
 
 dotenv.config();
 
@@ -21,6 +22,8 @@ app.get("/test-db", async (req, res) => {
 
 //API routes
 app.use("/api/goals", goalRoutes);
+
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
     res.send("Backend is running!");
