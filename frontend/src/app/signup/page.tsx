@@ -1,12 +1,10 @@
-'use client'
+"use client";
 
-import React from 'react'
-import AuthForm from './AuthForm'
+import React from "react";
+import AuthForm from "./AuthForm";
 
 const page = () => {
-  return (
-    <AuthForm />
-  )
-}
+  return <AuthForm />;
+};
 
-export default page
+export default page;
