@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import pool from "../db";
@@ -6,7 +6,7 @@ import pool from "../db";
 const router = express.Router();
 
 // ✅ User Signup
-router.post("/signup", async (req, res) => {
+router.post("/signup", async (req: Request<{}, any, { username: string, email: string, password: string }>, res: Response) => {
     const { username, email, password } = req.body;
 
     try {
@@ -25,7 +25,7 @@ router.post("/signup", async (req, res) => {
 });
 
 // ✅ User Login
-router.post("/login", async (req, res) => {
+router.post("/login", async (req: Request<{}, any, {email: string, password: string }>, res: Response) => {
     const { email, password } = req.body;
 
     try {
@@ -56,7 +56,7 @@ router.post("/login", async (req, res) => {
 });
 
 // ✅ Get User Profile
-router.get("/profile", async (req, res) => {
+router.get("/profile", async (req:Request, res:Response) => {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) return res.status(401).json({ error: "Unauthorized" });
