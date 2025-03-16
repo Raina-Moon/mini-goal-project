@@ -1,24 +1,38 @@
 "use client";
 
-import React from 'react'
+import React, { useState } from "react";
 
-const ProfileForm = ({ username }: {username : string}) => {
+interface ProfileFormProps {
+  username: string;
+  onUpdate: (nickname: string) => void;
+}
+
+const ProfileForm = ({ username,onUpdate}:ProfileFormProps) => {
+  const [nickname, setNickname] = useState(username);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdate(nickname);
+  };
+
   return (
     <div>
       <h1>{username}'s Profile</h1>
-      <form>
+      <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="name">Name</label>
-          <input type="text" id="name" name="name" />
+          <input
+            type="text"
+            id="name"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            required
+          />
         </div>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input type="email" id="email" name="email" />
-        </div>
-        <button type="submit">Submit</button>
+        <button type="submit">Update Username</button>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default ProfileForm
+export default ProfileForm;
