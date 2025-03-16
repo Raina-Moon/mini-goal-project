@@ -73,7 +73,7 @@ router.post("/login", (async (
 
 // ✅ Get User Profile
 router.get("/profile/:userId", (async (req: Request, res: Response) => {
-  const {userId} = req.params;
+  const { userId } = req.params;
 
   try {
     const result = await pool.query(
@@ -89,7 +89,27 @@ router.get("/profile/:userId", (async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
-}) as RequestHandler);  
- 
+}) as RequestHandler);
+
+// ✅ Update User Profile
+router.put("/profile/:userId", (async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { username } = req.body;
+
+  try {
+    const result = await pool.query(
+      "UPDATE users SET username = $1 WHERE id = $3 RETURNING id, username, email",
+      [username, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
 
 export default router;
