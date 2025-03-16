@@ -6,7 +6,7 @@ export const signup = async (
   email: string,
   password: string
 ) => {
-  const res = await fetch("http://localhost:5000/api/auth/signup", {
+  const res = await fetch(`${API_URL}/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, email, password }),
@@ -18,7 +18,7 @@ export const signup = async (
 
 // ✅ User Login
 export const login = async (email: string, password: string) => {
-  const res = await fetch("http://localhost:5000/api/auth/login", {
+  const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -53,7 +53,7 @@ export const getStoredToken = () => {
 
 // ✅ Get User Profile
 export const getProfile = async (token: string, userId: number) => {
-  const res = await fetch(`http://localhost:5000/api/auth/profile/${userId}`, {
+  const res = await fetch(`${API_URL}/auth/profile/${userId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -67,7 +67,7 @@ export const updateProfile = async (
   userId: number,
   username: string
 ) => {
-  const res = await fetch(`http://localhost:5000/api/auth/profile/${userId}`, {
+  const res = await fetch(`${API_URL}/auth/profile/${userId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
