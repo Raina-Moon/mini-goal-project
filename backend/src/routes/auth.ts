@@ -92,13 +92,13 @@ router.get("/profile/:userId", (async (req: Request, res: Response) => {
 }) as RequestHandler);
 
 // ✅ Update User Profile
-router.put("/profile/:userId", (async (req: Request, res: Response) => {
+router.patch("/profile/:userId", (async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { username } = req.body;
 
   try {
     const result = await pool.query(
-      "UPDATE users SET username = $1 WHERE id = $3 RETURNING id, username, email",
+      "UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username, email",
       [username, userId]
     );
 
