@@ -2,43 +2,43 @@
 
 import React, { useEffect, useState } from "react";
 import ProfileForm from "../ProfileForm"; // Assume this is your form component
-import { getStoredToken } from "@/utils/api";
-import { useRouter } from "next/navigation";
+import { getProfile, getStoredToken, updateProfile } from "@/utils/api";
+import { useParams } from "next/navigation";
 
 const ProfilePage = () => {
-  const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { userId } = useParams();
+  const [user, setUser] = useState<{ id: number; username: string } | null>(
+    null
+  );
+  const token = getStoredToken();
 
   useEffect(() => {
-    const token = getStoredToken();
-    const userId = localStorage.getItem("userId");
+    const fetchUser = async () => {
+      if (!token || !userId) return;
 
-    if (!token || !userId) {
-      router.push("/signup"); // Redirect to signup if token or userId is missing
-      return;
-    }
-
-    const fetchUserProfile = async () => {
       try {
-        const parsedUserId = JSON.parse(userId);
-        const res = await fetch(`http://localhost:5000/api/auth/profile/${parsedUserId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Failed to fetch profile");
-        const profileData = await res.json();
-        setUser(profileData);
+        const userProfile = await getProfile(token, Number(userId));
+        setUser(userProfile);
       } catch (err) {
-        console.error("Error fetching profile:", err);
-        router.push("/signup"); // Redirect to signup if there's an error
+        console.error(err);
       }
     };
+    fetchUser();
+  }, [userId,token]);
 
-    fetchUserProfile();
-  }, [router]);
+  const handleUpdateUsername = async (newUsername: string) => {
+    if (!token || !userId) return;
+    try {
+      const updatedUser = await updateProfile(token, Number(userId), newUsername);
+      setUser(updatedUser);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   if (!user) return <div>Loading...</div>;
 
-  return <ProfileForm username={user.username} />;
+  return <ProfileForm username={user.username} onUpdate={handleUpdateUsername}/>;
 };
 
 export default ProfilePage;
