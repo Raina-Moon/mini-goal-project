@@ -52,12 +52,29 @@ export const getStoredToken = () => {
 };
 
 // ✅ Get User Profile
-export const getProfile = async (token: string,userId:number) => {
+export const getProfile = async (token: string, userId: number) => {
   const res = await fetch(`http://localhost:5000/api/auth/profile/${userId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
   if (!res.ok) throw new Error("Failed to fetch profile");
+  return res.json();
+};
+
+// ✅ Update User Profile
+export const updateProfile = async (
+  token: string,
+  userId: number,
+  username: string
+) => {
+  const res = await fetch(`http://localhost:5000/api/auth/profile/${userId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ username }),
+  });
   return res.json();
 };
 
