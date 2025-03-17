@@ -35,7 +35,7 @@ const LoginForm = () => {
         <input
           type="email"
           id="email"
-          className="w-full h-8 bg-white rounded border border-primary-400 px-2 text-sm focus:outline-none focus:border-primary-600"
+          className="w-full h-8 bg-white rounded border border-primary-400 px-2 text-sm text-gray-900 focus:outline-none focus:border-primary-600"
           placeholder="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -46,7 +46,7 @@ const LoginForm = () => {
         <input
           type="password"
           id="password"
-          className="w-full h-8 bg-white rounded border border-primary-400 px-2 text-sm focus:outline-none focus:border-primary-600"
+          className="w-full h-8 bg-white rounded border border-primary-400 px-2 text-sm text-gray-900 focus:outline-none focus:border-primary-600"
           placeholder="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
