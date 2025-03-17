@@ -53,13 +53,13 @@ const LoginForm = () => {
           required
         />
 
-        <button type="submit" className="mt-3 w-16 h-6 bg-primary-300 rounded-full text-white text-sm focus:outline-none focus:border-primary-600">
+        <button type="submit" className="mt-3 w-16 h-6 bg-primary-300 rounded-full text-white text-sm hover:bg-primary-600">
           log in
         </button>
       </form>
 
       <Link href="/forgot-password">
-        <p className="mt-4 text-center text-emerald-500 text-xs cursor-pointer hover:text-primary-600">
+        <p className="mt-4 text-center text-primary-500 text-xs cursor-pointer hover:text-primary-600">
           Forgot your password? 
           Fix it here!
           
@@ -67,7 +67,7 @@ const LoginForm = () => {
       </Link>
 
       <Link href="/signup">
-        <p className="mt-2 text-center text-emerald-500 text-xs cursor-pointer hover:text-primary-600">
+        <p className="mt-2 text-center text-primary-500 text-xs cursor-pointer hover:text-primary-600">
           Need an account? Sign up here
         </p>
       </Link>
