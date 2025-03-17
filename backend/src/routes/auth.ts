@@ -112,4 +112,60 @@ router.patch("/profile/:userId", (async (req: Request, res: Response) => {
   }
 }) as RequestHandler);
 
+// ✅ Send Password Reset Token (Email simulation)
+router.post("/forgot-password", (async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  try {
+    const result = await pool.query("SELECT id FROM users WHERE email = $1", [
+      email,
+    ]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const resetToken = Math.floor(1000 + Math.random() * 9000); // 4-digit code for simplicity
+
+    await pool.query("UPDATE users SET reset_token = $1 WHERE email = $2", [
+      resetToken,
+      email,
+    ]);
+
+    // simulate sending email by returning the token
+    res.json({ resetToken, message: "Password reset token generated." });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
+
+// ✅ Verify Reset Token & Update Password
+router.patch("/reset-password", (async (req: Request, res: Response) => {
+  const { email, reset_token, newPassword } = req.body;
+
+  try {
+    const userResult = await pool.query(
+      "SELECT reset_token FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (
+      userResult.rows.length === 0 ||
+      userResult.rows[0].reset_token !== reset_token
+    ) {
+      return res.status(400).json({ error: "Invalid token or email." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      "UPDATE users SET password = $1, reset_token = NULL WHERE email = $2",
+      [hashedPassword, email]
+    );
+
+    res.json({ message: "Password updated successfully." });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
+
 export default router;
