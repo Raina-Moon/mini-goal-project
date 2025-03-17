@@ -78,6 +78,20 @@ export const updateProfile = async (
   return res.json();
 };
 
+// ✅ Forgot Password
+export const requestPasswordReset = async (email: string) => {
+  const res = await fetch(`${API_URL}/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.error);
+  return data; // Contains resetToken and message
+};
+
 // ✅ Create a new goal
 export const createGoal = async (
   title: string,
