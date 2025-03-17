@@ -19,7 +19,7 @@ const page = () => {
   }, []);
 
   return (
-    <div>
+    <div className="bg-primary-300">
       <Link href="/signup">
         <button>Sign Up</button>
       </Link>
