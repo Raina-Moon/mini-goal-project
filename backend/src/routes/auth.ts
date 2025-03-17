@@ -2,6 +2,7 @@ import express, { Request, Response, RequestHandler } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import pool from "../db";
+import { sendVerificationCode } from "../utils/email";
 
 const router = express.Router();
 
@@ -130,6 +131,8 @@ router.post("/forgot-password", (async (req: Request, res: Response) => {
       resetToken,
       email,
     ]);
+
+    await sendVerificationCode(email, resetToken);
 
     // simulate sending email by returning the token
     res.json({ resetToken, message: "Password reset token generated." });
