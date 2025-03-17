@@ -1,20 +1,21 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  service: "Gmail", 
+  service: "Gmail",
   auth: {
-    user: process.env.EMAIL_USER,    
-    pass: process.env.EMAIL_PASSWORD, 
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
 
-export const sendVerificationCode = async (toEmail: string, code: number) => {
-  const mailOptions = {
+export const sendVerificationCode = async (
+  email: string,
+  resetToken: number
+) => {
+  await transporter.sendMail({
     from: process.env.EMAIL_USER,
-    to: toEmail,
+    to: email,
     subject: "Your Password Reset Code",
-    text: `Your verification code is: ${code}`,
-  };
-
-  return transporter.sendMail(mailOptions);
+    text: `Your verification code is: ${resetToken}`,
+  });
 };
