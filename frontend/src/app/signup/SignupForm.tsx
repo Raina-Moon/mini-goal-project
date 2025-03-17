@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { signup } from "@/utils/api";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import ErrorIcon from "../../../public/icons/ErrorIcon";
 
 const SignupForm = () => {
   const router = useRouter();
@@ -29,82 +31,84 @@ const SignupForm = () => {
   };
 
   return (
-    <div className="w-80 h-[568px] bg-emerald-500 flex flex-col justify-center items-center">
-        <h2 className="text-white text-sm text-center mb-4">
-          Step Up, Stay Focused<br />Signup for the Brag!
-        </h2>
-      <div className="w-56 h-96 bg-neutral-100 rounded-2xl shadow-sm px-4 py-5 flex flex-col">
+    <div className="bg-primary-500 w-80 h-[568px] relative overflow-hidden font-inter mx-auto">
+      <div className="absolute left-1/2 top-[50px] transform -translate-x-1/2 text-center text-neutral-100 text-base">
+        Step Up, Badge Up
+        <br />
+        Create Your Account!
+      </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2 flex-grow">
-          <label className="text-sm font-medium text-black">Username</label>
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="border border-emerald-500 p-1 rounded"
-            required
-          />
+      <div className="w-56 bg-neutral-100 rounded-2xl shadow-sm px-4 py-5 absolute left-1/2 top-[140px] transform -translate-x-1/2">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-y-2">
+          <div className="text-gray-900 text-base text-center">Logo</div>
 
-          <label className="text-sm text-black">Email</label>
+          <label className="text-gray-900 text-sm">email</label>
           <input
             type="email"
             placeholder="Email"
+            className="border text-gray-900 border-primary-400 px-2 py-1 rounded text-sm focus:outline-none focus:border-primary-600"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border border-emerald-700 p-1 rounded"
             required
           />
 
-          <label className="text-sm">Password</label>
+          <label className="text-gray-900 text-sm">password</label>
           <input
             type="password"
             placeholder="Password"
+            className="border text-gray-900 border-primary-400 px-2 py-1 rounded text-sm focus:outline-none focus:border-primary-600"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border border-emerald-500 p-1 rounded"
             required
           />
 
-          <label className="text-sm">Confirm Password</label>
+          <label className="text-gray-900 text-sm">confirm password</label>
           <input
             type="password"
             placeholder="Confirm Password"
+            className={`border px-2 py-1 focus:outline-none rounded text-sm ${
+              confirmPassword && password !== confirmPassword
+                ? "border-red-500"
+                : "border-primary-400 focus:border-primary-600"
+            }`}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className={`border p-1 rounded ${
-              confirmPassword && password !== confirmPassword ? "border-red-500" : "border-emerald-700"
-            }`}
             required
           />
 
           {password !== confirmPassword && confirmPassword && (
-            <div className="text-red-500 text-xs text-center">
-              No match, try again!
+            <div className="text-red-500 text-xs flex flex-row">
+              <ErrorIcon /> No match, try again!
             </div>
           )}
 
+          <label className="text-gray-900 text-sm">username</label>
+          <input
+            type="text"
+            placeholder="Username"
+            className="border text-gray-900 border-primary-400 px-2 py-1 rounded text-sm focus:outline-none focus:border-primary-600"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+
           <button
             type="submit"
-            className="bg-emerald-300 rounded-full text-white text-xs mt-2 py-1 w-16 mx-auto"
+            className="bg-primary-300 rounded-full text-white text-sm mt-2 py-1 self-center w-20 hover:bg-primary-600"
           >
-            Sign Up
+            sign up
           </button>
         </form>
 
-        <div className="text-white text-xs text-center mt-3">
-          Need help?{" "}
-          <span className="text-white cursor-pointer">
-            Forgot password?
-          </span>
-        </div>
-        <div className="text-center mt-2 text-white text-xs cursor-pointer" onClick={() => router.push('/login')}>
-          Have an account? Login
-        </div>
+        <Link href="/login">
+          <p className="mt-3 text-center text-primary-500 text-xs cursor-pointer hover:text-primary-600">
+            Have an account? Hit login!
+          </p>
+        </Link>
+      </div>
 
-        <div className="absolute bottom-1 w-full text-center text-white text-[8px]">
-          Made by @Raina
-        </div>
+      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-white text-[6px]">
+        Made by @Raina
       </div>
     </div>
   );
