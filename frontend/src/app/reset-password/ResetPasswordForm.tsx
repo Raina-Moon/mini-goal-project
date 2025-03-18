@@ -22,9 +22,9 @@ const ResetPasswordForm = () => {
   const handleCodeChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;
 
-    const newCodeInputs = [...codeInputs];
+    const newCodeInputs = [...code];
     newCodeInputs[index] = value;
-    setCodeInputs(newCodeInputs);
+    setCode(newCodeInputs);
 
     if (value && index < 3) {
       const nextInput = document.getElementById(`code-${index + 1}`);
@@ -33,14 +33,14 @@ const ResetPasswordForm = () => {
   };
 
   const handleCodeVerify = async () => {
-    const code = codeInputs.join("");
+    const enteredCode = code.join("");
     if (code.length !== 4) {
       alert("Enter the 4-digit code.");
       return;
     }
 
     try {
-      await verifyResetCode(email, parseInt(code));
+      await verifyResetCode(email, parseInt(enteredCode));
       setIsCodeValid(true);
       alert("Code verified! Please set your new password.");
     } catch (error) {
@@ -57,7 +57,7 @@ const ResetPasswordForm = () => {
     }
 
     try {
-      await resetPassword(email, parseInt(codeInputs.join("")), password);
+      await resetPassword(email, parseInt(code.join("")), password);
       alert("Password updated! You can now log in.");
       router.push("/login");
     } catch (error) {
@@ -73,7 +73,7 @@ const ResetPasswordForm = () => {
 
       <form onSubmit={handlePasswordReset} className="w-56 h-80 bg-neutral-100 rounded-2xl shadow-sm p-4 flex flex-col items-center gap-y-2 relative">
         <div className="flex gap-2 mb-4">
-          {codeInputs.map((digit, index) => (
+          {code.map((digit, index) => (
             <input
               key={index}
               id={`code-${index}`}
