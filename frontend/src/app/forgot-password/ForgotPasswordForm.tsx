@@ -14,7 +14,7 @@ const ForgotPasswordForm = () => {
     try {
       await requestPasswordReset(email);
       alert("Check your email for the reset code!");
-      router.push("/reset-password");
+      router.push(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch (error) {
       alert("Email sending failed!");
     }
