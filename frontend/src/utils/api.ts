@@ -92,6 +92,36 @@ export const requestPasswordReset = async (email: string) => {
   return data; // Contains resetToken and message
 };
 
+// Verify reset token
+export const verifyResetCode = async (email: string, reset_token: number) => {
+  const res = await fetch(`${API_URL}/auth/verify-code`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, reset_token }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+};
+
+// Reset Password
+export const resetPassword = async (
+  email: string,
+  reset_token: number,
+  newPassword: string
+) => {
+  const res = await fetch(`${API_URL}/auth/reset-password`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, reset_token, newPassword }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+};
+
 // ✅ Create a new goal
 export const createGoal = async (
   title: string,
