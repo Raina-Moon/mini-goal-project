@@ -106,7 +106,7 @@ export const verifyResetCode = async (email: string, reset_token: number) => {
 };
 
 // Reset Password
-export const resetPassword = async (email: string, newPassword: string) => {
+export const resetPassword = async (email: string, p0: number, newPassword: string) => {
   const res = await fetch(`${API_URL}/auth/reset-password`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
