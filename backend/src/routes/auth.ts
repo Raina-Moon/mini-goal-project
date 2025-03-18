@@ -141,9 +141,9 @@ router.post("/forgot-password", (async (req: Request, res: Response) => {
   }
 }) as RequestHandler);
 
-// ✅ Verify Reset Token & Update Password
-router.patch("/reset-password", (async (req: Request, res: Response) => {
-  const { email, reset_token, newPassword } = req.body;
+// ✅ Verify reset code
+router.post("/verify-code", (async (req: Request, res: Response) => {
+  const { email, reset_token } = req.body;
 
   try {
     const userResult = await pool.query(
@@ -155,9 +155,20 @@ router.patch("/reset-password", (async (req: Request, res: Response) => {
       userResult.rows.length === 0 ||
       userResult.rows[0].reset_token !== reset_token
     ) {
-      return res.status(400).json({ error: "Invalid token or email." });
+      return res.status(400).json({ error: "Invalid token." });
     }
 
+    res.json({ message: "Code verified successfully." });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
+
+// ✅ Verify Reset Token & Update Password
+router.patch("/reset-password", (async (req: Request, res: Response) => {
+  const { email, newPassword } = req.body;
+
+  try {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await pool.query(
