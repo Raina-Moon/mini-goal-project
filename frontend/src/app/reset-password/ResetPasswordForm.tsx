@@ -1,85 +1,80 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { verifyResetCode, resetPassword } from "@/utils/api";
-import { useRouter } from "next/navigation";
 
 const ResetPasswordForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email"); // ✅ Get email from URL
 
   const [code, setCode] = useState(["", "", "", ""]);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isCodeValid, setIsCodeValid] = useState(false);
-  const [email, setEmail] = useState("");
 
-  useEffect(() => {
-    const userEmail = prompt("Please confirm your email again:");
-    if (userEmail) setEmail(userEmail);
-    else router.push("/forgot-password");
-  }, [router]);
+  if (!email) {
+    router.push("/forgot-password"); // Redirect if email is missing
+  }
 
   const handleCodeChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;
 
-    const newCodeInputs = [...code];
-    newCodeInputs[index] = value;
-    setCode(newCodeInputs);
+    const newCode = [...code];
+    newCode[index] = value;
+    setCode(newCode);
 
     if (value && index < 3) {
       const nextInput = document.getElementById(`code-${index + 1}`);
-      if (nextInput) nextInput.focus();
+      nextInput?.focus();
     }
   };
 
-  const handleCodeVerify = async () => {
-    const enteredCode = code.join("");
-    if (code.length !== 4) {
-      alert("Enter the 4-digit code.");
-      return;
-    }
-
+  const handleVerifyCode = async () => {
+    const enteredCode = parseInt(code.join(""));
     try {
-      await verifyResetCode(email, parseInt(enteredCode));
+      await verifyResetCode(email!, enteredCode);
       setIsCodeValid(true);
-      alert("Code verified! Please set your new password.");
+      alert("Code verified successfully!");
     } catch (error) {
-      alert("Invalid code!");
+      alert("Invalid code.");
     }
   };
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
 
+    const enteredCode = parseInt(code.join(""));
+
     try {
-      await resetPassword(email, parseInt(code.join("")), password);
-      alert("Password updated! You can now log in.");
+      await resetPassword(email!, enteredCode, password);
+      alert("Password successfully reset!");
       router.push("/login");
     } catch (error) {
-      alert("Password reset failed!");
+      alert("Failed to reset password.");
     }
   };
 
   return (
     <div className="bg-emerald-500 w-80 h-[568px] relative overflow-hidden font-inter mx-auto flex flex-col items-center justify-center">
       <h2 className="text-neutral-100 text-center mb-4 text-sm">
-        Enter the code<br /> Reset your password!
+        Enter your code <br /> Reset your password
       </h2>
 
-      <form onSubmit={handlePasswordReset} className="w-56 h-80 bg-neutral-100 rounded-2xl shadow-sm p-4 flex flex-col items-center gap-y-2 relative">
+      <form onSubmit={handleResetPassword} className="w-56 h-80 bg-neutral-100 rounded-2xl shadow-sm p-4 flex flex-col items-center gap-y-2 relative">
         <div className="flex gap-2 mb-4">
           {code.map((digit, index) => (
             <input
               key={index}
               id={`code-${index}`}
               type="text"
-              value={digit}
               maxLength={1}
+              value={digit}
               onChange={(e) => handleCodeChange(index, e.target.value)}
               className="w-8 h-14 bg-emerald-100 rounded-lg border border-emerald-400 text-center text-xl"
               required
@@ -89,7 +84,7 @@ const ResetPasswordForm = () => {
 
         <button
           type="button"
-          onClick={handleCodeVerify}
+          onClick={handleVerifyCode}
           className="bg-emerald-300 rounded-full text-white text-xs py-1 w-20 mb-2"
         >
           Verify Code
@@ -120,22 +115,13 @@ const ResetPasswordForm = () => {
           }`}
         />
 
-        {password !== confirmPassword && confirmPassword && (
-          <p className="text-red-500 text-[8px] text-center">No match, try again!</p>
-        )}
-
         <button
-          onClick={handlePasswordReset}
-          disabled={!isCodeValid || !password || password !== confirmPassword}
-          className="w-20 h-6 bg-emerald-300 text-white rounded-full text-xs mt-3 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          type="submit"
+          className="mt-3 w-20 h-6 bg-emerald-300 rounded-full text-white text-xs"
         >
           Reset Password
         </button>
       </form>
-
-      <div className="absolute bottom-2 text-white text-[6px]">
-        Made by @Raina
-      </div>
     </div>
   );
 };
