@@ -106,20 +106,17 @@ export const verifyResetCode = async (email: string, reset_token: number) => {
 };
 
 // Reset Password
-export const resetPassword = async (
-  email: string,
-  reset_token: number,
-  newPassword: string
-) => {
+export const resetPassword = async (email: string, newPassword: string) => {
   const res = await fetch(`${API_URL}/auth/reset-password`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, reset_token, newPassword }),
+    body: JSON.stringify({ email, newPassword }),
   });
 
   const data = await res.json();
   if (!res.ok) throw new Error(data.error);
-  return data;
+  
+  return data; // Contains message: "Password updated successfully."
 };
 
 // ✅ Create a new goal
