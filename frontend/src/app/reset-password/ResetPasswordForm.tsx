@@ -96,7 +96,7 @@ const ResetPasswordForm = () => {
           value={password}
           disabled={!isCodeValid}
           onChange={(e) => setPassword(e.target.value)}
-          className={`w-48 h-8 rounded border px-2 py-1 text-sm ${
+          className={`w-48 h-8 rounded border px-2 py-1 text-sm focus:outline-none ${
             isCodeValid ? "border-emerald-500" : "border-gray-300"
           }`}
           placeholder="Password"
@@ -108,7 +108,7 @@ const ResetPasswordForm = () => {
           value={confirmPassword}
           disabled={!isCodeValid}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          className={`w-48 h-8 rounded px-2 text-sm ${
+          className={`w-48 h-8 rounded px-2 text-sm focus:outline-none ${
             confirmPassword && password !== confirmPassword
               ? "border border-red-500"
               : "border border-emerald-500"
