@@ -3,10 +3,11 @@
 import React, { useEffect, useState } from "react";
 import ProfileForm from "../ProfileForm";
 import { getProfile, getStoredToken, logout, updateProfile } from "@/utils/api";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 const ProfilePage = () => {
   const { userId } = useParams();
+  const router = useRouter();
   const [user, setUser] = useState<{
     id: number;
     username: string;
@@ -14,6 +15,12 @@ const ProfilePage = () => {
   } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const token = getStoredToken();
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/login");
+    }
+  }, [token, router]);
 
   useEffect(() => {
     const fetchUser = async () => {
