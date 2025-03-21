@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import ProfileForm from "../ProfileForm";
-import { getProfile, getStoredToken, logout, updateProfile } from "@/utils/api";
+import { getProfile, getStoredToken, logout, updateProfile, updateProfileImage } from "@/utils/api";
 import { useParams, useRouter } from "next/navigation";
 
 const ProfilePage = () => {
@@ -12,9 +12,11 @@ const ProfilePage = () => {
     id: number;
     username: string;
     email: string;
+    profile_image: string;
   } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const token = getStoredToken();
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -58,9 +60,38 @@ const ProfilePage = () => {
       <div className="w-56 h-96 left-[51px] top-[104px] absolute bg-neutral-100 rounded-2xl" />
       <div className="w-40 h-20 left-[84px] top-[257px] absolute bg-white rounded-2xl border border-emerald-100" />
       <img
-        className="w-16 h-16 left-[126px] top-[131px] absolute"
-        src="https://placehold.co/71x71"
+        className="w-16 h-16 left-[126px] top-[131px] absolute rounded-full object-cover"
+        src={user.profile_image}
+        alt="Profile"
       />
+
+{/* Change Profile Image Section */}
+<input
+  type="text"
+  className="absolute top-[340px] left-[60px] w-48 p-1 text-xs rounded"
+  placeholder="Paste image URL"
+  value={newImageUrl}
+  onChange={(e) => setNewImageUrl(e.target.value)}
+/>
+<button
+  className="absolute top-[370px] left-[60px] bg-white border border-emerald-200 rounded-lg px-2 text-emerald-500 text-xs"
+  onClick={async () => {
+    if (!token || !userId || !newImageUrl) return;
+    try {
+      const updatedUser = await updateProfileImage(
+        token,
+        Number(userId),
+        newImageUrl
+      );
+      setUser(updatedUser);
+      setNewImageUrl("");
+    } catch (err) {
+      console.error(err);
+    }
+  }}
+>
+  Update Image
+</button>
 
       {/* User Info */}
       <div className="left-[124px] top-[209px] absolute text-center text-black text-base font-normal">
