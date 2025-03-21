@@ -101,7 +101,7 @@ const ProfilePage = () => {
       <input
         type="file"
         accept="image/*"
-        className="absolute top-[340px] left-[60px] w-48 text-xs"
+        className="absolute top-[310px] left-[60px] w-48 text-xs"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) {
@@ -122,19 +122,19 @@ const ProfilePage = () => {
         <img
           src={imagePreview}
           alt="Preview"
-          className="absolute top-[370px] left-[60px] w-16 h-16 object-cover rounded-full border"
-        />
+          className="absolute top-[340px] left-[60px] w-16 h-16 object-cover rounded-full border"
+          />
       )}
 
       <button
-        className="absolute top-[370px] left-[140px] bg-white border border-emerald-200 rounded-lg px-2 text-emerald-500 text-xs"
-        onClick={handleImageUpload}
+  className="absolute top-[340px] left-[140px] bg-white border border-emerald-200 rounded-lg px-2 text-emerald-500 text-xs"
+  onClick={handleImageUpload}
       >
         Upload
       </button>
 
       {errorMessage && (
-        <div className="absolute top-[440px] left-[60px] text-red-500 text-[10px] w-48">
+  <div className="absolute top-[410px] left-[60px] text-red-500 text-[10px] w-48">
           {errorMessage}
         </div>
       )}
