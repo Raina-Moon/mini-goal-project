@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getGoals } from "@/utils/api";
-import GoalForm from "@/components/GoalForm";
+import GoalForm from "@/app/dashboard/GoalForm";
 
 const Dashboard = () => {
     const [goals, setGoals] = useState<{ id: number; title: string; duration: number }[]>([]);
