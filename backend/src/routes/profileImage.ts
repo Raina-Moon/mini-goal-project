@@ -56,3 +56,5 @@ router.post(
     }
   }) as RequestHandler
 );
+
+export default router;
