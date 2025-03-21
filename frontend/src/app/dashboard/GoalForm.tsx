@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createGoal } from "@/utils/api";
 
-const GoalForm = () => {
+const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     const [title, setTitle] = useState("");
     const [duration, setDuration] = useState(5);
 
@@ -11,9 +11,7 @@ const GoalForm = () => {
         e.preventDefault();
         try {
             await createGoal(title, duration, 1); // Example user_id = 1
-            alert("Goal created!");
-            setTitle("");
-            setDuration(5);
+            onGoalCreated();
         } catch (error) {
             alert("Error creating goal!");
         }
