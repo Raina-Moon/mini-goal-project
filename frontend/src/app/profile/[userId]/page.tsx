@@ -2,7 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import ProfileForm from "../ProfileForm";
-import { getProfile, getStoredToken, logout, updateProfile, updateProfileImage } from "@/utils/api";
+import {
+  getProfile,
+  getStoredToken,
+  logout,
+  updateProfile,
+  updateProfileImage,
+} from "@/utils/api";
 import { useParams, useRouter } from "next/navigation";
 
 const ProfilePage = () => {
@@ -17,6 +23,8 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const token = getStoredToken();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -37,6 +45,14 @@ const ProfilePage = () => {
     fetchUser();
   }, [userId, token]);
 
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
   const handleUpdateUsername = async (newUsername: string) => {
     if (!token || !userId) return;
     try {
@@ -54,16 +70,19 @@ const ProfilePage = () => {
 
   const handleImageUpload = async () => {
     if (!token || !userId || !selectedFile) return;
-  
+
     try {
-      const updatedUser = await updateProfileImage(token, Number(userId), selectedFile);
+      const updatedUser = await updateProfileImage(
+        token,
+        Number(userId),
+        selectedFile
+      );
       setUser(updatedUser);
       setSelectedFile(null);
     } catch (err) {
       console.error(err);
     }
   };
-  
 
   if (!user) return <div>Loading...</div>;
 
@@ -78,33 +97,47 @@ const ProfilePage = () => {
         alt="Profile"
       />
 
-{/* Change Profile Image Section */}
-<input
-  type="text"
-  className="absolute top-[340px] left-[60px] w-48 p-1 text-xs rounded"
-  placeholder="Paste image URL"
-  value={newImageUrl}
-  onChange={(e) => setNewImageUrl(e.target.value)}
-/>
-<button
-  className="absolute top-[370px] left-[60px] bg-white border border-emerald-200 rounded-lg px-2 text-emerald-500 text-xs"
-  onClick={async () => {
-    if (!token || !userId || !newImageUrl) return;
-    try {
-      const updatedUser = await updateProfileImage(
-        token,
-        Number(userId),
-        newImageUrl
-      );
-      setUser(updatedUser);
-      setNewImageUrl("");
-    } catch (err) {
-      console.error(err);
-    }
-  }}
->
-  Update Image
-</button>
+      {/* Upload & Preview Profile Image */}
+      <input
+        type="file"
+        accept="image/*"
+        className="absolute top-[340px] left-[60px] w-48 text-xs"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+              setErrorMessage("Image must be less than 2MB.");
+              setSelectedFile(null);
+              setImagePreview(null);
+              return;
+            }
+            setSelectedFile(file);
+            setErrorMessage(null);
+            setImagePreview(URL.createObjectURL(file));
+          }
+        }}
+      />
+
+      {imagePreview && (
+        <img
+          src={imagePreview}
+          alt="Preview"
+          className="absolute top-[370px] left-[60px] w-16 h-16 object-cover rounded-full border"
+        />
+      )}
+
+      <button
+        className="absolute top-[370px] left-[140px] bg-white border border-emerald-200 rounded-lg px-2 text-emerald-500 text-xs"
+        onClick={handleImageUpload}
+      >
+        Upload
+      </button>
+
+      {errorMessage && (
+        <div className="absolute top-[440px] left-[60px] text-red-500 text-[10px] w-48">
+          {errorMessage}
+        </div>
+      )}
 
       {/* User Info */}
       <div className="left-[124px] top-[209px] absolute text-center text-black text-base font-normal">
