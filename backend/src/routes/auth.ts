@@ -182,4 +182,26 @@ router.patch("/reset-password", (async (req: Request, res: Response) => {
   }
 }) as RequestHandler);
 
+// ✅ Update Profile Image
+router.patch("/profile/:userId/image", (async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { profileImage } = req.body;
+
+  try {
+    const result = await pool.query(
+      "UPDATE users SET profile_image = $1 WHERE id = $2 RETURNING id, username, email, profile_image",
+      [profileImage, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
+
+
 export default router;
