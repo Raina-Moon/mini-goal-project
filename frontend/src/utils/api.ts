@@ -122,18 +122,20 @@ export const resetPassword = async (email: string, p0: number, newPassword: stri
 export const updateProfileImage = async (
   token: string,
   userId: number,
-  profileImage: string
+  file: File
 ) => {
-  const res = await fetch(`${API_URL}/auth/profile/${userId}/image`, {
-    method: "PATCH",
+  const formData = new FormData();
+  formData.append("profileImage", file);
+
+  const res = await fetch(`${API_URL}/auth/profile/${userId}/image-upload`, {
+    method: "POST",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ profileImage }),
+    body: formData,
   });
 
-  if (!res.ok) throw new Error("Failed to update profile image");
+  if (!res.ok) throw new Error("Failed to upload profile image");
   return res.json();
 };
 
