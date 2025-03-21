@@ -185,3 +185,11 @@ export const deleteGoal = async (goalId: number) => {
   if (!res.ok) throw new Error("Failed to delete goal");
   return res.json();
 };
+
+export const getStoredUserId = () => {
+  if (typeof window !== "undefined") {
+    const id = localStorage.getItem("userId");
+    return id ? JSON.parse(id) : null;
+  }
+  return null;
+};
