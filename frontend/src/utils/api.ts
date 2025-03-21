@@ -119,6 +119,25 @@ export const resetPassword = async (email: string, p0: number, newPassword: stri
   return data; // Contains message: "Password updated successfully."
 };
 
+export const updateProfileImage = async (
+  token: string,
+  userId: number,
+  profileImage: string
+) => {
+  const res = await fetch(`${API_URL}/auth/profile/${userId}/image`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ profileImage }),
+  });
+
+  if (!res.ok) throw new Error("Failed to update profile image");
+  return res.json();
+};
+
+
 // ✅ Create a new goal
 export const createGoal = async (
   title: string,
