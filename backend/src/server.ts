@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import goalRoutes from "./routes/goals";
 import pool from "./db";
 import authRoutes from "./routes/auth";
+import profileImageRoutes from "./routes/profileImage";
 
 dotenv.config();
 
@@ -24,6 +25,8 @@ app.get("/test-db", async (req, res) => {
 app.use("/api/goals", goalRoutes);
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/auth", profileImageRoutes);
 
 app.get("/", (req, res) => {
     res.send("Backend is running!");

@@ -119,6 +119,27 @@ export const resetPassword = async (email: string, p0: number, newPassword: stri
   return data; // Contains message: "Password updated successfully."
 };
 
+export const updateProfileImage = async (
+  token: string,
+  userId: number,
+  file: File
+) => {
+  const formData = new FormData();
+  formData.append("profileImage", file);
+
+  const res = await fetch(`${API_URL}/auth/profile/${userId}/image-upload`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("Failed to upload profile image");
+  return res.json();
+};
+
+
 // ✅ Create a new goal
 export const createGoal = async (
   title: string,
