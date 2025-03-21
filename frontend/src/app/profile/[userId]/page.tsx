@@ -16,7 +16,7 @@ const ProfilePage = () => {
   } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const token = getStoredToken();
-  const [newImageUrl, setNewImageUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -51,6 +51,19 @@ const ProfilePage = () => {
       console.error(err);
     }
   };
+
+  const handleImageUpload = async () => {
+    if (!token || !userId || !selectedFile) return;
+  
+    try {
+      const updatedUser = await updateProfileImage(token, Number(userId), selectedFile);
+      setUser(updatedUser);
+      setSelectedFile(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  
 
   if (!user) return <div>Loading...</div>;
 
