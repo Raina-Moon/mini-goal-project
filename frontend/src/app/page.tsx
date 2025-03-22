@@ -1,32 +1,32 @@
 "use client";
 
-import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import GoalForm from "./dashboard/GoalForm";
+import { getGoals, getStoredUserId } from "@/utils/api";
 
 const page = () => {
-  const [userId, setUserId] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId && storedUserId !== "undefined") {
-      try {
-        setUserId(JSON.parse(storedUserId));
-      } catch (error) {
-        console.error("Failed to parse userId:", error);
-        setUserId(null); // Reset userId if parsing fails
-      }
+  const [goals, setGoals] = useState([]);
+
+  const userId = getStoredUserId();
+
+  const fetchGoals = async () => {
+    if (!userId) return;
+    try {
+      const data = await getGoals(userId);
+      setGoals(data);
+    } catch (err) {
+      console.error("Failed to load goals", err);
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchGoals();
+  }, [userId]);
 
   return (
-    <div className="bg-primary-300">
-      <Link href="/signup">
-        <button>Sign Up</button>
-      </Link>
-      <Link href={`/profile/${userId}`}>
-        <button>Profile</button>
-      </Link>
-    </div>
+    <>
+      <GoalForm onGoalCreated={fetchGoals} />
+    </>
   );
 };
 
