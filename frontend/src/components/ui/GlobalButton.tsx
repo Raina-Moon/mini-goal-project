@@ -26,7 +26,7 @@ const sizeStyles = {
   lg: "px-5 py-3 text-lg",
 };
 
-const Button: React.FC<ButtonProps> = ({
+const GlobalButton: React.FC<ButtonProps> = ({
   children,
   variant = "primary",
   size = "md",
@@ -54,4 +54,4 @@ const Button: React.FC<ButtonProps> = ({
   );
 };
 
-export default Button;
+export default GlobalButton;

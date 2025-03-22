@@ -13,7 +13,7 @@ type InputProps = {
   className?: string;
 };
 
-const Input: React.FC<InputProps> = ({
+const GlobalInput: React.FC<InputProps> = ({
   label,
   type = "text",
   name,
@@ -51,4 +51,4 @@ const Input: React.FC<InputProps> = ({
   );
 };
 
-export default Input;
+export default GlobalInput;
