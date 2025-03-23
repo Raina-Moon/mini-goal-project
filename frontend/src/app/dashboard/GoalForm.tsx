@@ -44,11 +44,12 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const userId = Number(localStorage.getItem("userId"));
     try {
-      await createGoal(title, duration, 1); // Example user_id = 1
-      onGoalCreated();
-    } catch (error) {
-      alert("Error creating goal!");
+      const newGoal = await createGoal(title, duration, userId);
+      startTimer(newGoal.id, duration);
+    } catch (err) {
+      alert("Error creating goal");
     }
   };
 
