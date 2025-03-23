@@ -1,5 +1,6 @@
 import { useState } from "react";
 import GlobalButton from "@/components/ui/GlobalButton";
+import { uploadPostImage } from "@/utils/api";
 
 const PostModal = ({ isOpen, onClose, title, duration, onSubmit }: any) => {
   const [image, setImage] = useState<File | null>(null);
@@ -13,14 +14,19 @@ const PostModal = ({ isOpen, onClose, title, duration, onSubmit }: any) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!image || !description) {
       alert("Please provide image and description!");
       return;
     }
-
-    onSubmit({ image, description });
-    onClose();
+    try {
+      const imageUrl = await uploadPostImage(image);
+      onSubmit({ imageUrl, description });
+      onClose();
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Failed to upload image");
+    }
   };
 
   if (!isOpen) return null;

@@ -263,6 +263,20 @@ export const createPost = async (
   return res.json();
 };
 
+export const uploadPostImage = async (imageFile: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("image", imageFile);
+
+  const res = await fetch(`${API_URL}/posts/upload-image`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("Image upload failed");
+  const data = await res.json();
+  return data.imageUrl; 
+};
+
 export const getUserPosts = async (userId: number) => {
   const res = await fetch(`${API_URL}/posts/user/${userId}`);
   if (!res.ok) throw new Error("Failed to fetch posts");
