@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
+  getFollowers,
   getGoals,
   getProfile,
   getStoredToken,
@@ -18,11 +19,19 @@ interface Goal {
   created_at: string;
 }
 
+interface Follower {
+  id: number;
+  username: string;
+  profile_image: string | null;
+}
+
 const Dashboard = () => {
   const { userId } = useParams();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [username, setUsername] = useState("");
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [followers, setFollowers] = useState<Follower[]>([]);
+  const [showFollowers, setShowFollowers] = useState(false);
   const storedId = getStoredUserId();
   const token = getStoredToken();
   const [loading, setLoading] = useState(true);
@@ -50,6 +59,13 @@ const Dashboard = () => {
     }
   };
 
+  const handleShowFollowers = async () => {
+    if (!userId) return;
+    const data = await getFollowers(Number(userId));
+    setFollowers(data);
+    setShowFollowers(true);
+  };
+
   useEffect(() => {
     fetchGoals();
     fetchProfile();
@@ -59,14 +75,43 @@ const Dashboard = () => {
     <div className="p-6">
       {Number(userId) === storedId ? (
         <Link href={`/profile/${userId}`}>
-          <img src={profileImage ?? "/default-profile.png"} className="w-[70px] h-[70px] rouded-full" />
+          <img
+            src={profileImage ?? "/default-profile.png"}
+            className="w-[70px] h-[70px] rouded-full"
+          />
         </Link>
       ) : (
-        <img src={profileImage ?? "/default-profile.png"} className="w-[70px] h-[70px] rouded-full" />
-    )}
+        <img
+          src={profileImage ?? "/default-profile.png"}
+          className="w-[70px] h-[70px] rouded-full"
+        />
+      )}
       <h1 className="text-2xl font-bold mb-4 text-emerald-600">
         📋 {username}'s grab goals
       </h1>
+
+      <button
+        onClick={handleShowFollowers}
+        className="mb-4 px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
+      >
+        Show Followers
+      </button>
+
+      {/* ✅ Follower List */}
+      {showFollowers && followers.length > 0 && (
+        <ul className="mb-6 space-y-2">
+          {followers.map((follower) => (
+            <li key={follower.id} className="flex items-center gap-3">
+              <img
+                src={follower.profile_image ?? "/default-profile.png"}
+                alt={follower.username}
+                className="w-8 h-8 rounded-full"
+              />
+              <span className="text-gray-700">{follower.username}</span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {loading ? (
         <p>Loading goals...</p>
