@@ -7,6 +7,8 @@ import authRoutes from "./routes/auth";
 import profileImageRoutes from "./routes/profileImage";
 import followersRoutes from "./routes/followers";
 import postsRoutes from "./routes/posts";
+import commentsRoutes from "./routes/comments";
+import likesRoutes from "./routes/likes";
 
 dotenv.config();
 
@@ -33,6 +35,10 @@ app.use("/api/auth", profileImageRoutes);
 app.use("/api/followers", followersRoutes);
 
 app.use("/api/posts",postsRoutes);
+
+app.use("/api/comments", commentsRoutes);
+
+app.use("/api/likes", likesRoutes);
 
 app.get("/", (req, res) => {
     res.send("Backend is running!");

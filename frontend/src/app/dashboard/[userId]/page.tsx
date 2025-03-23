@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
+  addComment,
   followUser,
   getFollowers,
   getGoals,
@@ -10,11 +11,18 @@ import {
   getProfile,
   getStoredToken,
   getStoredUserId,
+  likePost,
   unfollowUser,
+  unlikePost,
 } from "@/utils/api";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from "next/link";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 
 interface Goal {
   id: number;
@@ -36,6 +44,15 @@ interface NailedPost {
   duration: number;
   image_url: string;
   description: string;
+  like_count: number;
+  liked_by_me: boolean;
+  comments: {
+    id: number;
+    user_id: number;
+    username: string;
+    content: string;
+    created_at: string;
+  }[];
 }
 
 const Dashboard = () => {
@@ -49,6 +66,10 @@ const Dashboard = () => {
   const [nailedPosts, setNailedPosts] = useState<NailedPost[]>([]);
   const [activeTab, setActiveTab] = useState("all");
   const [sortBy, setSortBy] = useState("latest");
+  const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
+  const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({});
+  const [comments, setComments] = useState<{ [key: number]: string[] }>({});
+  const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
 
   const storedId = getStoredUserId();
   const token = getStoredToken();
@@ -138,6 +159,55 @@ const Dashboard = () => {
     if (sortBy === "least-time") return a.duration - b.duration;
     return 0;
   });
+
+  const handleLike = async (goalId: number) => {
+    const userId = getStoredUserId();
+    const alreadyLiked = likeStatus[goalId];
+
+    try {
+      if (alreadyLiked) {
+        await unlikePost(goalId, userId);
+        setLikeCounts((prev) => ({
+          ...prev,
+          [goalId]: (prev[goalId] || 1) - 1,
+        }));
+      } else {
+        await likePost(goalId, userId);
+        setLikeCounts((prev) => ({
+          ...prev,
+          [goalId]: (prev[goalId] || 0) + 1,
+        }));
+      }
+
+      setLikeStatus((prev) => ({ ...prev, [goalId]: !alreadyLiked }));
+    } catch (err) {
+      console.error("Like failed", err);
+    }
+  };
+
+  const submitComment = async (goalId: number) => {
+    const userId = getStoredUserId();
+    const content = newComments[goalId];
+
+    if (!content) return;
+
+    try {
+      const comment = await addComment(goalId, userId, content);
+      setNewComments((prev) => ({ ...prev, [goalId]: "" }));
+      setNailedPosts((prev) =>
+        prev.map((post) =>
+          post.goal_id === goalId
+            ? {
+                ...post,
+                comments: [...(post.comments || []), comment],
+              }
+            : post
+        )
+      );
+    } catch (err) {
+      console.error("Comment failed", err);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -252,19 +322,19 @@ const Dashboard = () => {
           )}
         </TabsContent>
 
-        <div className="flex justify-end mb-2">
-  <Select onValueChange={setSortBy} defaultValue="latest">
-    <SelectTrigger className="w-40" />
-    <SelectContent>
-      <SelectItem value="latest">Latest</SelectItem>
-      <SelectItem value="oldest">Oldest</SelectItem>
-      <SelectItem value="most-time">Most Time</SelectItem>
-      <SelectItem value="least-time">Shortest Time</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
-
         <TabsContent value="nailed">
+          <div className="flex justify-end mb-2">
+            <Select onValueChange={setSortBy} defaultValue="latest">
+              <SelectTrigger className="w-40" />
+              <SelectContent>
+                <SelectItem value="latest">Latest</SelectItem>
+                <SelectItem value="oldest">Oldest</SelectItem>
+                <SelectItem value="most-time">Most Time</SelectItem>
+                <SelectItem value="least-time">Shortest Time</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <ul className="space-y-3">
             {sortedNailedPosts.map((post) => (
               <li
@@ -285,6 +355,44 @@ const Dashboard = () => {
                   />
                 )}
                 <p className="text-sm text-gray-800">{post.description}</p>
+                {/* ✅ Like + Comment Section */}
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    onClick={() => handleLike(post.goal_id)}
+                    className="text-pink-600 hover:underline"
+                  >
+                    {likeStatus[post.goal_id] ? "❤️ Liked" : "🤍 Like"} (
+                    {likeCounts[post.goal_id] || post.like_count})
+                  </button>
+                </div>
+
+                <div className="mt-4">
+                  <input
+                    value={newComments[post.goal_id] || ""}
+                    onChange={(e) =>
+                      setNewComments((prev) => ({
+                        ...prev,
+                        [post.goal_id]: e.target.value,
+                      }))
+                    }
+                    placeholder="Leave a comment..."
+                    className="w-full border rounded px-2 py-1 text-sm"
+                  />
+                  <button
+                    onClick={() => submitComment(post.goal_id)}
+                    className="text-blue-500 text-sm mt-1"
+                  >
+                    Submit
+                  </button>
+
+                  <ul className="mt-2 space-y-1 text-sm">
+                    {(post.comments || []).map((c) => (
+                      <li key={c.id}>
+                        <strong>{c.username}:</strong> {c.content}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </li>
             ))}
           </ul>
