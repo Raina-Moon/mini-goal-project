@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
+  followUser,
   getFollowers,
   getGoals,
   getProfile,
   getStoredToken,
   getStoredUserId,
+  unfollowUser,
 } from "@/utils/api";
 import Link from "next/link";
 
@@ -32,6 +34,7 @@ const Dashboard = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [showFollowers, setShowFollowers] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
   const storedId = getStoredUserId();
   const token = getStoredToken();
   const [loading, setLoading] = useState(true);
@@ -59,16 +62,41 @@ const Dashboard = () => {
     }
   };
 
-  const handleShowFollowers = async () => {
+  const fetchFollowers = async () => {
     if (!userId) return;
-    const data = await getFollowers(Number(userId));
-    setFollowers(data);
+    try {
+      const data = await getFollowers(Number(userId));
+      setFollowers(data);
+      const followingIds = data.map((f: Follower) => f.id);
+      setIsFollowing(followingIds.includes(storedId));
+    } catch (err) {
+      console.error("Failed to fetch followers:", err);
+    }
+  };
+
+  const handleShowFollowers = async () => {
+    await fetchFollowers();
     setShowFollowers(true);
+  };
+
+  const handleFollowToggle = async () => {
+    if (!storedId || !userId) return;
+    try {
+      if (isFollowing) {
+        await unfollowUser(storedId, Number(userId));
+      } else {
+        await followUser(storedId, Number(userId));
+      }
+      setIsFollowing(!isFollowing);
+    } catch (err) {
+      alert("Failed to update follow status");
+    }
   };
 
   useEffect(() => {
     fetchGoals();
     fetchProfile();
+    fetchFollowers();
   }, [userId]);
 
   return (
@@ -89,6 +117,20 @@ const Dashboard = () => {
       <h1 className="text-2xl font-bold mb-4 text-emerald-600">
         📋 {username}'s grab goals
       </h1>
+
+      {/* ✅ Follow / Unfollow Button */}
+      {Number(userId) !== storedId && (
+        <button
+          onClick={handleFollowToggle}
+          className={`mb-2 px-3 py-2 rounded text-white ${
+            isFollowing
+              ? "bg-gray-500 hover:bg-gray-600"
+              : "bg-emerald-600 hover:bg-emerald-700"
+          }`}
+        >
+          {isFollowing ? "Unfollow" : "Follow"}
+        </button>
+      )}
 
       <button
         onClick={handleShowFollowers}
