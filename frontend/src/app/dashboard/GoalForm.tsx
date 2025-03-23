@@ -1,6 +1,6 @@
 "use client"; // ✅ Since we're using Next.js App Router
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createGoal, updateGoal } from "@/utils/api";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
@@ -29,7 +29,19 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       setSecondsLeft(null);
     }
   };
-  
+
+  useEffect(() => {
+    if (secondsLeft === null) return;
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [secondsLeft]);
+
+  const formatTime = (sec: number) =>
+    `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
