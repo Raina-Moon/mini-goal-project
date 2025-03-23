@@ -1,11 +1,17 @@
 "use client"; // ✅ Since we're using Next.js App Router
 
 import { useEffect, useState } from "react";
-import { createGoal, createPost, getStoredUserId, updateGoal } from "@/utils/api";
+import {
+  createGoal,
+  createPost,
+  getStoredUserId,
+  updateGoal,
+} from "@/utils/api";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
 import { useRouter } from "next/navigation";
 import PostModal from "./PostModal";
+import { celebrate } from "@/utils/confetti";
 
 const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const router = useRouter();
@@ -54,16 +60,16 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   }) => {
     const userId = getStoredUserId();
     if (!userId || !goalId) return;
-  
+
     await createPost(userId, goalId, imageUrl, description);
   };
-  
 
   useEffect(() => {
     if (secondsLeft === null) return;
 
     if (secondsLeft <= 0 && goalId) {
       updateGoal(goalId, "nailed it").then(() => {
+        celebrate();
         alert("💪 Nailed it!");
         setCompletedGoal({ id: goalId, title, duration });
         setShowPostModal(true);
