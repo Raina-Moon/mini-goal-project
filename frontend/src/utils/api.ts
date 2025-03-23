@@ -193,3 +193,52 @@ export const getStoredUserId = () => {
   }
   return null;
 };
+
+// ✅ Follow a user
+export const followUser = async (followerId: number, followingId: number) => {
+  const res = await fetch(`${API_URL}/followers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
+  });
+
+  if (!res.ok) throw new Error("Failed to follow user");
+  return res.json();
+};
+
+// ✅ Unfollow a user
+export const unfollowUser = async (followerId: number, followingId: number) => {
+  const res = await fetch(`${API_URL}/followers`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
+  });
+
+  if (!res.ok) throw new Error("Failed to unfollow user");
+  return res.json();
+};
+
+// ✅ Get users I'm following
+export const getFollowing = async (userId: number) => {
+  const res = await fetch(`${API_URL}/followers/following/${userId}`);
+
+  if (!res.ok) throw new Error("Failed to fetch following users");
+  return res.json(); // returns an array of user objects
+};
+
+// ✅ Get my followers
+export const getFollowers = async (userId: number) => {
+  const res = await fetch(`${API_URL}/followers/followers/${userId}`);
+
+  if (!res.ok) throw new Error("Failed to fetch followers");
+  return res.json(); // returns an array of user objects
+};
+
+// ✅ Utility: Check if I am following someone
+export const isFollowing = async (
+  myFollowingList: { id: number }[],
+  targetUserId: number
+): Promise<boolean> => {
+  return myFollowingList.some((user) => user.id === targetUserId);
+};
+
