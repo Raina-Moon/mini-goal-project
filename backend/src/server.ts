@@ -6,6 +6,7 @@ import pool from "./db";
 import authRoutes from "./routes/auth";
 import profileImageRoutes from "./routes/profileImage";
 import followersRoutes from "./routes/followers";
+import postsRoutes from "./routes/posts";
 
 dotenv.config();
 
@@ -30,6 +31,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth", profileImageRoutes);
 
 app.use("/api/followers", followersRoutes);
+
+app.use("/api/posts",postsRoutes);
 
 app.get("/", (req, res) => {
     res.send("Backend is running!");
