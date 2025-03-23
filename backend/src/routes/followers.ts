@@ -13,7 +13,7 @@ router.post("/", (async (req: Request, res: Response) => {
 
   try {
     const result = await pool.query(
-      "INSERT INTO followers (follower_id, following_id) VALUES ($1, $2) RETURNING *",
+      "INSERT INTO follows (follower_id, following_id) VALUES ($1, $2) RETURNING *",
       [follower_id, following_id]
     );
     res.json(result.rows[0]);
@@ -27,7 +27,7 @@ router.delete("/", async (req, res) => {
   const { follower_id, following_id } = req.body;
   try {
     await pool.query(
-      "DELETE FROM followers WHERE follower_id = $1 AND following_id = $2",
+      "DELETE FROM follows WHERE follower_id = $1 AND following_id = $2",
       [follower_id, following_id]
     );
     res.json({ message: "Unfollowed successfully" });
@@ -42,9 +42,9 @@ router.get("/following/:user_id", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT users.id, users.username, users.profile_image
-       FROM followers
-       JOIN users ON followers.following_id = users.id
-       WHERE followers.follower_id = $1`,
+       FROM follows
+       JOIN users ON follows.following_id = users.id
+       WHERE follows.follower_id = $1`,
       [user_id]
     );
     res.json(result.rows);
@@ -59,9 +59,9 @@ router.get("/followers/:user_id", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT users.id, users.username, users.profile_image
-       FROM followers
-       JOIN users ON followers.follower_id = users.id
-       WHERE followers.following_id = $1`,
+       FROM follows
+       JOIN users ON follows.follower_id = users.id
+       WHERE follows.following_id = $1`,
       [user_id]
     );
     res.json(result.rows);
