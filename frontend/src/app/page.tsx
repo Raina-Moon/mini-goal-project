@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import GoalForm from "./dashboard/GoalForm";
+import GoalForm from "../components/GoalForm";
 import { getGoals, getStoredUserId } from "@/utils/api";
 
 const page = () => {
