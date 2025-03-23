@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { createGoal, updateGoal } from "@/utils/api";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
+import { usePathname } from "next/navigation";
 
 const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
+  const pathname = usePathname();
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState(5);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [goalId, setGoalId] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState(duration * 60);
 
   const startTimer = (goalId: number, duration: number) => {
     setGoalId(goalId);
@@ -30,6 +33,19 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const userId = Number(localStorage.getItem("userId"));
+    try {
+      const newGoal = await createGoal(title, duration, userId);
+      startTimer(newGoal.id, duration);
+
+      onGoalCreated();
+    } catch (err) {
+      alert("Error creating goal");
+    }
+  };
+
   useEffect(() => {
     if (secondsLeft === null) return;
     const interval = setInterval(() => {
@@ -41,16 +57,35 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const formatTime = (sec: number) =>
     `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const userId = Number(localStorage.getItem("userId"));
-    try {
-      const newGoal = await createGoal(title, duration, userId);
-      startTimer(newGoal.id, duration);
-    } catch (err) {
-      alert("Error creating goal");
-    }
-  };
+  // ✅ Fail on tab close or refresh
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (goalId) {
+        await updateGoal(goalId, "fail out");
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [goalId]);
+
+  // ✅ Fail on route change
+  useEffect(() => {
+    const currentPath = pathname;
+
+    const handleRouteChange = async () => {
+      if (goalId && window.location.pathname !== currentPath) {
+        await updateGoal(goalId, "fail out");
+      }
+    };
+
+    window.addEventListener("popstate", handleRouteChange);
+    window.addEventListener("pushstate", handleRouteChange);
+
+    return () => {
+      window.removeEventListener("popstate", handleRouteChange);
+      window.removeEventListener("pushstate", handleRouteChange);
+    };
+  }, [goalId, pathname]);
 
   return (
     <form
