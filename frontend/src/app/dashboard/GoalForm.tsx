@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { createGoal, updateGoal } from "@/utils/api";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
-  const pathname = usePathname();
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState(5);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
@@ -20,7 +20,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
 
   const handleFailOut = async () => {
     if (goalId) {
-      await updateGoal(goalId, "fail out");
+      await updateGoal(goalId, "failed out");
       alert("😢 Failed out");
       setSecondsLeft(null);
     }
@@ -32,7 +32,6 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     try {
       const newGoal = await createGoal(title, duration, userId);
       startTimer(newGoal.id, duration);
-
       onGoalCreated();
     } catch (err) {
       alert("Error creating goal");
@@ -43,7 +42,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     if (secondsLeft === null) return;
 
     if (secondsLeft <= 0 && goalId) {
-      updateGoal(goalId, "nail it").then(() => {
+      updateGoal(goalId, "nailed it").then(() => {
         alert("💪 Nailed it!");
         setSecondsLeft(null);
       });
@@ -61,33 +60,33 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
 
   // ✅ Fail on tab close or refresh
   useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (goalId) {
-        await updateGoal(goalId, "fail out");
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (secondsLeft !== null) {
+        e.preventDefault();
+        e.returnValue = "";
+        updateGoal(goalId!, "failed out");
       }
     };
+
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [goalId]);
+  }, [secondsLeft, goalId]);
 
-  // ✅ Fail on route change
+  // ✅ Fail if user switches tab or minimizes window
   useEffect(() => {
-    const currentPath = pathname;
-
-    const handleRouteChange = async () => {
-      if (goalId && window.location.pathname !== currentPath) {
-        await updateGoal(goalId, "fail out");
+    const handleVisibilityChange = () => {
+      if (document.hidden && secondsLeft !== null && goalId !== null) {
+        updateGoal(goalId, "failed out");
+        alert("😢 You left the page. Failed out.");
+        setSecondsLeft(null);
       }
     };
 
-    window.addEventListener("popstate", handleRouteChange);
-    window.addEventListener("pushstate", handleRouteChange);
-
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      window.removeEventListener("popstate", handleRouteChange);
-      window.removeEventListener("pushstate", handleRouteChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [goalId, pathname]);
+  }, [secondsLeft, goalId]);
 
   return (
     <form
