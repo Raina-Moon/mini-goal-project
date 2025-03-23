@@ -1,7 +1,7 @@
 "use client"; // ✅ Since we're using Next.js App Router
 
 import { useEffect, useState } from "react";
-import { createGoal, createPost, updateGoal } from "@/utils/api";
+import { createGoal, createPost, getStoredUserId, updateGoal } from "@/utils/api";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
 import { useRouter } from "next/navigation";
@@ -46,35 +46,18 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   };
 
   const handlePostSubmit = async ({
-    image,
+    imageUrl,
     description,
   }: {
-    image: File;
+    imageUrl: string;
     description: string;
   }) => {
-    if (!completedGoal) return;
-    const userId = Number(localStorage.getItem("userId"));
-
-    // You’ll need to upload the image first
-    const formData = new FormData();
-    formData.append("file", image);
-    formData.append("upload_preset", "YOUR_UPLOAD_PRESET");
-
-    const cloudRes = await fetch(
-      "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    const cloudData = await cloudRes.json();
-    const imageUrl = cloudData.secure_url;
-
-    await createPost(userId, completedGoal.id, imageUrl, description);
-    setShowPostModal(false);
-    alert("🚀 Posted successfully!");
+    const userId = getStoredUserId();
+    if (!userId || !goalId) return;
+  
+    await createPost(userId, goalId, imageUrl, description);
   };
+  
 
   useEffect(() => {
     if (secondsLeft === null) return;
