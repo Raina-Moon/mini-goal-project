@@ -41,7 +41,6 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const formatTime = (sec: number) =>
     `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const userId = Number(localStorage.getItem("userId"));
@@ -64,21 +63,32 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
         </h1>
         <img />
       </div>
-      <GlobalInput
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="title"
-        className="border p-2 w-full focus:outline-none"
-      />
-      <GlobalInput
-        type="number"
-        value={String(duration)}
-        onChange={(e) => setDuration(Number(e.target.value))}
-        className="border p-2 w-full"
-      />
-      <div className="flex justify-center">
-        <GlobalButton type="submit">hit the drip</GlobalButton>
-      </div>
+      {secondsLeft === null ? (
+        <>
+          <GlobalInput
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="title"
+            className="border p-2 w-full focus:outline-none"
+          />
+          <GlobalInput
+            type="number"
+            value={String(duration)}
+            onChange={(e) => setDuration(Number(e.target.value))}
+            className="border p-2 w-full"
+          />
+          <div className="flex justify-center">
+            <GlobalButton type="submit">hit the drip</GlobalButton>
+          </div>
+        </>
+      ) : (
+        <div className="text-center space-y-4">
+          <p className="text-2xl font-bold text-emerald-600">
+            ⏳ {formatTime(secondsLeft)}
+          </p>
+          <GlobalButton onClick={handleFailOut}>Fail Out</GlobalButton>
+        </div>
+      )}
     </form>
   );
 };
