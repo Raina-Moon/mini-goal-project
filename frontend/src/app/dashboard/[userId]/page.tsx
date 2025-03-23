@@ -14,6 +14,7 @@ import {
 } from "@/utils/api";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from "next/link";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 interface Goal {
   id: number;
@@ -47,6 +48,7 @@ const Dashboard = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [nailedPosts, setNailedPosts] = useState<NailedPost[]>([]);
   const [activeTab, setActiveTab] = useState("all");
+  const [sortBy, setSortBy] = useState("latest");
 
   const storedId = getStoredUserId();
   const token = getStoredToken();
@@ -129,6 +131,14 @@ const Dashboard = () => {
     return true;
   });
 
+  const sortedNailedPosts = [...nailedPosts].sort((a, b) => {
+    if (sortBy === "latest") return b.goal_id - a.goal_id;
+    if (sortBy === "oldest") return a.goal_id - b.goal_id;
+    if (sortBy === "most-time") return b.duration - a.duration;
+    if (sortBy === "least-time") return a.duration - b.duration;
+    return 0;
+  });
+
   return (
     <div className="p-6">
       {Number(userId) === storedId ? (
@@ -185,7 +195,11 @@ const Dashboard = () => {
         </ul>
       )}
 
-<Tabs defaultValue="all" onValueChange={(val) => setActiveTab(val)} className="mt-6">
+      <Tabs
+        defaultValue="all"
+        onValueChange={(val) => setActiveTab(val)}
+        className="mt-6"
+      >
         <TabsList className="mb-4">
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="nailed">Nailed It</TabsTrigger>
@@ -238,15 +252,31 @@ const Dashboard = () => {
           )}
         </TabsContent>
 
+        <div className="flex justify-end mb-2">
+  <Select onValueChange={setSortBy} defaultValue="latest">
+    <SelectTrigger className="w-40" />
+    <SelectContent>
+      <SelectItem value="latest">Latest</SelectItem>
+      <SelectItem value="oldest">Oldest</SelectItem>
+      <SelectItem value="most-time">Most Time</SelectItem>
+      <SelectItem value="least-time">Shortest Time</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
+
         <TabsContent value="nailed">
           <ul className="space-y-3">
-            {nailedPosts.map((post) => (
+            {sortedNailedPosts.map((post) => (
               <li
                 key={post.goal_id}
                 className="border border-emerald-300 bg-emerald-50 rounded-lg p-4"
               >
-                <h2 className="text-lg font-semibold text-emerald-700">{post.title}</h2>
-                <p className="text-sm text-gray-600 mb-2">Duration: {post.duration} min</p>
+                <h2 className="text-lg font-semibold text-emerald-700">
+                  {post.title}
+                </h2>
+                <p className="text-sm text-gray-600 mb-2">
+                  Duration: {post.duration} min
+                </p>
                 {post.image_url && (
                   <img
                     src={post.image_url}
@@ -269,8 +299,12 @@ const Dashboard = () => {
                   key={goal.id}
                   className="border border-red-400 bg-red-50 rounded-lg p-4"
                 >
-                  <h2 className="text-lg font-semibold text-red-700">{goal.title}</h2>
-                  <p className="text-sm text-gray-600">Duration: {goal.duration} min</p>
+                  <h2 className="text-lg font-semibold text-red-700">
+                    {goal.title}
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Duration: {goal.duration} min
+                  </p>
                   <p className="text-sm text-gray-400">
                     Created: {new Date(goal.created_at).toLocaleString()}
                   </p>
@@ -282,6 +316,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
 
 export default Dashboard;
