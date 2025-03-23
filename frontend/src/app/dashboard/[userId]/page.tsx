@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getGoals } from "@/utils/api";
+import {
+  getGoals,
+  getProfile,
+  getStoredToken,
+  getStoredUserId,
+} from "@/utils/api";
+import Link from "next/link";
 
 interface Goal {
   id: number;
@@ -13,8 +19,12 @@ interface Goal {
 }
 
 const Dashboard = () => {
-  const { userId } = useParams(); // get userId from the dynamic route
+  const { userId } = useParams();
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [username, setUsername] = useState("");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const storedId = getStoredUserId();
+  const token = getStoredToken();
   const [loading, setLoading] = useState(true);
 
   const fetchGoals = async () => {
@@ -29,13 +39,34 @@ const Dashboard = () => {
     }
   };
 
+  const fetchProfile = async () => {
+    if (!userId || !token) return;
+    try {
+      const userData = await getProfile(token, Number(userId));
+      setUsername(userData.username);
+      setProfileImage(userData.profile_image);
+    } catch (err) {
+      console.error("Failed to fetch profile:", err);
+    }
+  };
+
   useEffect(() => {
     fetchGoals();
+    fetchProfile();
   }, [userId]);
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-emerald-600">📋 Your Goals</h1>
+      {Number(userId) === storedId ? (
+        <Link href={`/profile/${userId}`}>
+          <img src={profileImage ?? "/default-profile.png"} className="w-[70px] h-[70px] rouded-full" />
+        </Link>
+      ) : (
+        <img src={profileImage ?? "/default-profile.png"} className="w-[70px] h-[70px] rouded-full" />
+    )}
+      <h1 className="text-2xl font-bold mb-4 text-emerald-600">
+        📋 {username}'s grab goals
+      </h1>
 
       {loading ? (
         <p>Loading goals...</p>
