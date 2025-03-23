@@ -116,14 +116,14 @@ const Dashboard = () => {
   };
 
   const fetchNailedPosts = async () => {
-    if (!userId) return;
+    if (!userId || !storedId) return;
     try {
-      const data = await getNailedPosts(Number(userId));
+      const data = await getNailedPosts(Number(userId), storedId);
       setNailedPosts(data);
     } catch (err) {
       console.error("Failed to fetch nailed posts:", err);
     }
-  };
+  };  
 
   const handleFollowToggle = async () => {
     if (!storedId || !userId) return;
