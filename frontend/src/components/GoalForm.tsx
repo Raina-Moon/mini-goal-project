@@ -1,10 +1,11 @@
 "use client"; // ✅ Since we're using Next.js App Router
 
 import { useEffect, useState } from "react";
-import { createGoal, updateGoal } from "@/utils/api";
+import { createGoal, createPost, updateGoal } from "@/utils/api";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
 import { useRouter } from "next/navigation";
+import PostModal from "./PostModal";
 
 const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const router = useRouter();
@@ -12,6 +13,12 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const [duration, setDuration] = useState(5);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [goalId, setGoalId] = useState<number | null>(null);
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [completedGoal, setCompletedGoal] = useState<{
+    id: number;
+    title: string;
+    duration: number;
+  } | null>(null);
 
   const startTimer = (goalId: number, duration: number) => {
     setGoalId(goalId);
@@ -38,12 +45,45 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     }
   };
 
+  const handlePostSubmit = async ({
+    image,
+    description,
+  }: {
+    image: File;
+    description: string;
+  }) => {
+    if (!completedGoal) return;
+    const userId = Number(localStorage.getItem("userId"));
+
+    // You’ll need to upload the image first
+    const formData = new FormData();
+    formData.append("file", image);
+    formData.append("upload_preset", "YOUR_UPLOAD_PRESET");
+
+    const cloudRes = await fetch(
+      "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const cloudData = await cloudRes.json();
+    const imageUrl = cloudData.secure_url;
+
+    await createPost(userId, completedGoal.id, imageUrl, description);
+    setShowPostModal(false);
+    alert("🚀 Posted successfully!");
+  };
+
   useEffect(() => {
     if (secondsLeft === null) return;
 
     if (secondsLeft <= 0 && goalId) {
       updateGoal(goalId, "nailed it").then(() => {
         alert("💪 Nailed it!");
+        setCompletedGoal({ id: goalId, title, duration });
+        setShowPostModal(true);
         setSecondsLeft(null);
       });
       return;
@@ -89,43 +129,52 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   }, [secondsLeft, goalId]);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4 mx-7 mt-20 p-4 border border-primary-500 rounded-[20px]"
-    >
-      <div className="flex flex-row items-center justify-center gap-4">
-        <h1 className="font-medium text-xl text-center text-gray-900">
-          lowkey timer drip!
-        </h1>
-        <img src="/images/TimerLogo.png" className="w-7 h-7"/>
-      </div>
-      {secondsLeft === null ? (
-        <>
-          <GlobalInput
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="title"
-            className="border p-2 w-full focus:outline-none"
-          />
-          <GlobalInput
-            type="number"
-            value={String(duration)}
-            onChange={(e) => setDuration(Number(e.target.value))}
-            className="border p-2 w-full"
-          />
-          <div className="flex justify-center">
-            <GlobalButton type="submit">hit the drip</GlobalButton>
-          </div>
-        </>
-      ) : (
-        <div className="text-center space-y-4">
-          <p className="text-2xl font-bold text-emerald-600">
-            ⏳ {formatTime(secondsLeft)}
-          </p>
-          <GlobalButton onClick={handleFailOut}>Fail Out</GlobalButton>
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 mx-7 mt-20 p-4 border border-primary-500 rounded-[20px]"
+      >
+        <div className="flex flex-row items-center justify-center gap-4">
+          <h1 className="font-medium text-xl text-center text-gray-900">
+            lowkey timer drip!
+          </h1>
+          <img src="/images/TimerLogo.png" className="w-7 h-7" />
         </div>
-      )}
-    </form>
+        {secondsLeft === null ? (
+          <>
+            <GlobalInput
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="title"
+              className="border p-2 w-full focus:outline-none"
+            />
+            <GlobalInput
+              type="number"
+              value={String(duration)}
+              onChange={(e) => setDuration(Number(e.target.value))}
+              className="border p-2 w-full"
+            />
+            <div className="flex justify-center">
+              <GlobalButton type="submit">hit the drip</GlobalButton>
+            </div>
+          </>
+        ) : (
+          <div className="text-center space-y-4">
+            <p className="text-2xl font-bold text-emerald-600">
+              ⏳ {formatTime(secondsLeft)}
+            </p>
+            <GlobalButton onClick={handleFailOut}>Fail Out</GlobalButton>
+          </div>
+        )}
+      </form>
+      <PostModal
+        isOpen={showPostModal}
+        onClose={() => setShowPostModal(false)}
+        title={completedGoal?.title}
+        duration={completedGoal?.duration}
+        onSubmit={handlePostSubmit}
+      />
+    </>
   );
 };
 
