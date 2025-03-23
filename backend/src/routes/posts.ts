@@ -1,7 +1,10 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response,RequestHandler } from "express";
 import pool from "../db";
+import multer from "multer";
+import cloudinary from "../utils/cloudinary";
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ✅ Create a post when a goal is completed
 router.post("/", async (req: Request, res: Response) => {
@@ -18,6 +21,26 @@ router.post("/", async (req: Request, res: Response) => {
     res.status(500).json({ error: (err as Error).message });
   }
 });
+
+// ✅ Upload post image to Cloudinary
+router.post("/upload-image", upload.single("image"), (async (req: Request, res: Response) => {
+    try {
+      const file = req.file;
+      if (!file) return res.status(400).json({ error: "No file uploaded" });
+  
+      const base64 = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+  
+      const uploadRes = await cloudinary.uploader.upload(base64, {
+        folder: "post_images",
+      });
+  
+      res.json({ imageUrl: uploadRes.secure_url });
+    } catch (err) {
+      console.error("Cloudinary upload failed:", err);
+      res.status(500).json({ error: "Image upload failed" });
+    }
+  }) as RequestHandler);
+  
 
 // ✅ Get all posts by user
 router.get("/user/:userId", async (req: Request, res: Response) => {
