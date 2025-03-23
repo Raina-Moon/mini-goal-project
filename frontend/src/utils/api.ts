@@ -242,3 +242,29 @@ export const isFollowing = async (
   return myFollowingList.some((user) => user.id === targetUserId);
 };
 
+export const createPost = async (
+  userId: number,
+  goalId: number,
+  imageUrl: string,
+  description: string
+) => {
+  const res = await fetch(`${API_URL}/posts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      goal_id: goalId,
+      image_url: imageUrl,
+      description,
+    }),
+  });
+
+  if (!res.ok) throw new Error("Failed to create post");
+  return res.json();
+};
+
+export const getUserPosts = async (userId: number) => {
+  const res = await fetch(`${API_URL}/posts/user/${userId}`);
+  if (!res.ok) throw new Error("Failed to fetch posts");
+  return res.json();
+};
