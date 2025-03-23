@@ -93,11 +93,11 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       onSubmit={handleSubmit}
       className="space-y-4 mx-7 mt-20 p-4 border border-primary-500 rounded-[20px]"
     >
-      <div className="flex flex-row items-center justify-center">
+      <div className="flex flex-row items-center justify-center gap-4">
         <h1 className="font-medium text-xl text-center text-gray-900">
           lowkey timer drip!
         </h1>
-        <img />
+        <img src="/images/TimerLogo.png" className="w-7 h-7"/>
       </div>
       {secondsLeft === null ? (
         <>
