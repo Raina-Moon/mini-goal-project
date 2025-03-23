@@ -228,7 +228,7 @@ export const getFollowing = async (userId: number) => {
 
 // ✅ Get my followers
 export const getFollowers = async (userId: number) => {
-  const res = await fetch(`${API_URL}/followers/${userId}`);
+  const res = await fetch(`${API_URL}/followers/followers/${userId}`);
 
   if (!res.ok) throw new Error("Failed to fetch followers");
   return res.json(); // returns an array of user objects
