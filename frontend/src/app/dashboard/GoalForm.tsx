@@ -12,17 +12,10 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const [duration, setDuration] = useState(5);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [goalId, setGoalId] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState(duration * 60);
 
   const startTimer = (goalId: number, duration: number) => {
     setGoalId(goalId);
     setSecondsLeft(duration * 60);
-
-    // Automatically nail it if time completes
-    setTimeout(() => {
-      updateGoal(goalId, "nail it");
-      alert("💪 Nailed it!");
-    }, duration * 60 * 1000);
   };
 
   const handleFailOut = async () => {
@@ -48,11 +41,20 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
 
   useEffect(() => {
     if (secondsLeft === null) return;
+
+    if (secondsLeft <= 0 && goalId) {
+      updateGoal(goalId, "nail it").then(() => {
+        alert("💪 Nailed it!");
+        setSecondsLeft(null);
+      });
+      return;
+    }
+
     const interval = setInterval(() => {
       setSecondsLeft((prev) => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => clearInterval(interval);
-  }, [secondsLeft]);
+  }, [secondsLeft, goalId]);
 
   const formatTime = (sec: number) =>
     `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
