@@ -283,3 +283,41 @@ export const getNailedPosts = async (userId: number) => {
   return res.json();
 };
 
+// Comments
+export const getComments = async (postId: number) => {
+  const res = await fetch(`${API_URL}/comments/${postId}`);
+  return res.json();
+};
+
+export const addComment = async (userId: number, postId: number, content: string) => {
+  const res = await fetch(`${API_URL}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId, post_id: postId, content }),
+  });
+  return res.json();
+};
+
+// Likes
+export const getLikeStatus = async (postId: number, userId: number) => {
+  const res = await fetch(`${API_URL}/likes/status/${postId}/${userId}`);
+  return res.json();
+};
+
+export const likePost = async (userId: number, postId: number) => {
+  const res = await fetch(`${API_URL}/likes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId, post_id: postId }),
+  });
+  return res.json();
+};
+
+export const unlikePost = async (userId: number, postId: number) => {
+  const res = await fetch(`${API_URL}/likes`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId, post_id: postId }),
+  });
+  return res.json();
+};
