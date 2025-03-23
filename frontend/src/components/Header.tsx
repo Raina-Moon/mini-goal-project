@@ -50,7 +50,7 @@ const Header = () => {
       <div>
         {isLoggedIn ? (
           <button
-            onClick={() => router.push(`/profile/${userId}`)}
+            onClick={() => router.push(`/dashboard/${userId}`)}
             className="w-10 h-10 rounded-full border border-gray-300 overflow-hidden"
           >
             <img
