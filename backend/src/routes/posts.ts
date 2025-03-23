@@ -42,19 +42,28 @@ router.post("/upload-image", upload.single("image"), (async (req: Request, res: 
   }) as RequestHandler);
   
 
-// ✅ Get all posts by user
-router.get("/user/:userId", async (req: Request, res: Response) => {
-  const { userId } = req.params;
-
-  try {
-    const result = await pool.query(
-      `SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC`,
-      [userId]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
-  }
-});
+// ✅ Get "nailed it" goals + post data for a user
+router.get("/nailed/:userId", async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    try {
+      const result = await pool.query(`
+        SELECT 
+          g.id AS goal_id,
+          g.title,
+          g.duration,
+          p.image_url,
+          p.description
+        FROM goals g
+        JOIN posts p ON g.id = p.goal_id
+        WHERE g.user_id = $1 AND g.status = 'nailed it'
+        ORDER BY g.created_at DESC
+      `, [userId]);
+  
+      res.json(result.rows);
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+  
 
 export default router;

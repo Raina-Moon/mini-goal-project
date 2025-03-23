@@ -277,8 +277,9 @@ export const uploadPostImage = async (imageFile: File): Promise<string> => {
   return data.imageUrl; 
 };
 
-export const getUserPosts = async (userId: number) => {
-  const res = await fetch(`${API_URL}/posts/user/${userId}`);
-  if (!res.ok) throw new Error("Failed to fetch posts");
+export const getNailedPosts = async (userId: number) => {
+  const res = await fetch(`${API_URL}/posts/nailed/${userId}`);
+  if (!res.ok) throw new Error("Failed to fetch nailed posts");
   return res.json();
 };
+

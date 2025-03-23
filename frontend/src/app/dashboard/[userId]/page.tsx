@@ -6,12 +6,15 @@ import {
   followUser,
   getFollowers,
   getGoals,
+  getNailedPosts,
   getProfile,
   getStoredToken,
   getStoredUserId,
   unfollowUser,
 } from "@/utils/api";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Link from "next/link";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 interface Goal {
   id: number;
@@ -27,6 +30,14 @@ interface Follower {
   profile_image: string | null;
 }
 
+interface NailedPost {
+  goal_id: number;
+  title: string;
+  duration: number;
+  image_url: string;
+  description: string;
+}
+
 const Dashboard = () => {
   const { userId } = useParams();
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -35,6 +46,10 @@ const Dashboard = () => {
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [showFollowers, setShowFollowers] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [nailedPosts, setNailedPosts] = useState<NailedPost[]>([]);
+  const [activeTab, setActiveTab] = useState("all");
+  const [sortBy, setSortBy] = useState("latest");
+
   const storedId = getStoredUserId();
   const token = getStoredToken();
   const [loading, setLoading] = useState(true);
@@ -79,6 +94,16 @@ const Dashboard = () => {
     setShowFollowers(true);
   };
 
+  const fetchNailedPosts = async () => {
+    if (!userId) return;
+    try {
+      const data = await getNailedPosts(Number(userId));
+      setNailedPosts(data);
+    } catch (err) {
+      console.error("Failed to fetch nailed posts:", err);
+    }
+  };
+
   const handleFollowToggle = async () => {
     if (!storedId || !userId) return;
     try {
@@ -97,7 +122,22 @@ const Dashboard = () => {
     fetchGoals();
     fetchProfile();
     fetchFollowers();
+    fetchNailedPosts();
   }, [userId]);
+
+  const filteredGoals = goals.filter((goal) => {
+    if (activeTab === "nailed") return goal.status === "nailed it";
+    if (activeTab === "failed") return goal.status === "failed out";
+    return true;
+  });
+
+  const sortedNailedPosts = [...nailedPosts].sort((a, b) => {
+    if (sortBy === "latest") return b.goal_id - a.goal_id;
+    if (sortBy === "oldest") return a.goal_id - b.goal_id;
+    if (sortBy === "most-time") return b.duration - a.duration;
+    if (sortBy === "least-time") return a.duration - b.duration;
+    return 0;
+  });
 
   return (
     <div className="p-6">
@@ -155,49 +195,124 @@ const Dashboard = () => {
         </ul>
       )}
 
-      {loading ? (
-        <p>Loading goals...</p>
-      ) : goals.length === 0 ? (
-        <p className="text-gray-500">No goals yet! Let's start one! 💡</p>
-      ) : (
-        <ul className="space-y-3">
-          {goals.map((goal) => (
-            <li
-              key={goal.id}
-              className={`border rounded-lg p-4 ${
-                goal.status === "nailed it"
-                  ? "border-emerald-500 bg-emerald-50"
-                  : goal.status === "failed out"
-                  ? "border-red-400 bg-red-50"
-                  : "border-gray-300"
-              }`}
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-lg font-semibold">{goal.title}</h2>
+      <Tabs
+        defaultValue="all"
+        onValueChange={(val) => setActiveTab(val)}
+        className="mt-6"
+      >
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="nailed">Nailed It</TabsTrigger>
+          <TabsTrigger value="failed">Failed It</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all">
+          {loading ? (
+            <p>Loading goals...</p>
+          ) : filteredGoals.length === 0 ? (
+            <p className="text-gray-500">No goals yet! Let's start one! 💡</p>
+          ) : (
+            <ul className="space-y-3">
+              {filteredGoals.map((goal) => (
+                <li
+                  key={goal.id}
+                  className={`border rounded-lg p-4 ${
+                    goal.status === "nailed it"
+                      ? "border-emerald-500 bg-emerald-50"
+                      : goal.status === "failed out"
+                      ? "border-red-400 bg-red-50"
+                      : "border-gray-300"
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-lg font-semibold">{goal.title}</h2>
+                      <p className="text-sm text-gray-600">
+                        Duration: {goal.duration} min
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Created: {new Date(goal.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-xs font-semibold px-2 py-1 rounded ${
+                        goal.status === "nailed it"
+                          ? "bg-emerald-200 text-emerald-800"
+                          : goal.status === "failed out"
+                          ? "bg-red-200 text-red-800"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {goal.status}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+
+        <div className="flex justify-end mb-2">
+  <Select onValueChange={setSortBy} defaultValue="latest">
+    <SelectTrigger className="w-40" />
+    <SelectContent>
+      <SelectItem value="latest">Latest</SelectItem>
+      <SelectItem value="oldest">Oldest</SelectItem>
+      <SelectItem value="most-time">Most Time</SelectItem>
+      <SelectItem value="least-time">Shortest Time</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
+
+        <TabsContent value="nailed">
+          <ul className="space-y-3">
+            {sortedNailedPosts.map((post) => (
+              <li
+                key={post.goal_id}
+                className="border border-emerald-300 bg-emerald-50 rounded-lg p-4"
+              >
+                <h2 className="text-lg font-semibold text-emerald-700">
+                  {post.title}
+                </h2>
+                <p className="text-sm text-gray-600 mb-2">
+                  Duration: {post.duration} min
+                </p>
+                {post.image_url && (
+                  <img
+                    src={post.image_url}
+                    alt="Post Image"
+                    className="w-full max-h-64 object-cover rounded mb-2"
+                  />
+                )}
+                <p className="text-sm text-gray-800">{post.description}</p>
+              </li>
+            ))}
+          </ul>
+        </TabsContent>
+
+        <TabsContent value="failed">
+          <ul className="space-y-3">
+            {goals
+              .filter((goal) => goal.status === "failed out")
+              .map((goal) => (
+                <li
+                  key={goal.id}
+                  className="border border-red-400 bg-red-50 rounded-lg p-4"
+                >
+                  <h2 className="text-lg font-semibold text-red-700">
+                    {goal.title}
+                  </h2>
                   <p className="text-sm text-gray-600">
                     Duration: {goal.duration} min
                   </p>
                   <p className="text-sm text-gray-400">
                     Created: {new Date(goal.created_at).toLocaleString()}
                   </p>
-                </div>
-                <span
-                  className={`text-xs font-semibold px-2 py-1 rounded ${
-                    goal.status === "nailed it"
-                      ? "bg-emerald-200 text-emerald-800"
-                      : goal.status === "failed out"
-                      ? "bg-red-200 text-red-800"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  {goal.status}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+                </li>
+              ))}
+          </ul>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
