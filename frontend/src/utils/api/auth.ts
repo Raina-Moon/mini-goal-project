@@ -9,7 +9,9 @@ export const signup = (username: string, email: string, password: string) =>
   });
 
 export const login = async (email: string, password: string) => {
-  const userData = await fetchApi<{ token: string; user: User }>("/auth/login", {
+  const userData = await fetchApi<{
+    username: any; token: string; user: User 
+}>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
@@ -64,7 +66,7 @@ export const verifyResetCode = (email: string, reset_token: number) =>
     body: JSON.stringify({ email, reset_token }),
   });
 
-export const resetPassword = (email: string, newPassword: string) =>
+export const resetPassword = (email: string, enteredCode: number, newPassword: string) =>
   fetchApi<{ message: string }>("/auth/reset-password", {
     method: "PATCH",
     body: JSON.stringify({ email, newPassword }),
