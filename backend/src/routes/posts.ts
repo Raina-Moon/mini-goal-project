@@ -60,7 +60,7 @@ router.get("/nailed/:userId", async (req: Request, res: Response) => {
         goals.duration,
         posts.image_url,
         posts.description,
-        COUNT(likes.id) AS like_count,
+        CAST(COUNT(likes.id) AS INTEGER) AS like_count,
         EXISTS (
           SELECT 1 FROM likes WHERE post_id = posts.id AND user_id = $2
         ) AS liked_by_me,
