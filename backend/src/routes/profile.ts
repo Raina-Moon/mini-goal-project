@@ -10,8 +10,49 @@ const upload = multer();
 
 const router = express.Router();
 
+// ✅ Get User Profile
+router.get("/:userId", (async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  try {
+    const result = await pool.query(
+      "SELECT id, username, email, profile_image FROM users WHERE id = $1",
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
+
+// ✅ Update User Profile
+router.patch("/:userId", (async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { username } = req.body;
+
+  try {
+    const result = await pool.query(
+      "UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username, email",
+      [username, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
+
 router.post(
-  "/profile/:userId/image-upload",
+  "/:userId/image-upload",
   upload.single("profileImage"),
   (async (req: Request, res: Response) => {
     const { userId } = req.params;
