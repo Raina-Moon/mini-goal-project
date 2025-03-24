@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import goalRoutes from "./routes/goals";
 import pool from "./db";
 import authRoutes from "./routes/auth";
-import profileImageRoutes from "./routes/profileImage";
+import profileRoutes from "./routes/profile";
 import followersRoutes from "./routes/followers";
 import postsRoutes from "./routes/posts";
 import commentsRoutes from "./routes/comments";
@@ -30,7 +30,7 @@ app.use("/api/goals", goalRoutes);
 
 app.use("/api/auth", authRoutes);
 
-app.use("/api/auth", profileImageRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use("/api/followers", followersRoutes);
 

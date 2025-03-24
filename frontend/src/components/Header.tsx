@@ -56,8 +56,8 @@ const Header = () => {
             <img
               src={
                 profileImage
-                  ? `${profileImage}?t=${Date.now()}` // 💡 bust cache
-                  : "/images/DefaultProfile.png" // ✅ corrected
+                  ? `${profileImage}?t=${Date.now()}`
+                  : "/images/DefaultProfile.png"
                 }
               alt="Profile"
               className="object-cover w-full h-full"
