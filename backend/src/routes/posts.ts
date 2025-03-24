@@ -1,4 +1,4 @@
-import express, { Request, Response,RequestHandler } from "express";
+import express, { Request, Response, RequestHandler } from "express";
 import pool from "../db";
 import multer from "multer";
 import cloudinary from "../utils/cloudinary";
@@ -23,47 +23,75 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 // ✅ Upload post image to Cloudinary
-router.post("/upload-image", upload.single("image"), (async (req: Request, res: Response) => {
-    try {
-      const file = req.file;
-      if (!file) return res.status(400).json({ error: "No file uploaded" });
-  
-      const base64 = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-  
-      const uploadRes = await cloudinary.uploader.upload(base64, {
-        folder: "post_images",
-      });
-  
-      res.json({ imageUrl: uploadRes.secure_url });
-    } catch (err) {
-      console.error("Cloudinary upload failed:", err);
-      res.status(500).json({ error: "Image upload failed" });
-    }
-  }) as RequestHandler);
-  
+router.post("/upload-image", upload.single("image"), (async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "No file uploaded" });
+
+    const base64 = `data:${file.mimetype};base64,${file.buffer.toString(
+      "base64"
+    )}`;
+
+    const uploadRes = await cloudinary.uploader.upload(base64, {
+      folder: "post_images",
+    });
+
+    res.json({ imageUrl: uploadRes.secure_url });
+  } catch (err) {
+    console.error("Cloudinary upload failed:", err);
+    res.status(500).json({ error: "Image upload failed" });
+  }
+}) as RequestHandler);
 
 // ✅ Get "nailed it" goals + post data for a user
 router.get("/nailed/:userId", async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    try {
-      const result = await pool.query(`
-        SELECT 
-          g.id AS goal_id,
-          g.title,
-          g.duration,
-          p.image_url,
-          p.description
-        FROM goals g
-        JOIN posts p ON g.id = p.goal_id
-        WHERE g.user_id = $1 AND g.status = 'nailed it'
-        ORDER BY g.created_at DESC
-      `, [userId]);
-  
-      res.json(result.rows);
-    } catch (err) {
-      res.status(500).json({ error: (err as Error).message });
-    }
-  });
-  
+  const profileUserId = req.params.userId;
+  const viewerUserId = req.query.viewerId as string;
+  try {
+    const result = await pool.query(
+      `
+      SELECT 
+        posts.id AS post_id,
+        posts.goal_id AS goal_id,
+        goals.title,
+        goals.duration,
+        posts.image_url,
+        posts.description,
+        CAST(COUNT(likes.id) AS INTEGER) AS like_count,
+        EXISTS (
+          SELECT 1 FROM likes WHERE post_id = posts.id AND user_id = $2
+        ) AS liked_by_me,
+        COALESCE(
+          (
+            SELECT json_agg(json_build_object(
+              'id', comments.id,
+              'user_id', comments.user_id,
+              'username', users.username,
+              'content', comments.content,
+              'created_at', comments.created_at
+            ))
+            FROM comments
+            JOIN users ON users.id = comments.user_id
+            WHERE comments.post_id = posts.id
+          ),
+          '[]'::json
+        ) AS comments
+      FROM posts
+      JOIN goals ON posts.goal_id = goals.id
+      LEFT JOIN likes ON posts.id = likes.post_id
+      WHERE posts.user_id = $1 AND goals.status = 'nailed it'
+      GROUP BY posts.id, posts.goal_id, goals.title, goals.duration, posts.image_url, posts.description, goals.created_at
+      ORDER BY goals.created_at DESC`,
+      [profileUserId, viewerUserId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
 
 export default router;
