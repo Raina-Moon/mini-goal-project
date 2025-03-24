@@ -33,12 +33,12 @@ export const getStoredUserId = () => {
 };
 
 export const getProfile = (token: string, userId: number) =>
-  fetchApi<User>(`/auth/profile/${userId}`, {
+  fetchApi<User>(`/profile/${userId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
 export const updateProfile = (token: string, userId: number, username: string) =>
-  fetchApi<User>(`/auth/profile/${userId}`, {
+  fetchApi<User>(`/profile/${userId}`, {
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ username }),
@@ -47,7 +47,7 @@ export const updateProfile = (token: string, userId: number, username: string) =
 export const updateProfileImage = async (token: string, userId: number, file: File) => {
   const formData = new FormData();
   formData.append("profileImage", file);
-  return fetchApi<User>(`/auth/profile/${userId}/image-upload`, {
+  return fetchApi<User>(`/profile/${userId}/image-upload`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
