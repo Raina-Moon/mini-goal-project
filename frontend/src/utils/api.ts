@@ -106,7 +106,11 @@ export const verifyResetCode = async (email: string, reset_token: number) => {
 };
 
 // Reset Password
-export const resetPassword = async (email: string, p0: number, newPassword: string) => {
+export const resetPassword = async (
+  email: string,
+  p0: number,
+  newPassword: string
+) => {
   const res = await fetch(`${API_URL}/auth/reset-password`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -115,7 +119,7 @@ export const resetPassword = async (email: string, p0: number, newPassword: stri
 
   const data = await res.json();
   if (!res.ok) throw new Error(data.error);
-  
+
   return data; // Contains message: "Password updated successfully."
 };
 
@@ -138,7 +142,6 @@ export const updateProfileImage = async (
   if (!res.ok) throw new Error("Failed to upload profile image");
   return res.json();
 };
-
 
 // ✅ Create a new goal
 export const createGoal = async (
@@ -199,7 +202,10 @@ export const followUser = async (followerId: number, followingId: number) => {
   const res = await fetch(`${API_URL}/followers`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
+    body: JSON.stringify({
+      follower_id: followerId,
+      following_id: followingId,
+    }),
   });
 
   if (!res.ok) throw new Error("Failed to follow user");
@@ -211,7 +217,10 @@ export const unfollowUser = async (followerId: number, followingId: number) => {
   const res = await fetch(`${API_URL}/followers`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
+    body: JSON.stringify({
+      follower_id: followerId,
+      following_id: followingId,
+    }),
   });
 
   if (!res.ok) throw new Error("Failed to unfollow user");
@@ -274,11 +283,16 @@ export const uploadPostImage = async (imageFile: File): Promise<string> => {
 
   if (!res.ok) throw new Error("Image upload failed");
   const data = await res.json();
-  return data.imageUrl; 
+  return data.imageUrl;
 };
 
-export const getNailedPosts = async (userId: number) => {
-  const res = await fetch(`${API_URL}/posts/nailed/${userId}`);
+export const getNailedPosts = async (
+  profileUserId: number,
+  viewerUserId: number
+) => {
+  const res = await fetch(
+    `${API_URL}/posts/nailed/${profileUserId}?viewerId=${viewerUserId}`
+  );
   if (!res.ok) throw new Error("Failed to fetch nailed posts");
   return res.json();
 };
@@ -289,7 +303,11 @@ export const getComments = async (postId: number) => {
   return res.json();
 };
 
-export const addComment = async (userId: number, postId: number, content: string) => {
+export const addComment = async (
+  userId: number,
+  postId: number,
+  content: string
+) => {
   const res = await fetch(`${API_URL}/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
