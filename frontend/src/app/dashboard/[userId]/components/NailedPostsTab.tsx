@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { likePost, unlikePost, addComment } from "@/utils/api";
+import { likePost, unlikePost, addComment, Post } from "@/utils/api";
 import {
   Select,
   SelectContent,
@@ -7,20 +7,8 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 
-interface NailedPost {
-  post_id: number;
-  goal_id: number;
-  title: string;
-  duration: number;
-  image_url: string;
-  description: string;
-  like_count: number;
-  liked_by_me: boolean;
-  comments: { id: number; user_id: number; username: string; content: string; created_at: string }[];
-}
-
 interface NailedPostsTabProps {
-  posts: NailedPost[];
+  posts: Post[];
   userId: number | null;
 }
 
@@ -33,7 +21,7 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     posts.reduce((acc, post) => ({ ...acc, [post.post_id]: post.like_count }), {})
   );
   const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
-  const [updatedPosts, setUpdatedPosts] = useState<NailedPost[]>(posts);
+  const [updatedPosts, setUpdatedPosts] = useState<Post[]>(posts);
 
   const sortedPosts = [...updatedPosts].sort((a, b) => {
     if (sortBy === "latest") return b.goal_id - a.goal_id;
