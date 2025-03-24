@@ -40,6 +40,7 @@ router.get("/nailed/:userId", async (req, res) => {
       const result = await pool.query(`
         SELECT 
           posts.id AS post_id,
+          posts.goal_id AS goal_id,
           posts.title,
           posts.description,
           posts.duration,
@@ -66,6 +67,7 @@ router.get("/nailed/:userId", async (req, res) => {
         GROUP BY posts.id
       `, [profileUserId, viewerUserId]);
   
+      console.log("Server response:", result.rows); // 서버 로그 추가
       res.json(result.rows);
     } catch (err) {
       res.status(500).json({ error: (err as Error).message });
