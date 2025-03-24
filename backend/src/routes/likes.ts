@@ -39,7 +39,7 @@ router.get("/nailed/:userId", async (req, res) => {
     try {
       const result = await pool.query(`
         SELECT 
-          posts.id AS goal_id,
+          posts.id AS post_id,
           posts.title,
           posts.description,
           posts.duration,
