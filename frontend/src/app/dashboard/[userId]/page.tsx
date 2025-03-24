@@ -167,13 +167,13 @@ const Dashboard = () => {
 
     try {
       if (alreadyLiked) {
-        await unlikePost(postId, userId);
+        await unlikePost(userId,postId);
         setLikeCounts((prev) => ({
           ...prev,
           [postId]: (prev[postId] || 1) - 1,
         }));
       } else {
-        await likePost(postId, userId);
+        await likePost(userId, postId);
         setLikeCounts((prev) => ({
           ...prev,
           [postId]: (prev[postId] || 0) + 1,
