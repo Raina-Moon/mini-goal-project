@@ -24,7 +24,7 @@ const Header = () => {
       const fetchImage = async () => {
         try {
           const user = await getProfile(token, id);
-          setProfileImage(user.profile_image);
+          setProfileImage(user.profile_image ?? null);
         } catch (err) {
           console.error("Failed to fetch profile image:", err);
         }

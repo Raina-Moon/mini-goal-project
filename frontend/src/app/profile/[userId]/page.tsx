@@ -37,7 +37,11 @@ const ProfilePage = () => {
       if (!token || !userId) return;
       try {
         const userProfile = await getProfile(token, Number(userId));
-        setUser(userProfile);
+        setUser({
+          ...userProfile,
+          email: userProfile.email || "", // Ensure email is always a string
+          profile_image: userProfile.profile_image || "", // Ensure profile_image is always a string
+        });
       } catch (err) {
         console.error(err);
       }
@@ -61,7 +65,11 @@ const ProfilePage = () => {
         Number(userId),
         newUsername
       );
-      setUser({ ...updatedUser, email: user?.email || "" }); // Keep email intact
+      setUser({ 
+        ...updatedUser, 
+        email: user?.email || "", 
+        profile_image: updatedUser.profile_image || user?.profile_image || "" 
+      }); // Ensure profile_image is always a string
       setIsEditing(false); // Close form after updating
     } catch (err) {
       console.error(err);
@@ -77,7 +85,11 @@ const ProfilePage = () => {
         Number(userId),
         selectedFile
       );
-      setUser(updatedUser);
+      setUser({
+        ...updatedUser,
+        email: updatedUser.email || user?.email || "",
+        profile_image: updatedUser.profile_image || user?.profile_image || "",
+      });
       setSelectedFile(null);
     } catch (err) {
       console.error(err);
