@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import GoalForm from "../components/GoalForm";
-import { getGoals, getStoredUserId } from "@/utils/api";
+import { getGoals, getStoredUserId, Goal } from "@/utils/api";
 
 const page = () => {
-  const [goals, setGoals] = useState([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
 
   const userId = getStoredUserId();
 
