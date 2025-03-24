@@ -40,7 +40,7 @@ const ProfilePage = () => {
         setUser({
           ...userProfile,
           email: userProfile.email || "", // Ensure email is always a string
-          profile_image: userProfile.profile_image || "", // Ensure profile_image is always a string
+          profile_image: userProfile.profile_image || "/images/DefaultProfile.png", // Ensure profile_image is always a string
         });
       } catch (err) {
         console.error(err);
@@ -68,7 +68,7 @@ const ProfilePage = () => {
       setUser({ 
         ...updatedUser, 
         email: user?.email || "", 
-        profile_image: updatedUser.profile_image || user?.profile_image || "" 
+        profile_image: updatedUser.profile_image || user?.profile_image || "/images/DefaultProfile.png"
       }); // Ensure profile_image is always a string
       setIsEditing(false); // Close form after updating
     } catch (err) {
