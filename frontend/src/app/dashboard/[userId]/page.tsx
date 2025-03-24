@@ -39,6 +39,7 @@ interface Follower {
 }
 
 interface NailedPost {
+  id: number;
   goal_id: number;
   title: string;
   duration: number;
@@ -160,43 +161,43 @@ const Dashboard = () => {
     return 0;
   });
 
-  const handleLike = async (goalId: number) => {
+  const handleLike = async (postId: number) => {
     const userId = getStoredUserId();
-    const alreadyLiked = likeStatus[goalId];
+    const alreadyLiked = likeStatus[postId];
 
     try {
       if (alreadyLiked) {
-        await unlikePost(goalId, userId);
+        await unlikePost(postId, userId);
         setLikeCounts((prev) => ({
           ...prev,
-          [goalId]: (prev[goalId] || 1) - 1,
+          [postId]: (prev[postId] || 1) - 1,
         }));
       } else {
-        await likePost(goalId, userId);
+        await likePost(postId, userId);
         setLikeCounts((prev) => ({
           ...prev,
-          [goalId]: (prev[goalId] || 0) + 1,
+          [postId]: (prev[postId] || 0) + 1,
         }));
       }
 
-      setLikeStatus((prev) => ({ ...prev, [goalId]: !alreadyLiked }));
+      setLikeStatus((prev) => ({ ...prev, [postId]: !alreadyLiked }));
     } catch (err) {
       console.error("Like failed", err);
     }
   };
 
-  const submitComment = async (goalId: number) => {
+  const submitComment = async (postId: number) => {
     const userId = getStoredUserId();
-    const content = newComments[goalId];
+    const content = newComments[postId];
 
     if (!content) return;
 
     try {
-      const comment = await addComment(goalId, userId, content);
-      setNewComments((prev) => ({ ...prev, [goalId]: "" }));
+      const comment = await addComment(postId, userId, content);
+      setNewComments((prev) => ({ ...prev, [postId]: "" }));
       setNailedPosts((prev) =>
         prev.map((post) =>
-          post.goal_id === goalId
+          post.goal_id === postId
             ? {
                 ...post,
                 comments: [...(post.comments || []), comment],
@@ -358,28 +359,28 @@ const Dashboard = () => {
                 {/* ✅ Like + Comment Section */}
                 <div className="mt-2 flex items-center gap-3">
                   <button
-                    onClick={() => handleLike(post.goal_id)}
+                    onClick={() => handleLike(post.id)}
                     className="text-pink-600 hover:underline"
                   >
-                    {likeStatus[post.goal_id] ? "❤️ Liked" : "🤍 Like"} (
-                    {likeCounts[post.goal_id] || post.like_count})
+                    {likeStatus[post.id] ? "❤️ Liked" : "🤍 Like"} (
+                    {likeCounts[post.id] || post.like_count})
                   </button>
                 </div>
 
                 <div className="mt-4">
                   <input
-                    value={newComments[post.goal_id] || ""}
+                    value={newComments[post.id] || ""}
                     onChange={(e) =>
                       setNewComments((prev) => ({
                         ...prev,
-                        [post.goal_id]: e.target.value,
+                        [post.id]: e.target.value,
                       }))
                     }
                     placeholder="Leave a comment..."
                     className="w-full border rounded px-2 py-1 text-sm"
                   />
                   <button
-                    onClick={() => submitComment(post.goal_id)}
+                    onClick={() => submitComment(post.id)}
                     className="text-blue-500 text-sm mt-1"
                   >
                     Submit
