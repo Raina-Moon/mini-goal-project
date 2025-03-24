@@ -88,7 +88,6 @@ router.get("/nailed/:userId", async (req: Request, res: Response) => {
       [profileUserId, viewerUserId]
     );
 
-    console.log("Server response:", result.rows);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
