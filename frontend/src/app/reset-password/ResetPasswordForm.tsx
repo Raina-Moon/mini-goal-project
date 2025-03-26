@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { verifyResetCode, resetPassword } from "@/utils/api";
+import useAuthStore from "@/stores/useAuthStore";
 
 const ResetPasswordForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email"); // ✅ Get email from URL
+  const { verifyResetCode, resetPassword } = useAuthStore();
 
   const [code, setCode] = useState(["", "", "", ""]);
   const [password, setPassword] = useState("");
@@ -66,7 +67,10 @@ const ResetPasswordForm = () => {
         Enter your code <br /> Reset your password
       </h2>
 
-      <form onSubmit={handleResetPassword} className="w-56 h-80 bg-neutral-100 rounded-2xl shadow-sm p-4 flex flex-col items-center gap-y-2 relative">
+      <form
+        onSubmit={handleResetPassword}
+        className="w-56 h-80 bg-neutral-100 rounded-2xl shadow-sm p-4 flex flex-col items-center gap-y-2 relative"
+      >
         <div className="flex gap-2 mb-4">
           {code.map((digit, index) => (
             <input

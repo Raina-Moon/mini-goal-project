@@ -2,52 +2,25 @@
 
 import React, { useEffect, useState } from "react";
 import ProfileForm from "../ProfileForm";
-import {
-  getProfile,
-  getStoredToken,
-  logout,
-  updateProfile,
-  updateProfileImage,
-} from "@/utils/api";
 import { useParams, useRouter } from "next/navigation";
+import useAuthStore from "@/stores/useAuthStore";
 
 const ProfilePage = () => {
   const { userId } = useParams();
   const router = useRouter();
-  const [user, setUser] = useState<{
-    id: number;
-    username: string;
-    email: string;
-    profile_image: string;
-  } | null>(null);
+  const {token, user, isLoggedIn, logout, getProfile, updateProfile, updateProfileImage} = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
-  const token = getStoredToken();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) {
+    if (!isLoggedIn || !token) {
       router.push("/login");
+    } else {
+      getProfile(Number(userId));
     }
-  }, [token, router]);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!token || !userId) return;
-      try {
-        const userProfile = await getProfile(token, Number(userId));
-        setUser({
-          ...userProfile,
-          email: userProfile.email || "", // Ensure email is always a string
-          profile_image: userProfile.profile_image || "/images/DefaultProfile.png", // Ensure profile_image is always a string
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchUser();
-  }, [userId, token]);
+  }, [token, router, isLoggedIn, userId, getProfile]);
 
   useEffect(() => {
     return () => {
@@ -58,43 +31,16 @@ const ProfilePage = () => {
   }, [imagePreview]);
 
   const handleUpdateUsername = async (newUsername: string) => {
-    if (!token || !userId) return;
-    try {
-      const updatedUser = await updateProfile(
-        token,
-        Number(userId),
-        newUsername
-      );
-      setUser({ 
-        ...updatedUser, 
-        email: user?.email || "", 
-        profile_image: updatedUser.profile_image || user?.profile_image || "/images/DefaultProfile.png"
-      }); // Ensure profile_image is always a string
-      setIsEditing(false); // Close form after updating
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    await updateProfile(Number(userId), newUsername);
+    setIsEditing(false);
+  }
 
   const handleImageUpload = async () => {
-    if (!token || !userId || !selectedFile) return;
-
-    try {
-      const updatedUser = await updateProfileImage(
-        token,
-        Number(userId),
-        selectedFile
-      );
-      setUser({
-        ...updatedUser,
-        email: updatedUser.email || user?.email || "",
-        profile_image: updatedUser.profile_image || user?.profile_image || "",
-      });
-      setSelectedFile(null);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    if (!selectedFile) return;
+    await updateProfileImage(Number(userId), selectedFile);
+    setSelectedFile(null);
+    setImagePreview(null);
+  }
 
   if (!user) return <div>Loading...</div>;
 
@@ -105,7 +51,7 @@ const ProfilePage = () => {
       <div className="w-40 h-20 left-[84px] top-[257px] absolute bg-white rounded-2xl border border-emerald-100" />
       <img
         className="w-16 h-16 left-[126px] top-[131px] absolute rounded-full object-cover"
-        src={user.profile_image}
+        src={user.profile_image || "images/DefaultProfile.png"}
         alt="Profile"
       />
 

@@ -1,23 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { login } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import useAuthStore from "@/stores/useAuthStore";
 
 const LoginForm = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const {login} = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const user = await login(email, password);
-      alert(`Welcome back, ${user.username}!`);
+      await login(email, password);
+      const username = useAuthStore.getState().user?.username;
+      alert(`Welcome back, ${username}!`);
       router.push("/");
     } catch (error) {
-      alert("Login failed!");
+      alert("Failed to login");
     }
   };
 
