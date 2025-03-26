@@ -3,38 +3,22 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getProfile, getStoredToken } from "@/utils/api";
+import useAuthStore from "@/stores/useAuthStore";
 
 const Header = () => {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [userId, setUserId] = useState<number | null>(null);
-
-  useEffect(() => {
-    const token = getStoredToken();
-    const storedId = localStorage.getItem("userId");
-
-    if (token && storedId) {
-      const id = Number(storedId);
-      setIsLoggedIn(true);
-      setUserId(id);
+  const {user, getProfile, isLoggedIn} = useAuthStore((state) => ({
+    isLoggedIn: state.isLoggedIn,
+    user: state.user,
+    getProfile: state.getProfile,
+  }));
 
       // 🔥 Fetch actual profile image
-      const fetchImage = async () => {
-        try {
-          const user = await getProfile(token, id);
-          setProfileImage(user.profile_image ?? null);
-        } catch (err) {
-          console.error("Failed to fetch profile image:", err);
+      useEffect(() => {
+        if (isLoggedIn && user && !user.profile_image) {
+          getProfile(user.id);
         }
-      };
-
-      fetchImage();
-    } else {
-      setIsLoggedIn(false);
-    }
-  }, []);
+      }, [isLoggedIn, user, getProfile]);
 
   return (
     <header className="w-full h-16 flex items-center justify-between px-6 bg-white border-b shadow-sm fixed top-0 z-50">
@@ -48,17 +32,17 @@ const Header = () => {
 
       {/* Right side (conditional) */}
       <div>
-        {isLoggedIn ? (
+        {isLoggedIn && user ? (
           <button
-            onClick={() => router.push(`/dashboard/${userId}`)}
+            onClick={() => router.push(`/dashboard/${user.id}`)}
             className="w-10 h-10 rounded-full border border-gray-300 overflow-hidden"
           >
-            <img
+           <img
               src={
-                profileImage
-                  ? `${profileImage}?t=${Date.now()}`
+                user.profile_image
+                  ? `${user.profile_image}?t=${Date.now()}`
                   : "/images/DefaultProfile.png"
-                }
+              }
               alt="Profile"
               className="object-cover w-full h-full"
             />
