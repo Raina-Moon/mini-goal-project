@@ -1,24 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import useAuthStore from "@/stores/useAuthStore";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 const Header = () => {
   const router = useRouter();
-  const {user, getProfile, isLoggedIn} = useAuthStore((state) => ({
-    isLoggedIn: state.isLoggedIn,
-    user: state.user,
-    getProfile: state.getProfile,
-  }));
+  const { user, getProfile, isLoggedIn } = useAuth();
 
-      // 🔥 Fetch actual profile image
-      useEffect(() => {
-        if (isLoggedIn && user && !user.profile_image) {
-          getProfile(user.id);
-        }
-      }, [isLoggedIn, user, getProfile]);
+  const fetchProfile = useCallback(async () => {
+    if (!isLoggedIn || !user?.id || user.profile_image) {
+      return;
+    }
+    await getProfile(user.id);
+  }, [isLoggedIn, user?.id, user?.profile_image, getProfile]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   return (
     <header className="w-full h-16 flex items-center justify-between px-6 bg-white border-b shadow-sm fixed top-0 z-50">
@@ -37,7 +37,7 @@ const Header = () => {
             onClick={() => router.push(`/dashboard/${user.id}`)}
             className="w-10 h-10 rounded-full border border-gray-300 overflow-hidden"
           >
-           <img
+            <img
               src={
                 user.profile_image
                   ? `${user.profile_image}?t=${Date.now()}`

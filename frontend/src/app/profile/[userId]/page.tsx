@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from "react";
 import ProfileForm from "../ProfileForm";
 import { useParams, useRouter } from "next/navigation";
-import useAuthStore from "@/stores/useAuthStore";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 const ProfilePage = () => {
   const { userId } = useParams();
   const router = useRouter();
-  const {token, user, isLoggedIn, logout, getProfile, updateProfile, updateProfileImage} = useAuthStore();
+  const {token, user, isLoggedIn, logout, getProfile, updateProfile, updateProfileImage} = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
