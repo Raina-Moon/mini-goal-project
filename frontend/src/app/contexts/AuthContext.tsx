@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { User } from "@/utils/api";
 import { fetchApi } from "@/utils/api/fetch";
 
@@ -14,9 +20,18 @@ interface AuthState {
   getProfile: (userId: number) => Promise<void>;
   updateProfile: (userId: number, username: string) => Promise<void>;
   updateProfileImage: (userId: number, file: File) => Promise<void>;
-  requestPasswordReset: (email: string) => Promise<{ resetToken: string; message: string }>;
-  verifyResetCode: (email: string, reset_token: number) => Promise<{ message: string }>;
-  resetPassword: (email: string, enteredCode: number, newPassword: string) => Promise<{ message: string }>;
+  requestPasswordReset: (
+    email: string
+  ) => Promise<{ resetToken: string; message: string }>;
+  verifyResetCode: (
+    email: string,
+    reset_token: number
+  ) => Promise<{ message: string }>;
+  resetPassword: (
+    email: string,
+    enteredCode: number,
+    newPassword: string
+  ) => Promise<{ message: string }>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -25,30 +40,59 @@ const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(
-    typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null
-  );
-  const [user, setUser] = useState<User | null>(
-    typeof window !== "undefined" ? JSON.parse(localStorage.getItem(USER_KEY) || "null") : null
-  );
-  const [isLoggedIn, setIsLoggedIn] = useState(!!token);
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Function to verify the token
+  const verifyToken = async (storedToken: string) => {
+    try {
+      const response = await fetchApi<{ valid: boolean }>(
+        "/auth/verify-token",
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${storedToken}` },
+        }
+      );
+      return response.valid;
+    } catch (err) {
+      console.error("Token verification failed:", err);
+      return false;
+    }
+  };
 
   // Initialize state from localStorage on first render
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    const storedUser = localStorage.getItem(USER_KEY);
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      setIsLoggedIn(true);
-    }
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem(TOKEN_KEY);
+      const storedUser = localStorage.getItem(USER_KEY);
+      if (storedToken && storedUser) {
+        const isValid = await verifyToken(storedToken);
+        if (isValid) {
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+          setIsLoggedIn(true);
+        } else {
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
+          setToken(null);
+          setUser(null);
+          setIsLoggedIn(false);
+        }
+      }
+    };
+
+    initializeAuth();
   }, []);
 
-const signup = async (username: string, email: string, password: string) => {
-    const userData = await fetchApi<{ token: string; user: User }>("/auth/signup", {
-      method: "POST",
-      body: JSON.stringify({ username, email, password }),
-    });
+  const signup = async (username: string, email: string, password: string) => {
+    const userData = await fetchApi<{ token: string; user: User }>(
+      "/auth/signup",
+      {
+        method: "POST",
+        body: JSON.stringify({ username, email, password }),
+      }
+    );
     setToken(userData.token);
     setUser(userData.user);
     setIsLoggedIn(true);
@@ -57,10 +101,13 @@ const signup = async (username: string, email: string, password: string) => {
   };
 
   const login = async (email: string, password: string) => {
-    const userData = await fetchApi<{ token: string; user: User }>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+    const userData = await fetchApi<{ token: string; user: User }>(
+      "/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      }
+    );
     setToken(userData.token);
     setUser(userData.user);
     setIsLoggedIn(true);
@@ -103,20 +150,26 @@ const signup = async (username: string, email: string, password: string) => {
     if (!token) return;
     const formData = new FormData();
     formData.append("profileImage", file);
-    const updatedUser = await fetchApi<User>(`/profile/${userId}/image-upload`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
+    const updatedUser = await fetchApi<User>(
+      `/profile/${userId}/image-upload`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      }
+    );
     setUser(updatedUser);
     localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
   };
 
   const requestPasswordReset = async (email: string) => {
-    return fetchApi<{ resetToken: string; message: string }>("/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    });
+    return fetchApi<{ resetToken: string; message: string }>(
+      "/auth/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }
+    );
   };
 
   const verifyResetCode = async (email: string, reset_token: number) => {
@@ -126,7 +179,11 @@ const signup = async (username: string, email: string, password: string) => {
     });
   };
 
-  const resetPassword = async (email: string, enteredCode: number, newPassword: string) => {
+  const resetPassword = async (
+    email: string,
+    enteredCode: number,
+    newPassword: string
+  ) => {
     return fetchApi<{ message: string }>("/auth/reset-password", {
       method: "PATCH",
       body: JSON.stringify({ email, reset_token: enteredCode, newPassword }),
