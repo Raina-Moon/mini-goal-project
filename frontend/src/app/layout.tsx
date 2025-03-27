@@ -2,11 +2,13 @@
 
 import GlobalModal from "@/components/ui/GlobalModal";
 import "./globals.css";
-import Header from "@/components/Header";
 import { AuthProvider } from "./contexts/AuthContext";
 import { GoalProvider } from "./contexts/GoalContext";
 import { PostProvider } from "./contexts/PostContext";
 import { FollowerProvider } from "./contexts/FollowerContext";
+import dynamic from "next/dynamic";
+
+const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 
 export default function RootLayout({
   children,
