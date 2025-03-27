@@ -8,7 +8,11 @@ import { useAuth } from "./AuthContext";
 interface GoalState {
   goals: Goal[];
   fetchGoals: (userId: number) => Promise<void>;
-  createGoal: (title: string, duration: number, userId: number) => Promise<void>;
+  createGoal: (
+    userId: number,
+    title: string,
+    duration: number
+  ) => Promise<Goal>;
   updateGoal: (goalId: number, status: string) => Promise<void>;
   deleteGoal: (goalId: number) => Promise<void>;
 }
@@ -27,31 +31,42 @@ export const GoalProvider = ({ children }: { children: ReactNode }) => {
     setGoals(goalsData);
   };
 
-  const createGoal = async (title: string, duration: number, userId: number) => {
-    if (!token) return;
-    const newGoal = await fetchApi<{ id: number; title: string; duration: number; user_id: number }>(
-      "/goals",
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title, duration, user_id: userId }),
-      }
-    );
-    setGoals((prev) => [
-      ...prev,
-      { ...newGoal, status: "pending", created_at: new Date().toISOString() },
-    ]);
+  const createGoal = async (
+    userId: number,
+    title: string,
+    duration: number
+  ) => {
+    if (!token) throw new Error("No authentication token available");
+    const newGoal = await fetchApi<{
+      id: number;
+      title: string;
+      duration: number;
+      user_id: number;
+      status: string;
+      created_at: string;
+    }>("/goals", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ user_id: userId, title, duration }),
+    });
+    setGoals((prev) => [...prev, newGoal]);
+    return newGoal;
   };
 
   const updateGoal = async (goalId: number, status: string) => {
-    if (!token) return;
-    const updatedGoal = await fetchApi<{ id: number; status: string }>(`/goals/${goalId}`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status }),
-    });
+    if (!token) throw new Error("No authentication token available");
+    const updatedGoal = await fetchApi<{ id: number; status: string }>(
+      `/goals/${goalId}`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      }
+    );
     setGoals((prev) =>
-      prev.map((goal) => (goal.id === goalId ? { ...goal, status: updatedGoal.status } : goal))
+      prev.map((goal) =>
+        goal.id === goalId ? { ...goal, status: updatedGoal.status } : goal
+      )
     );
   };
 
