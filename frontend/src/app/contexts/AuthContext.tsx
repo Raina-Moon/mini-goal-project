@@ -87,6 +87,9 @@ const signup = async (username: string, email: string, password: string) => {
 
   const updateProfile = async (userId: number, username: string) => {
     if (!token) return;
+    if (!username || username.trim() === "") {
+      throw new Error("Username cannot be empty");
+    }
     const updatedUser = await fetchApi<User>(`/profile/${userId}`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
