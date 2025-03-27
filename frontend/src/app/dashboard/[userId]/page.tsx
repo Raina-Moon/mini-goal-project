@@ -2,17 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  getStoredUserId,
-  getStoredToken,
-  getProfile,
-  getGoals,
-  getFollowers,
-  getNailedPosts,
-  Goal,
-  User,
-  Post,
-} from "@/utils/api";
 import ProfileHeader from "./components/ProfileHeader";
 import FollowButton from "./components/FollowButton";
 import FollowersList from "./components/FollowersList";
@@ -20,42 +9,35 @@ import GoalsTab from "./components/GoalsTab";
 import NailedPostsTab from "./components/NailedPostsTab";
 import FailedGoalsTab from "./components/FailedGoalsTab";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useAuth } from "@/app/contexts/AuthContext";
+import { useGoals } from "@/app/contexts/GoalContext";
+import { useFollowers } from "@/app/contexts/FollowerContext";
+import { usePosts } from "@/app/contexts/PostContext";
 
 const Dashboard = () => {
   const { userId } = useParams();
-  const [storedId, setStoredId] = useState<number | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [username, setUsername] = useState("");
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [followers, setFollowers] = useState<User[]>([]);
-  const [nailedPosts, setNailedPosts] = useState<Post[]>([]);
+  const { user, token, getProfile } = useAuth();
+  const { goals, fetchGoals } = useGoals();
+  const { nailedPosts, fetchNailedPosts } = usePosts();
+  const { followers, fetchFollowers } = useFollowers();
   const [isFollowing, setIsFollowing] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setStoredId(getStoredUserId());
-    setToken(getStoredToken());
-  }, []);
-
   const fetchData = async () => {
-    if (!userId || !storedId || !token) return;
-    try {
-      const [profileData, goalsData, followersData, postsData] = await Promise.all([
-        getProfile(token, Number(userId)),
-        getGoals(Number(userId)),
-        getFollowers(Number(userId)),
-        getNailedPosts(Number(userId), storedId),
-      ]);
+    if (!userId || !user?.id || !token) return;
+    const profileId = Number(userId);
+    const viewerId = user.id;
 
-      setUsername(profileData.username);
-      setProfileImage(profileData.profile_image ?? null);
-      setGoals(goalsData);
-      setFollowers(followersData);
-      setNailedPosts(postsData);
-      setIsFollowing(followersData.some((f) => f.id === storedId));
+    try {
+      await Promise.all([
+        profileId !== viewerId && getProfile(profileId),
+        fetchGoals(profileId),
+        fetchNailedPosts(profileId, viewerId),
+        fetchFollowers(profileId),
+      ]);
+      setIsFollowing(followers.some((f) => f.id === viewerId));
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
     } finally {
@@ -64,15 +46,22 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (storedId && token) fetchData();
-  }, [userId, storedId, token]);
+    if (user && token) fetchData();
+  }, [userId, user, token]);
+
+  if (!user || !token) return <div>Please log in to view the dashboard.</div>;
 
   return (
     <div className="p-6">
-      <ProfileHeader userId={Number(userId)} storedId={storedId} username={username} profileImage={profileImage} />
-      {storedId !== Number(userId) && (
+      <ProfileHeader
+        userId={Number(userId)}
+        storedId={user.id}
+        username={user.username}
+        profileImage={user.profile_image || "images/DefaultProfile.png"}
+      />
+      {user.id !== Number(userId) && (
         <FollowButton
-          storedId={storedId}
+          storedId={user.id}
           userId={Number(userId)}
           isFollowing={isFollowing}
           setIsFollowing={setIsFollowing}
@@ -102,7 +91,7 @@ const Dashboard = () => {
           <GoalsTab goals={goals} loading={loading} />
         </TabsContent>
         <TabsContent value="nailed">
-          <NailedPostsTab posts={nailedPosts} userId={storedId} />
+          <NailedPostsTab posts={nailedPosts} userId={user.id} />
         </TabsContent>
         <TabsContent value="failed">
           <FailedGoalsTab goals={goals} />

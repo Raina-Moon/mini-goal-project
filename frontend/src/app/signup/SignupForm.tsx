@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { signup } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ErrorIcon from "../../../public/icons/ErrorIcon";
+import { useAuth } from "../contexts/AuthContext";
 
 const SignupForm = () => {
   const router = useRouter();
@@ -12,7 +12,8 @@ const SignupForm = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
-
+  const { signup } = useAuth();
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
