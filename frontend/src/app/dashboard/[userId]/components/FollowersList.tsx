@@ -1,9 +1,7 @@
 "use client";
 
 import { Follower, User } from "@/utils/api";
-import { fetchApi } from "@/utils/api/fetch";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 interface FollowersListProps {
   followers: Follower[];
@@ -11,7 +9,6 @@ interface FollowersListProps {
 
 const FollowersList = ({ followers }: FollowersListProps) => {
   const router = useRouter();
-  const [viewedUser, setViewedUser] = useState<User | null>(null);
 
   const goToDashboard = (userId: number) => {
     router.push(`/dashboard/${userId}`);
