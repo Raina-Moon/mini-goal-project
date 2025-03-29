@@ -1,4 +1,4 @@
-import { followUser, unfollowUser } from "@/utils/api";
+import { useFollowers } from "@/app/contexts/FollowerContext";
 
 interface FollowButtonProps {
   storedId: number | null;
@@ -7,7 +7,13 @@ interface FollowButtonProps {
   setIsFollowing: (value: boolean) => void;
 }
 
-const FollowButton = ({ storedId, userId, isFollowing, setIsFollowing }: FollowButtonProps) => {
+const FollowButton = ({
+  storedId,
+  userId,
+  isFollowing,
+  setIsFollowing,
+}: FollowButtonProps) => {
+  const { followUser, unfollowUser } = useFollowers();
   const handleFollowToggle = async () => {
     if (!storedId) return;
     try {
@@ -26,7 +32,9 @@ const FollowButton = ({ storedId, userId, isFollowing, setIsFollowing }: FollowB
     <button
       onClick={handleFollowToggle}
       className={`mb-2 px-3 py-2 rounded text-white ${
-        isFollowing ? "bg-gray-500 hover:bg-gray-600" : "bg-emerald-600 hover:bg-emerald-700"
+        isFollowing
+          ? "bg-gray-500 hover:bg-gray-600"
+          : "bg-emerald-600 hover:bg-emerald-700"
       }`}
     >
       {isFollowing ? "Unfollow" : "Follow"}
