@@ -1,31 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import GoalForm from "../components/GoalForm";
-import { getGoals, getStoredUserId, Goal } from "@/utils/api";
+import { useAuth } from "./contexts/AuthContext";
 
 const page = () => {
-  const [goals, setGoals] = useState<Goal[]>([]);
-
-  const userId = getStoredUserId();
-
-  const fetchGoals = async () => {
-    if (!userId) return;
-    try {
-      const data = await getGoals(userId);
-      setGoals(data);
-    } catch (err) {
-      console.error("Failed to load goals", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchGoals();
-  }, [userId]);
+  const { user } = useAuth();
 
   return (
     <>
-      <GoalForm onGoalCreated={fetchGoals} />
+      <GoalForm
+        onGoalCreated={() => {
+          console.log("Goal created");
+        }}
+      />
     </>
   );
 };

@@ -11,6 +11,7 @@ export interface User {
     duration: number;
     status: string;
     created_at: string;
+    user_id:number;
   }
   
   export interface Post {

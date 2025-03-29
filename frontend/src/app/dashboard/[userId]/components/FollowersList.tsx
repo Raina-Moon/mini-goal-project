@@ -14,7 +14,7 @@ interface Follower {
         {followers.map((follower) => (
           <li key={follower.id} className="flex items-center gap-3">
             <img
-              src={follower.profile_image ?? "/default-profile.png"}
+              src={follower.profile_image ?? "/images/DefaultProfile.png"}
               alt={follower.username}
               className="w-8 h-8 rounded-full"
             />

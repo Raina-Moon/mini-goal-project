@@ -1,43 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getProfile, getStoredToken } from "@/utils/api";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 const Header = () => {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [userId, setUserId] = useState<number | null>(null);
+  const { user, getProfile, isLoggedIn } = useAuth();
+
+  const fetchProfile = useCallback(async () => {
+    if (!isLoggedIn || !user?.id || user.profile_image) {
+      return;
+    }
+    await getProfile(user.id);
+  }, [isLoggedIn, user?.id, user?.profile_image, getProfile]);
 
   useEffect(() => {
-    const token = getStoredToken();
-    const storedId = localStorage.getItem("userId");
-
-    if (token && storedId) {
-      const id = Number(storedId);
-      setIsLoggedIn(true);
-      setUserId(id);
-
-      // 🔥 Fetch actual profile image
-      const fetchImage = async () => {
-        try {
-          const user = await getProfile(token, id);
-          setProfileImage(user.profile_image ?? null);
-        } catch (err) {
-          console.error("Failed to fetch profile image:", err);
-        }
-      };
-
-      fetchImage();
-    } else {
-      setIsLoggedIn(false);
-    }
-  }, []);
+    fetchProfile();
+  }, [fetchProfile]);
 
   return (
-    <header className="w-full h-16 flex items-center justify-between px-6 bg-white border-b shadow-sm fixed top-0 z-50">
+    <div className="w-full h-16 flex items-center justify-between px-6 bg-white border-b shadow-sm fixed top-0 z-50">
       {/* Logo */}
       <button
         onClick={() => router.push("/")}
@@ -45,34 +29,32 @@ const Header = () => {
       >
         Sign
       </button>
-
-      {/* Right side (conditional) */}
-      <div>
-        {isLoggedIn ? (
-          <button
-            onClick={() => router.push(`/dashboard/${userId}`)}
-            className="w-10 h-10 rounded-full border border-gray-300 overflow-hidden"
-          >
-            <img
-              src={
-                profileImage
-                  ? `${profileImage}?t=${Date.now()}` // 💡 bust cache
-                  : "/images/DefaultProfile.png" // ✅ corrected
-                }
-              alt="Profile"
-              className="object-cover w-full h-full"
-            />
-          </button>
+      {/* Right side */}
+      <button
+        onClick={() =>
+          router.push(isLoggedIn && user ? `/dashboard/${user.id}` : "/login")
+        }
+        className={
+          isLoggedIn && user
+            ? "w-10 h-10 rounded-full border border-gray-300 overflow-hidden"
+            : "text-sm px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600"
+        }
+      >
+        {isLoggedIn && user ? (
+          <img
+            src={
+              user.profile_image
+                ? `${user.profile_image}?t=${Date.now()}`
+                : "/images/DefaultProfile.png"
+            }
+            alt="Profile"
+            className="object-cover w-full h-full"
+          />
         ) : (
-          <Link
-            href="/login"
-            className="text-sm px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600"
-          >
-            Login
-          </Link>
+          "Login"
         )}
-      </div>
-    </header>
+      </button>
+    </div>
   );
 };
 
