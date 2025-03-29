@@ -26,15 +26,17 @@ export default function RootLayout({
         <AuthProvider>
           <GoalProvider>
             <PostProvider>
-              <CommentsProvider>
-                <LikesProvider>
-                  <FollowerProvider>
-                    <Header />
-                    <main className="pt-16">{children}</main>
-                    <GlobalModal />
-                  </FollowerProvider>
-                </LikesProvider>
-              </CommentsProvider>
+              <FollowerProvider>
+                <CommentsProvider>
+                  <LikesProvider>
+                    <FollowerProvider>
+                      <Header />
+                      <main className="pt-16">{children}</main>
+                      <GlobalModal />
+                    </FollowerProvider>
+                  </LikesProvider>
+                </CommentsProvider>
+              </FollowerProvider>
             </PostProvider>
           </GoalProvider>
         </AuthProvider>
