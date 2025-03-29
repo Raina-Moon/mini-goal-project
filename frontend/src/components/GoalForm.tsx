@@ -8,10 +8,12 @@ import { celebrate } from "@/utils/confetti";
 import { useGoals } from "@/app/contexts/GoalContext";
 import { usePosts } from "@/app/contexts/PostContext";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const { createGoal, updateGoal } = useGoals();
   const { createPost } = usePosts();
+  const { user } = useAuth();
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState(5);
@@ -39,14 +41,14 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userId = Number(localStorage.getItem("userId"));
-    if (!userId) {
+    
+    if (!user || !user.id) {
       alert("User ID not found. Please log in.");
       router.push("/login");
       return;
     }
     try {
-      const newGoal = await createGoal(userId, title, duration);
+      const newGoal = await createGoal(user.id, title, duration);
       startTimer(newGoal.id, duration);
       onGoalCreated();
     } catch (err) {
