@@ -58,8 +58,8 @@ const Dashboard = () => {
       <ProfileHeader
         userId={viewUser.id}
         storedId={user.id}
-        username={user.username}
-        profileImage={user.profile_image || "images/DefaultProfile.png"}
+        username={viewUser.username}
+        profileImage={viewUser.profile_image || "images/DefaultProfile.png"}
       />
       {user.id !== viewUser.id && (
         <FollowButton
