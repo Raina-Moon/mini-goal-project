@@ -13,7 +13,7 @@ const FollowButton = ({
   isFollowing,
   setIsFollowing,
 }: FollowButtonProps) => {
-  const { followUser, unfollowUser } = useFollowers();
+  const { followUser, unfollowUser,fetchFollowers } = useFollowers();
   const handleFollowToggle = async () => {
     if (!storedId) return;
     try {
@@ -22,8 +22,11 @@ const FollowButton = ({
       } else {
         await followUser(storedId, userId);
       }
-      setIsFollowing(!isFollowing);
-    } catch (err) {
+      const updatedFollowers = await fetchFollowers(userId);
+      if (!updatedFollowers) return;
+      const isNowFollowing = updatedFollowers.some((f) => f.id === storedId);
+      setIsFollowing(isNowFollowing);
+        } catch (err) {
       alert("Failed to update follow status");
     }
   };
