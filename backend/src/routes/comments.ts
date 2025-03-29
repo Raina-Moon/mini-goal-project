@@ -8,7 +8,9 @@ router.post("/", async (req, res) => {
   const { user_id, post_id, content } = req.body;
   try {
     const result = await pool.query(
-      `INSERT INTO comments (user_id, post_id, content) VALUES ($1, $2, $3) RETURNING *`,
+      `INSERT INTO comments (user_id, post_id, content) 
+       VALUES ($1, $2, $3) 
+       RETURNING *, (SELECT username FROM users WHERE users.id = $1) AS username`,
       [user_id, post_id, content]
     );
     res.json(result.rows[0]);
