@@ -1,11 +1,12 @@
 import { useState } from "react";
 import GlobalButton from "@/components/ui/GlobalButton";
-import { uploadPostImage } from "@/utils/api";
+import { usePosts } from "@/app/contexts/PostContext";
 
 const PostModal = ({ isOpen, onClose, title, duration, onSubmit }: any) => {
   const [image, setImage] = useState<File | null>(null);
   const [description, setDescription] = useState("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const { uploadPostImage } = usePosts();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
