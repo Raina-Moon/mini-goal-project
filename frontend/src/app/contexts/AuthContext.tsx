@@ -49,7 +49,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchViewUser = async (id: number) => {
     try {
-      const data = await fetchApi<User>(`/users/${id}`);
+      const data = await fetchApi<User>(`/profile/${id}`,{
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setViewUser(data);
     } catch (err) {
       console.error("Failed to fetch viewed user:", err);
