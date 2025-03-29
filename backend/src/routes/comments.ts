@@ -36,4 +36,31 @@ router.get("/:postId", async (req, res) => {
   }
 });
 
+// ✅ Edit a comment
+router.patch("/:commentId", async (req, res) => {
+  const { commentId } = req.params;
+  const { content } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE comments SET content = $1 WHERE id = $2 RETURNING *`,
+      [content, commentId]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// ✅ Delete a comment
+router.delete("/:commentId", async (req, res) => {
+  const { commentId } = req.params;
+  try {
+    await pool.query(`DELETE FROM comments WHERE id = $1`, [commentId]);
+    res.json({ message: "Comment deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+
 export default router;
