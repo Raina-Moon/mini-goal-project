@@ -13,7 +13,9 @@ import { fetchApi } from "@/utils/api/fetch";
 interface AuthState {
   token: string | null;
   user: User | null;
+  viewUser: User | null;
   isLoggedIn: boolean;
+  fetchViewUser: (id: number) => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -43,6 +45,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [viewUser, setViewUser] = useState<User | null>(null);
+
+  const fetchViewUser = async (id: number) => {
+    try {
+      const data = await fetchApi<User>(`/profile/${id}`,{
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setViewUser(data);
+    } catch (err) {
+      console.error("Failed to fetch viewed user:", err);
+    }
+  };
 
   // Function to verify the token
   const verifyToken = async (storedToken: string) => {
@@ -194,6 +208,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     token,
     user,
     isLoggedIn,
+    viewUser,
+    fetchViewUser,
     signup,
     login,
     logout,

@@ -38,3 +38,9 @@ export interface Comment {
   content: string;
   created_at: string;
 }
+
+export interface Follower {
+  id: number;
+  username: string;
+  profile_image: string | null;
+}

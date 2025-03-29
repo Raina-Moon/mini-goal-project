@@ -1,4 +1,4 @@
-import { followUser, unfollowUser } from "@/utils/api";
+import { useFollowers } from "@/app/contexts/FollowerContext";
 
 interface FollowButtonProps {
   storedId: number | null;
@@ -7,7 +7,13 @@ interface FollowButtonProps {
   setIsFollowing: (value: boolean) => void;
 }
 
-const FollowButton = ({ storedId, userId, isFollowing, setIsFollowing }: FollowButtonProps) => {
+const FollowButton = ({
+  storedId,
+  userId,
+  isFollowing,
+  setIsFollowing,
+}: FollowButtonProps) => {
+  const { followUser, unfollowUser,fetchFollowers } = useFollowers();
   const handleFollowToggle = async () => {
     if (!storedId) return;
     try {
@@ -16,8 +22,11 @@ const FollowButton = ({ storedId, userId, isFollowing, setIsFollowing }: FollowB
       } else {
         await followUser(storedId, userId);
       }
-      setIsFollowing(!isFollowing);
-    } catch (err) {
+      const updatedFollowers = await fetchFollowers(userId);
+      if (!updatedFollowers) return;
+      const isNowFollowing = updatedFollowers.some((f) => f.id === storedId);
+      setIsFollowing(isNowFollowing);
+        } catch (err) {
       alert("Failed to update follow status");
     }
   };
@@ -26,7 +35,9 @@ const FollowButton = ({ storedId, userId, isFollowing, setIsFollowing }: FollowB
     <button
       onClick={handleFollowToggle}
       className={`mb-2 px-3 py-2 rounded text-white ${
-        isFollowing ? "bg-gray-500 hover:bg-gray-600" : "bg-emerald-600 hover:bg-emerald-700"
+        isFollowing
+          ? "bg-gray-500 hover:bg-gray-600"
+          : "bg-emerald-600 hover:bg-emerald-700"
       }`}
     >
       {isFollowing ? "Unfollow" : "Follow"}

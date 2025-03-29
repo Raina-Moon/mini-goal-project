@@ -13,13 +13,15 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import { useGoals } from "@/app/contexts/GoalContext";
 import { useFollowers } from "@/app/contexts/FollowerContext";
 import { usePosts } from "@/app/contexts/PostContext";
+import { User } from "@/utils/api";
 
 const Dashboard = () => {
   const { userId } = useParams();
-  const { user, token, getProfile } = useAuth();
+  const { user, token, isLoggedIn, fetchViewUser, viewUser } = useAuth();
   const { goals, fetchGoals } = useGoals();
   const { nailedPosts, fetchNailedPosts } = usePosts();
   const { followers, fetchFollowers } = useFollowers();
+
   const [isFollowing, setIsFollowing] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
@@ -32,9 +34,9 @@ const Dashboard = () => {
 
     try {
       await Promise.all([
-        profileId !== viewerId && getProfile(profileId),
+        fetchViewUser(profileId),
         fetchGoals(profileId),
-        fetchNailedPosts(profileId, viewerId),
+        fetchNailedPosts(profileId),
         fetchFollowers(profileId),
       ]);
       setIsFollowing(followers.some((f) => f.id === viewerId));
@@ -49,20 +51,20 @@ const Dashboard = () => {
     if (user && token) fetchData();
   }, [userId, user, token]);
 
-  if (!user || !token) return <div>Please log in to view the dashboard.</div>;
+  if (!user || !token || !viewUser) return <div>Please log in to view the dashboard.</div>;
 
   return (
     <div className="p-6">
       <ProfileHeader
-        userId={Number(userId)}
+        userId={viewUser.id}
         storedId={user.id}
-        username={user.username}
-        profileImage={user.profile_image || "images/DefaultProfile.png"}
+        username={viewUser.username}
+        profileImage={viewUser.profile_image || "images/DefaultProfile.png"}
       />
-      {user.id !== Number(userId) && (
+      {user.id !== viewUser.id && (
         <FollowButton
           storedId={user.id}
-          userId={Number(userId)}
+          userId={viewUser.id}
           isFollowing={isFollowing}
           setIsFollowing={setIsFollowing}
         />

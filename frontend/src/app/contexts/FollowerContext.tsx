@@ -7,7 +7,7 @@ import { useAuth } from "./AuthContext";
 
 interface FollowerState {
   followers: User[];
-  fetchFollowers: (userId: number) => Promise<void>;
+  fetchFollowers: (userId: number) => Promise<User[] | undefined>;
   followUser: (followerId: number, followingId: number) => Promise<void>;
   unfollowUser: (followerId: number, followingId: number) => Promise<void>;
 }
@@ -24,6 +24,7 @@ export const FollowerProvider = ({ children }: { children: ReactNode }) => {
       headers: { Authorization: `Bearer ${token}` },
     });
     setFollowers(followersData);
+    return followersData;
   };
 
   const followUser = async (followerId: number, followingId: number) => {
