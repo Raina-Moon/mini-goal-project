@@ -145,7 +145,7 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
                 Submit
               </button>
               <ul className="mt-2 space-y-1 text-sm">
-                {(post.comments || []).map((c) => (
+                {(commentsByPost[post.post_id] || []).map((c) => (
                   <li key={c.id}>
                     <strong>{c.username}:</strong> {c.content}
                     <input
