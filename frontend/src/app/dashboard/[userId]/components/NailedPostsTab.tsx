@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { addComment, Post } from "@/utils/api";
+import { Post } from "@/utils/api";
 import {
   Select,
   SelectContent,
@@ -7,6 +7,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { useLikes } from "@/app/contexts/LikesContext";
+import { useComments } from "@/app/contexts/CommentsContext";
 
 interface NailedPostsTabProps {
   posts: Post[];
@@ -15,11 +16,14 @@ interface NailedPostsTabProps {
 
 const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
   const { likePost, unlikePost, getLikeStatus, fetchLikeCount } = useLikes();
+  const { commentsByPost, fetchComments, addComment, editComment, deleteComment } =
+    useComments();
   const [sortBy, setSortBy] = useState("latest");
   const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
   const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({});
   const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
   const [updatedPosts, setUpdatedPosts] = useState<Post[]>(posts);
+  const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
   useEffect(() => {
     const initializeLikes = async () => {
@@ -29,6 +33,7 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
       for (const post of posts) {
         status[post.post_id] = await getLikeStatus(post.post_id, userId);
         counts[post.post_id] = await fetchLikeCount(post.post_id);
+        await fetchComments(post.post_id); // Fetch comments for each post
       }
       setLikeStatus(status);
       setLikeCounts(counts);
@@ -62,25 +67,21 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
 
   const submitComment = async (postId: number) => {
     if (!userId || !newComments[postId]) return;
-    try {
-      const comment = await addComment(userId, postId, newComments[postId]);
-      setNewComments((prev) => ({ ...prev, [postId]: "" }));
-      setUpdatedPosts((prev) =>
-        prev.map((post) =>
-          post.post_id === postId
-            ? {
-                ...post,
-                comments: [
-                  ...(post.comments || []),
-                  { ...comment, username: comment.username || "Anonymous" },
-                ],
-              }
-            : post
-        )
-      );
-    } catch (err) {
-      console.error("Comment failed:", err);
-    }
+    await addComment(userId, postId, newComments[postId]);
+    setNewComments((prev) => ({ ...prev, [postId]: "" }));
+  };
+
+  const handleEditComment = async (
+    postId: number,
+    commentId: number,
+    content: string,
+  ) => {
+    await editComment(postId ,commentId, content);
+    setCommentEdit((prev) => ({ ...prev, [commentId]: "" }));
+  };
+
+  const handleDeleteComment = async (postId:number,commentId: number) => {
+    await deleteComment(postId,commentId);
   };
 
   return (
@@ -144,9 +145,33 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
                 Submit
               </button>
               <ul className="mt-2 space-y-1 text-sm">
-                {(post.comments || []).map((c) => (
+                {(commentsByPost[post.post_id] || []).map((c) => (
                   <li key={c.id}>
                     <strong>{c.username}:</strong> {c.content}
+                    <input
+                      value={commentEdit[c.id] ?? c.content}
+                      onChange={(e) =>
+                        setCommentEdit((prev) => ({
+                          ...prev,
+                          [c.id]: e.target.value,
+                        }))
+                      }
+                      className="border rounded px-1 mx-1"
+                    />
+                    <button
+                      onClick={() =>
+                        handleEditComment(post.post_id , c.id, commentEdit[c.id] || c.content)
+                      }
+                      className="text-green-500"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => handleDeleteComment(post.post_id,c.id)}
+                      className="text-red-500"
+                    >
+                      Delete
+                    </button>
                   </li>
                 ))}
               </ul>

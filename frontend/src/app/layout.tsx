@@ -8,6 +8,7 @@ import { PostProvider } from "./contexts/PostContext";
 import { FollowerProvider } from "./contexts/FollowerContext";
 import dynamic from "next/dynamic";
 import { LikesProvider } from "./contexts/LikesContext";
+import { CommentsProvider } from "./contexts/CommentsContext";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 
@@ -25,13 +26,15 @@ export default function RootLayout({
         <AuthProvider>
           <GoalProvider>
             <PostProvider>
-              <LikesProvider>
-                <FollowerProvider>
-                  <Header />
-                  <main className="pt-16">{children}</main>
-                  <GlobalModal />
-                </FollowerProvider>
-              </LikesProvider>
+              <CommentsProvider>
+                <LikesProvider>
+                  <FollowerProvider>
+                    <Header />
+                    <main className="pt-16">{children}</main>
+                    <GlobalModal />
+                  </FollowerProvider>
+                </LikesProvider>
+              </CommentsProvider>
             </PostProvider>
           </GoalProvider>
         </AuthProvider>
