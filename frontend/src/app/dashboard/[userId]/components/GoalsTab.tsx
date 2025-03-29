@@ -1,11 +1,5 @@
-interface Goal {
-    id: number;
-    title: string;
-    duration: number;
-    status: string;
-    created_at: string;
-  }
-  
+import { Goal } from "@/utils/api";
+
   interface GoalsTabProps {
     goals: Goal[];
     loading: boolean;
