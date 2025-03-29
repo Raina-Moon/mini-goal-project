@@ -31,15 +31,15 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     setSecondsLeft(duration * 60);
   };
 
-  const handleFailOut = () => {
+  const handleFailOut = async () => {
     if (goalId) {
-      updateGoal(goalId, "failed out");
+      await updateGoal(goalId, "failed out");
       alert("😢 Failed out");
       setSecondsLeft(null);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !user.id) {
       alert("User ID not found. Please log in.");
@@ -47,7 +47,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       return;
     }
     try {
-      const newGoal = createGoal(user.id, title, duration);
+      const newGoal = await createGoal(user.id, title, duration);
       startTimer(newGoal.id, duration);
       onGoalCreated();
     } catch (err) {
@@ -55,7 +55,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     }
   };
 
-  const handlePostSubmit = ({
+  const handlePostSubmit = async ({
     imageUrl,
     description,
   }: {
@@ -64,7 +64,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   }) => {
     if (!user || !user.id || !goalId) return;
 
-    createPost(user.id, goalId, imageUrl, description);
+    await createPost(user.id, goalId, imageUrl, description);
     setShowPostModal(false);
   };
 
@@ -72,13 +72,18 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     if (secondsLeft === null) return;
 
     if (secondsLeft <= 0 && goalId) {
-      updateGoal(goalId, "nailed it");
-      celebrate();
-      alert("💪 Nailed it!");
-      setCompletedGoal({ id: goalId, title, duration });
-      setShowPostModal(true);
-      setSecondsLeft(null);
-
+      updateGoal(goalId, "nailed it")
+        .then(() => {
+          celebrate();
+          alert("💪 Nailed it!");
+          setCompletedGoal({ id: goalId, title, duration });
+          setShowPostModal(true);
+          setSecondsLeft(null);
+        })
+        .catch((err) => {
+          console.error("Error updating goal:", err);
+          alert("Error updating goal status. Please try again.");
+        });
       return;
     }
 
@@ -86,7 +91,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       setSecondsLeft((prev) => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => clearInterval(interval);
-  }, [secondsLeft, goalId,updateGoal]);
+  }, [secondsLeft, goalId, updateGoal]);
 
   const formatTime = (sec: number) =>
     `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
@@ -97,21 +102,30 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       if (secondsLeft !== null && goalId) {
         e.preventDefault();
         e.returnValue = "";
-        updateGoal(goalId, "failed out");
+        updateGoal(goalId, "failed out").catch((err) => {
+          console.error("Error updating goal:", err);
+          alert("Error updating goal status. Please try again.");
+        });
       }
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [secondsLeft, goalId,updateGoal]);
+  }, [secondsLeft, goalId, updateGoal]);
 
   // ✅ Fail if user switches tab or minimizes window
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && secondsLeft !== null && goalId !== null) {
-        updateGoal(goalId, "failed out");
-        alert("😢 You left the page. Failed out.");
-        setSecondsLeft(null);
+        updateGoal(goalId, "failed out")
+          .then(() => {
+            alert("😢 You left the page. Failed out.");
+            setSecondsLeft(null);
+          })
+          .catch((err) => {
+            console.error("Error updating goal:", err);
+            alert("Error updating goal status. Please try again.");
+          });
       }
     };
 
@@ -119,7 +133,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [secondsLeft, goalId]);
+  }, [secondsLeft, goalId,updateGoal]);
 
   return (
     <>

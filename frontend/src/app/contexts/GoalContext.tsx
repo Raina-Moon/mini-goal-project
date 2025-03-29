@@ -1,14 +1,15 @@
 "use client";
 
-import { Goal } from "@/utils/api";
 import { createContext, useContext, useState, ReactNode } from "react";
+import { fetchApi } from "@/utils/api/fetch";
+import { Goal } from "@/utils/api";
 
 interface GoalState {
   goals: Goal[];
-  fetchGoals: (userId: number) => Goal[];
-  createGoal: (userId: number, title: string, duration: number) => Goal;
-  updateGoal: (goalId: number, status: string) => void;
-  deleteGoal: (goalId: number) => void;
+  fetchGoals: (userId: number) => Promise<Goal[]>;
+  createGoal: (userId: number, title: string, duration: number) => Promise<Goal>;
+  updateGoal: (goalId: number, status: string) => Promise<void>;
+  deleteGoal: (goalId: number) => Promise<void>;
 }
 
 const GoalContext = createContext<GoalState | undefined>(undefined);
@@ -16,30 +17,33 @@ const GoalContext = createContext<GoalState | undefined>(undefined);
 export const GoalProvider = ({ children }: { children: ReactNode }) => {
   const [goals, setGoals] = useState<Goal[]>([]);
 
-  const fetchGoals = (userId: number) => {
-    return goals.filter((goal) => goal.user_id === userId);
+  const fetchGoals = async (userId: number) => {
+    const fetchedGoals = await fetchApi<Goal[]>(`/goals/${userId}`);
+    setGoals(fetchedGoals);
+    return fetchedGoals;
   };
 
-  const createGoal = (userId: number, title: string, duration: number) => {
-    const newGoal: Goal = {
-      id: Date.now(),
-      user_id: userId,
-      title,
-      duration,
-      status: "pending",
-      created_at: new Date().toISOString(),
-    };
+  const createGoal = async (userId: number, title: string, duration: number) => {
+    const newGoal = await fetchApi<Goal>("/goals", {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId, title, duration }),
+    });
     setGoals((prev) => [...prev, newGoal]);
     return newGoal;
   };
 
-  const updateGoal = (goalId: number, status: string) => {
+  const updateGoal = async (goalId: number, status: string) => {
+    const updatedGoal = await fetchApi<Goal>(`/goals/${goalId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
     setGoals((prev) =>
-      prev.map((goal) => (goal.id === goalId ? { ...goal, status } : goal))
+      prev.map((goal) => (goal.id === goalId ? updatedGoal : goal))
     );
   };
 
-  const deleteGoal = (goalId: number) => {
+  const deleteGoal = async (goalId: number) => {
+    await fetchApi(`/goals/${goalId}`, { method: "DELETE" });
     setGoals((prev) => prev.filter((goal) => goal.id !== goalId));
   };
 
