@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addComment, Post } from "@/utils/api";
 import {
   Select,
@@ -14,22 +14,28 @@ interface NailedPostsTabProps {
 }
 
 const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
-  const { likePost, unlikePost } = useLikes();
+  const { likePost, unlikePost, getLikeStatus, fetchLikeCount } = useLikes();
   const [sortBy, setSortBy] = useState("latest");
-  const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>(
-    posts.reduce(
-      (acc, post) => ({ ...acc, [post.post_id]: post.liked_by_me }),
-      {}
-    )
-  );
-  const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>(
-    posts.reduce(
-      (acc, post) => ({ ...acc, [post.post_id]: post.like_count }),
-      {}
-    )
-  );
+  const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
+  const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({});
   const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
   const [updatedPosts, setUpdatedPosts] = useState<Post[]>(posts);
+
+  useEffect(() => {
+    const initializeLikes = async () => {
+      if (!userId) return;
+      const status: { [key: number]: boolean } = {};
+      const counts: { [key: number]: number } = {};
+      for (const post of posts) {
+        status[post.post_id] = await getLikeStatus(post.post_id, userId);
+        counts[post.post_id] = await fetchLikeCount(post.post_id);
+      }
+      setLikeStatus(status);
+      setLikeCounts(counts);
+      setUpdatedPosts(posts);
+    };
+    initializeLikes();
+  }, [posts, userId, getLikeStatus, fetchLikeCount]);
 
   const sortedPosts = [...updatedPosts].sort((a, b) => {
     if (sortBy === "latest") return b.goal_id - a.goal_id;
@@ -43,20 +49,12 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     if (!userId) return;
     const alreadyLiked = likeStatus[postId] || false;
     try {
-      if (alreadyLiked) {
-        await unlikePost(userId, postId);
-        setLikeCounts((prev) => ({
-          ...prev,
-          [postId]: (prev[postId] || 1) - 1,
-        }));
-      } else {
-        await likePost(userId, postId);
-        setLikeCounts((prev) => ({
-          ...prev,
-          [postId]: (prev[postId] || 0) + 1,
-        }));
-      }
-      setLikeStatus((prev) => ({ ...prev, [postId]: !alreadyLiked }));
+      const newCount = alreadyLiked
+        ? await unlikePost(userId, postId)
+        : await likePost(userId, postId);
+      const newLikeStatus = await getLikeStatus(postId, userId);
+      setLikeStatus((prev) => ({ ...prev, [postId]: newLikeStatus }));
+      setLikeCounts((prev) => ({ ...prev, [postId]: newCount }));
     } catch (err) {
       console.error("Like failed:", err);
     }
