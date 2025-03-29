@@ -14,11 +14,10 @@ import { useGoals } from "@/app/contexts/GoalContext";
 import { useFollowers } from "@/app/contexts/FollowerContext";
 import { usePosts } from "@/app/contexts/PostContext";
 import { User } from "@/utils/api";
-import { fetchApi } from "@/utils/api/fetch";
 
 const Dashboard = () => {
   const { userId } = useParams();
-  const { user, token, getProfile } = useAuth();
+  const { user, token, isLoggedIn, fetchViewUser, viewUser } = useAuth();
   const { goals, fetchGoals } = useGoals();
   const { nailedPosts, fetchNailedPosts } = usePosts();
   const { followers, fetchFollowers } = useFollowers();
@@ -27,16 +26,6 @@ const Dashboard = () => {
   const [showFollowers, setShowFollowers] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [viewerId, setViewerId] = useState<User | null>(null);
-
-  const fetchViewedUser = async (id: number) => {
-    try {
-      const userData = await fetchApi<User>(`/users/${id}`);
-      setViewerId(userData);
-    } catch (err) {
-      console.error("Failed to fetch user:", err);
-    }
-  };
 
   const fetchData = async () => {
     if (!userId || !user?.id || !token) return;
@@ -45,7 +34,7 @@ const Dashboard = () => {
 
     try {
       await Promise.all([
-        fetchViewedUser(profileId),
+        fetchViewUser(profileId),
         fetchGoals(profileId),
         fetchNailedPosts(profileId),
         fetchFollowers(profileId),
@@ -62,20 +51,20 @@ const Dashboard = () => {
     if (user && token) fetchData();
   }, [userId, user, token]);
 
-  if (!user || !token || !viewerId) return <div>Please log in to view the dashboard.</div>;
+  if (!user || !token || !viewUser) return <div>Please log in to view the dashboard.</div>;
 
   return (
     <div className="p-6">
       <ProfileHeader
-        userId={viewerId.id}
+        userId={viewUser.id}
         storedId={user.id}
         username={user.username}
         profileImage={user.profile_image || "images/DefaultProfile.png"}
       />
-      {user.id !== viewerId.id && (
+      {user.id !== viewUser.id && (
         <FollowButton
           storedId={user.id}
-          userId={viewerId.id}
+          userId={viewUser.id}
           isFollowing={isFollowing}
           setIsFollowing={setIsFollowing}
         />
