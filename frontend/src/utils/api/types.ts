@@ -44,3 +44,11 @@ export interface Follower {
   username: string;
   profile_image: string | null;
 }
+
+export interface Notification {
+  id: number;
+  user_id: number;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
