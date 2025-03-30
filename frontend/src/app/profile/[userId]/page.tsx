@@ -5,7 +5,8 @@ import ProfileForm from "../ProfileForm";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useBookmarks } from "@/app/contexts/BookmarksContext";
-import { Post } from "@/utils/api";
+import { Notification, Post } from "@/utils/api";
+import { useNotifications } from "@/app/contexts/NotificationsContext";
 
 const ProfilePage = () => {
   const {
@@ -18,6 +19,7 @@ const ProfilePage = () => {
     updateProfileImage,
   } = useAuth();
   const { fetchBookmarkedPosts } = useBookmarks();
+  const { fetchNotifications, markAsRead } = useNotifications();
 
   const { userId } = useParams();
   const router = useRouter();
@@ -27,6 +29,9 @@ const ProfilePage = () => {
   const [showBookmarkedPosts, setShowBookmarkedPosts] = useState(false);
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationEnabled, setNotificationEnabled] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,6 +61,27 @@ const ProfilePage = () => {
     await updateProfileImage(Number(userId), selectedFile);
     setSelectedFile(null);
     setImagePreview(null);
+  };
+
+  const loadNotifications = async () => {
+    if (user) {
+      const notifs = await fetchNotifications(user.id);
+      setNotifications(notifs);
+      setShowNotifications(true);
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId: number) => {
+    await markAsRead(notificationId);
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === notificationId ? { ...notif, is_read: true } : notif
+      )
+    );
+  };
+
+  const handleNotificationToggle = () => {
+    setNotificationEnabled(!notificationEnabled);
   };
 
   if (!user) return <div>Loading...</div>;
@@ -145,9 +171,12 @@ const ProfilePage = () => {
       >
         saved
       </button>
-      <div className="left-[114px] top-[317px] absolute text-center text-zinc-600 text-[8px]">
+      <button
+        className="left-[114px] top-[317px] absolute text-center text-zinc-600 text-[8px]"
+        onClick={loadNotifications}
+      >
         notifications
-      </div>
+      </button>
       <div className="left-[115px] top-[398px] absolute text-center text-zinc-600 text-[8px]">
         change password
       </div>
@@ -163,6 +192,18 @@ const ProfilePage = () => {
         >
           logout
         </button>
+      </div>
+
+      {/* Notification Toggle Button */}
+      <div className="left-[114px] top-[338px] absolute text-center text-zinc-600 text-[8px]">
+        <label>
+          <input
+            type="checkbox"
+            checked={notificationEnabled}
+            onChange={handleNotificationToggle}
+          />
+          Notification
+        </label>
       </div>
 
       {/* Form Modal */}
@@ -191,6 +232,26 @@ const ProfilePage = () => {
               />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Notification Log Section */}
+      {showNotifications && (
+        <div className="absolute left-[0px] top-[0px] w-full h-full bg-white p-4">
+          <button onClick={() => setShowNotifications(false)}>close</button>
+          <ul className="space-y-2">
+            {notifications.map((notif) => (
+              <li
+                key={notif.id}
+                className={`p-2 ${
+                  notif.is_read ? "bg-gray-100" : "bg-primary-100"
+                }`}
+                onClick={() => handleMarkAsRead(notif.id)}
+              >
+                {notif.message}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
