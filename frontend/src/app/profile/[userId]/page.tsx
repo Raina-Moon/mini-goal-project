@@ -146,6 +146,7 @@ const ProfilePage = () => {
           <ProfileForm
             username={user.username}
             onUpdate={handleUpdateUsername}
+            onCancel={() => setIsEditing(false)}
           />
         </div>
       )}
