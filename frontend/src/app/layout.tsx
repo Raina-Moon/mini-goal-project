@@ -11,6 +11,7 @@ import { LikesProvider } from "./contexts/LikesContext";
 import { CommentsProvider } from "./contexts/CommentsContext";
 import { Book } from "lucide-react";
 import { BookmarksProvider } from "./contexts/BookmarksContext";
+import { NotificationsProvider } from "./contexts/NotificationsContext";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 
@@ -29,17 +30,19 @@ export default function RootLayout({
           <GoalProvider>
             <PostProvider>
               <BookmarksProvider>
-                <FollowerProvider>
-                  <CommentsProvider>
-                    <LikesProvider>
-                      <FollowerProvider>
-                        <Header />
-                        <main className="pt-16">{children}</main>
-                        <GlobalModal />
-                      </FollowerProvider>
-                    </LikesProvider>
-                  </CommentsProvider>
-                </FollowerProvider>
+                <NotificationsProvider>
+                  <FollowerProvider>
+                    <CommentsProvider>
+                      <LikesProvider>
+                        <FollowerProvider>
+                          <Header />
+                          <main className="pt-16">{children}</main>
+                          <GlobalModal />
+                        </FollowerProvider>
+                      </LikesProvider>
+                    </CommentsProvider>
+                  </FollowerProvider>
+                </NotificationsProvider>
               </BookmarksProvider>
             </PostProvider>
           </GoalProvider>
