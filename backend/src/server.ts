@@ -10,6 +10,7 @@ import postsRoutes from "./routes/posts";
 import commentsRoutes from "./routes/comments";
 import likesRoutes from "./routes/likes";
 import BookmarkRoutes from "./routes/bookmarks";
+import NotificationRoutes from "./routes/notifications";
 
 dotenv.config();
 
@@ -51,6 +52,8 @@ app.use("/api/comments", commentsRoutes);
 app.use("/api/likes", likesRoutes);
 
 app.use("/api/bookmarks", BookmarkRoutes);
+
+app.use("/api/notifications", NotificationRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running!");
