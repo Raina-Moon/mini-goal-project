@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { useLikes } from "@/app/contexts/LikesContext";
 import { useComments } from "@/app/contexts/CommentsContext";
+import { useBookmarks } from "@/app/contexts/BookmarksContext";
 
 interface NailedPostsTabProps {
   posts: Post[];
@@ -16,12 +17,22 @@ interface NailedPostsTabProps {
 
 const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
   const { likePost, unlikePost, getLikeStatus, fetchLikeCount } = useLikes();
-  const { commentsByPost, fetchComments, addComment, editComment, deleteComment } =
-    useComments();
+  const {
+    commentsByPost,
+    fetchComments,
+    addComment,
+    editComment,
+    deleteComment,
+  } = useComments();
+  const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
+
   const [sortBy, setSortBy] = useState("latest");
   const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
   const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({});
   const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
+  const [bookmarkStatus, setBookmarkStatus] = useState<{
+    [key: number]: boolean;
+  }>({});
   const [updatedPosts, setUpdatedPosts] = useState<Post[]>(posts);
   const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
@@ -30,17 +41,22 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
       if (!userId) return;
       const status: { [key: number]: boolean } = {};
       const counts: { [key: number]: number } = {};
+      const bookmarkStatusTemp: { [key: number]: boolean } = {};
+      const bookmarkedPosts = await fetchBookmarkedPosts(userId);
+
       for (const post of posts) {
         status[post.post_id] = await getLikeStatus(post.post_id, userId);
         counts[post.post_id] = await fetchLikeCount(post.post_id);
+        bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some(bp => bp.post_id === post.post_id);
         await fetchComments(post.post_id); // Fetch comments for each post
       }
       setLikeStatus(status);
       setLikeCounts(counts);
+      setBookmarkStatus(bookmarkStatusTemp);
       setUpdatedPosts(posts);
     };
     initializeLikes();
-  }, [posts, userId, getLikeStatus, fetchLikeCount]);
+  }, [posts, userId, getLikeStatus, fetchLikeCount, fetchComments, fetchBookmarkedPosts]);
 
   const sortedPosts = [...updatedPosts].sort((a, b) => {
     if (sortBy === "latest") return b.goal_id - a.goal_id;
@@ -65,6 +81,21 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     }
   };
 
+  const handleBookmark = async (postId: number) => {
+    if (!userId) return;
+    const isBookmarked = bookmarkStatus[postId] || false;
+    try {
+      if (isBookmarked) {
+        await unbookmarkPost(userId, postId);
+      } else {
+        await bookmarkPost(userId, postId);
+      }
+      setBookmarkStatus((prev) => ({ ...prev, [postId]: !isBookmarked }));
+    } catch (err) {
+      console.error("Bookmark action failed:", err);
+    }
+  };
+
   const submitComment = async (postId: number) => {
     if (!userId || !newComments[postId]) return;
     await addComment(userId, postId, newComments[postId]);
@@ -74,14 +105,14 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
   const handleEditComment = async (
     postId: number,
     commentId: number,
-    content: string,
+    content: string
   ) => {
-    await editComment(postId ,commentId, content);
+    await editComment(postId, commentId, content);
     setCommentEdit((prev) => ({ ...prev, [commentId]: "" }));
   };
 
-  const handleDeleteComment = async (postId:number,commentId: number) => {
-    await deleteComment(postId,commentId);
+  const handleDeleteComment = async (postId: number, commentId: number) => {
+    await deleteComment(postId, commentId);
   };
 
   return (
@@ -125,6 +156,12 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
                 {likeStatus[post.post_id] ? "❤️ Liked" : "🤍 Like"} (
                 {likeCounts[post.post_id] || post.like_count})
               </button>
+              <button
+                onClick={() => handleBookmark(post.post_id)}
+                className="text-primary-400 hover:underline"
+              >
+                {bookmarkStatus[post.post_id] ? "⭐ Bookmarked" : "☆ Bookmark"}
+              </button>
             </div>
             <div className="mt-4">
               <input
@@ -160,14 +197,18 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
                     />
                     <button
                       onClick={() =>
-                        handleEditComment(post.post_id , c.id, commentEdit[c.id] || c.content)
+                        handleEditComment(
+                          post.post_id,
+                          c.id,
+                          commentEdit[c.id] || c.content
+                        )
                       }
                       className="text-green-500"
                     >
                       Save
                     </button>
                     <button
-                      onClick={() => handleDeleteComment(post.post_id,c.id)}
+                      onClick={() => handleDeleteComment(post.post_id, c.id)}
                       className="text-red-500"
                     >
                       Delete
