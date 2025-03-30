@@ -244,11 +244,12 @@ const ProfilePage = () => {
               <li
                 key={notif.id}
                 className={`p-2 ${
-                  notif.is_read ? "bg-gray-100" : "bg-primary-100"
-                }`}
+                  notif.is_read ? "bg-gray-100" : "bg-blue-100"
+                } cursor-pointer`}
                 onClick={() => handleMarkAsRead(notif.id)}
               >
-                {notif.message}
+                <span>{notif.message}</span>
+                <span className="text-xs text-gray-500"> ({notif.type})</span>
               </li>
             ))}
           </ul>
