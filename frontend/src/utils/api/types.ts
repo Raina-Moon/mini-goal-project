@@ -48,7 +48,11 @@ export interface Follower {
 export interface Notification {
   id: number;
   user_id: number;
+  sender_id: number;
+  post_id: number;
+  type: string;
   message: string;
   is_read: boolean;
   created_at: string;
+  sender_username: string;
 }

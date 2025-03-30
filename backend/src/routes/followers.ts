@@ -1,5 +1,6 @@
 import express, { Request, Response, RequestHandler } from "express";
 import pool from "../db";
+import { createFollowNotification } from "./notifications";
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ router.post("/", (async (req: Request, res: Response) => {
       "INSERT INTO follows (follower_id, following_id) VALUES ($1, $2) RETURNING *",
       [follower_id, following_id]
     );
+    await createFollowNotification(following_id, follower_id);
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });

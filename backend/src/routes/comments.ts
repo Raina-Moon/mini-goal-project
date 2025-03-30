@@ -1,5 +1,6 @@
 import express from "express";
 import pool from "../db";
+import { createCommentNotification } from "./notifications";
 
 const router = express.Router();
 
@@ -13,6 +14,11 @@ router.post("/", async (req, res) => {
        RETURNING *, (SELECT username FROM users WHERE users.id = $1) AS username`,
       [user_id, post_id, content]
     );
+    const post = await pool.query("SELECT user_id FROM posts WHERE id = $1", [post_id]);
+    const postOwnerId = post.rows[0].user_id;
+    if (postOwnerId !== user_id) { 
+      await createCommentNotification(postOwnerId, user_id, post_id);
+    }
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
