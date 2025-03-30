@@ -4,18 +4,33 @@ import React, { useEffect, useState } from "react";
 import ProfileForm from "../ProfileForm";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { useBookmarks } from "@/app/contexts/BookmarksContext";
+import { Post } from "@/utils/api";
 
 const ProfilePage = () => {
+  const {
+    token,
+    user,
+    isLoggedIn,
+    logout,
+    getProfile,
+    updateProfile,
+    updateProfileImage,
+  } = useAuth();
+  const { fetchBookmarkedPosts } = useBookmarks();
+
   const { userId } = useParams();
   const router = useRouter();
-  const {token, user, isLoggedIn, logout, getProfile, updateProfile, updateProfileImage} = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [showBookmarkedPosts, setShowBookmarkedPosts] = useState(false);
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if(!token || !userId) return;
+    if (!token || !userId) return;
     if (!isLoggedIn) {
       router.push("/login");
     } else if (!user) {
@@ -34,14 +49,14 @@ const ProfilePage = () => {
   const handleUpdateUsername = async (newUsername: string) => {
     await updateProfile(Number(userId), newUsername);
     setIsEditing(false);
-  }
+  };
 
   const handleImageUpload = async () => {
     if (!selectedFile) return;
     await updateProfileImage(Number(userId), selectedFile);
     setSelectedFile(null);
     setImagePreview(null);
-  }
+  };
 
   if (!user) return <div>Loading...</div>;
 
@@ -82,18 +97,18 @@ const ProfilePage = () => {
           src={imagePreview}
           alt="Preview"
           className="absolute top-[340px] left-[60px] w-16 h-16 object-cover rounded-full border"
-          />
+        />
       )}
 
       <button
-  className="absolute top-[340px] left-[140px] bg-white border border-emerald-200 rounded-lg px-2 text-emerald-500 text-xs"
-  onClick={handleImageUpload}
+        className="absolute top-[340px] left-[140px] bg-white border border-emerald-200 rounded-lg px-2 text-emerald-500 text-xs"
+        onClick={handleImageUpload}
       >
         Upload
       </button>
 
       {errorMessage && (
-  <div className="absolute top-[410px] left-[60px] text-red-500 text-[10px] w-48">
+        <div className="absolute top-[410px] left-[60px] text-red-500 text-[10px] w-48">
           {errorMessage}
         </div>
       )}
@@ -118,9 +133,18 @@ const ProfilePage = () => {
       <div className="left-[114px] top-[270px] absolute text-center text-zinc-600 text-[8px]">
         my goal records
       </div>
-      <div className="left-[114px] top-[296px] absolute text-center text-zinc-600 text-[8px]">
+      <button
+        className="left-[114px] top-[296px] absolute text-center text-zinc-600 text-[8px]"
+        onClick={async () => {
+          if (user) {
+            const posts = await fetchBookmarkedPosts(user.id);
+            setBookmarkedPosts(posts);
+            setShowBookmarkedPosts(true);
+          }
+        }}
+      >
         saved
-      </div>
+      </button>
       <div className="left-[114px] top-[317px] absolute text-center text-zinc-600 text-[8px]">
         notifications
       </div>
@@ -149,6 +173,40 @@ const ProfilePage = () => {
             onUpdate={handleUpdateUsername}
             onCancel={() => setIsEditing(false)}
           />
+        </div>
+      )}
+
+      {/* Bookmarked Posts View */}
+      {showBookmarkedPosts && (
+        <div className="absolute left-[0px] top-[0px] w-full h-full bg-white p-4">
+          <button onClick={() => setShowBookmarkedPosts(false)}>Close</button>
+          <div className="grid grid-cols-3 gap-2">
+            {bookmarkedPosts.map((post) => (
+              <img
+                key={post.post_id}
+                src={post.image_url}
+                alt="Bookmarked Post"
+                className="w-full h-auto aspect-square object-cover"
+                onClick={() => setSelectedPost(post)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Post Detail Modal */}
+      {selectedPost && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-lg max-w-md w-full">
+            <h2 className="text-lg font-semibold">{selectedPost.title}</h2>
+            <img
+              src={selectedPost.image_url}
+              alt="Post"
+              className="w-full h-auto object-cover"
+            />
+            <p>{selectedPost.description}</p>
+            <button onClick={() => setSelectedPost(null)}>Close</button>
+          </div>
         </div>
       )}
     </div>
