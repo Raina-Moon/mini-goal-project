@@ -9,6 +9,7 @@ import followersRoutes from "./routes/followers";
 import postsRoutes from "./routes/posts";
 import commentsRoutes from "./routes/comments";
 import likesRoutes from "./routes/likes";
+import BookmarkRoutes from "./routes/bookmarks";
 
 dotenv.config();
 
@@ -48,6 +49,8 @@ app.use("/api/posts", postsRoutes);
 app.use("/api/comments", commentsRoutes);
 
 app.use("/api/likes", likesRoutes);
+
+app.use("/api/bookmarks", BookmarkRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running!");
