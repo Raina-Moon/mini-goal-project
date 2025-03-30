@@ -2,13 +2,13 @@
 
 import React, { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import useAuthStore from "@/stores/useAuthStore";
+import { useAuth } from "../contexts/AuthContext";
 
 const ResetPasswordForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email"); // ✅ Get email from URL
-  const { verifyResetCode, resetPassword } = useAuthStore();
+  const { verifyResetCode, resetPassword } = useAuth();
 
   const [code, setCode] = useState(["", "", "", ""]);
   const [password, setPassword] = useState("");

@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { requestPasswordReset } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "../contexts/AuthContext";
 
 const ForgotPasswordForm = () => {
+  const { requestPasswordReset } = useAuth();
   const [email, setEmail] = useState("");
   const router = useRouter();
 
