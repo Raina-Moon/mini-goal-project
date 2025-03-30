@@ -1,5 +1,6 @@
 import express, { Request, Response, RequestHandler } from "express";
 import pool from "../db";
+import { createLikeNotification } from "./notifications";
 
 const router = express.Router();
 
@@ -54,6 +55,11 @@ router.post("/", (async (req: Request, res: Response) => {
     );
     if (result.rowCount === 0) {
       return res.status(400).json({ message: "Already liked" });
+    }
+    const post = await pool.query("SELECT user_id FROM posts WHERE id = $1", [post_id]);
+    const postOwnerId = post.rows[0].user_id;
+    if (postOwnerId !== user_id) { 
+      await createLikeNotification(postOwnerId, user_id, post_id);
     }
     res.json(result.rows[0]);
   } catch (err) {
