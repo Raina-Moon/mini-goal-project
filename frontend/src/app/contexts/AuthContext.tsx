@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchViewUser = async (id: number) => {
     try {
-      const data = await fetchApi<User>(`/profile/${id}`,{
+      const data = await fetchApi<User>(`/profile/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setViewUser(data);
@@ -200,7 +200,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     return fetchApi<{ message: string }>("/auth/reset-password", {
       method: "PATCH",
-      body: JSON.stringify({ email, reset_token: enteredCode, newPassword }),
+      body: JSON.stringify({ email, newPassword, reset_token: enteredCode }),
     });
   };
 
