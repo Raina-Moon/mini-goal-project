@@ -15,9 +15,10 @@ const ProfilePage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoggedIn || !token) {
+    if(!token || !userId) return;
+    if (!isLoggedIn) {
       router.push("/login");
-    } else {
+    } else if (!user) {
       getProfile(Number(userId));
     }
   }, [token, router, isLoggedIn, userId, getProfile]);
