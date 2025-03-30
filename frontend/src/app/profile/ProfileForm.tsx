@@ -5,9 +5,10 @@ import React, { useState } from "react";
 interface ProfileFormProps {
   username: string;
   onUpdate: (nickname: string) => void;
+  onCancel: () => void;
 }
 
-const ProfileForm = ({ username, onUpdate }: ProfileFormProps) => {
+const ProfileForm = ({ username, onUpdate,onCancel }: ProfileFormProps) => {
   const [nickname, setNickname] = useState(username);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +35,7 @@ const ProfileForm = ({ username, onUpdate }: ProfileFormProps) => {
           <button
             type="button"
             className="bg-gray-200 text-black px-4 py-2 rounded-md"
-            onClick={() => onUpdate(username)}
+            onClick={onCancel}
           >
             Cancel
           </button>
