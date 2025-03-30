@@ -153,7 +153,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     const updatedUser = await fetchApi<User>(`/profile/${userId}`, {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` },
       body: JSON.stringify({ username }),
     });
     setUser(updatedUser);
