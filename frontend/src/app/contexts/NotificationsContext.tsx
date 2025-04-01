@@ -32,37 +32,28 @@ export const NotificationsProvider = ({
   };
 
   useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
+    if ("serviceWorker" in navigator && "PushManager" in window && user) {
       const registerServiceWorker = async () => {
         const registration = await navigator.serviceWorker.register("/sw.js");
-        console.log("Service Worker registered:", registration);
-
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
         });
 
-        const userId = user?.id 
-        await fetch("/notifications/subscribe", {
-          method: "POST",
-          body: JSON.stringify({ subscription, userId }),
-          headers: { "Content-Type": "application/json" },
-        });
-        console.log("Push subscription sent to server with userId:", userId);
-      };
-
-      registerServiceWorker().catch((error) =>
-        console.error("Service Worker registration failed:", error)
-      );
-
-      navigator.serviceWorker.addEventListener("message", (event) => {
-        if (event.data && event.data.type === "PLAY_SOUND") {
-          const audio = new Audio(event.data.url);
-          audio.play();
-        }
+        const userId = user.id;
+      await fetch("/notifications/subscribe", {
+        method: "POST",
+        body: JSON.stringify({ subscription, userId }),
+        headers: { "Content-Type": "application/json" },
       });
-    }
-  }, [user]);
+      console.log("Push subscription sent to server with userId:", userId);
+    };
+
+    registerServiceWorker().catch((error) =>
+      console.error("Service Worker registration failed:", error)
+    );
+  }
+}, [user]);
 
   const value: NotificationsState = {
     fetchNotifications,
