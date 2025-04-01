@@ -15,6 +15,7 @@ export interface Goal {
 }
 
 export interface Post {
+  id: number;
   post_id: number;
   goal_id: number;
   title: string;
