@@ -1,6 +1,6 @@
 "use client";
 
-import { Follower, User } from "@/utils/api";
+import { Follower } from "@/utils/api";
 import { useRouter } from "next/navigation";
 
 interface FollowersListProps {

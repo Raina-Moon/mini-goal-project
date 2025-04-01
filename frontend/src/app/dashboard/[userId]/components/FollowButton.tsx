@@ -13,21 +13,37 @@ const FollowButton = ({
   isFollowing,
   setIsFollowing,
 }: FollowButtonProps) => {
-  const { followUser, unfollowUser,fetchFollowers } = useFollowers();
+  const { followUser, unfollowUser, fetchFollowers } = useFollowers();
+
   const handleFollowToggle = async () => {
     if (!storedId) return;
+
+    const newState = !isFollowing;
+    setIsFollowing(newState);
+
     try {
-      if (isFollowing) {
-        await unfollowUser(storedId, userId);
-      } else {
+      if (newState) {
         await followUser(storedId, userId);
+        console.log(`Followed ${userId}`);
+      } else {
+        await unfollowUser(storedId, userId);
+        console.log(`Unfollowed ${userId}`);
       }
       const updatedFollowers = await fetchFollowers(userId);
-      if (!updatedFollowers) return;
-      const isNowFollowing = updatedFollowers.some((f) => f.id === storedId);
+      const isNowFollowing = (updatedFollowers ?? []).some(
+        (f) => f.id === storedId
+      );
       setIsFollowing(isNowFollowing);
-        } catch (err) {
-      alert("Failed to update follow status");
+    } catch (err: any) {
+      console.error("Toggle error:", err);
+      if (err.message.includes("duplicate key value")) {
+        setIsFollowing(true);
+      } else if (err.message.includes("Not following")) {
+        setIsFollowing(false); 
+      } else {
+        setIsFollowing(!newState); 
+      }
+      alert(`Failed to update follow status: ${err.message || "Unknown error"}`);
     }
   };
 
