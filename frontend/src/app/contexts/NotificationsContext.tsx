@@ -41,19 +41,25 @@ export const NotificationsProvider = ({
         });
 
         const userId = user.id;
-      await fetch("/notifications/subscribe", {
-        method: "POST",
-        body: JSON.stringify({ subscription, userId }),
-        headers: { "Content-Type": "application/json" },
-      });
-      console.log("Push subscription sent to server with userId:", userId);
-    };
+        await fetchApi("/notifications/subscribe", {
+          method: "POST",
+          body: JSON.stringify({ subscription, userId }),
+          headers: { "Content-Type": "application/json" },
+        });
+        console.log("Push subscription sent to server with userId:", userId);
+      };
 
-    registerServiceWorker().catch((error) =>
-      console.error("Service Worker registration failed:", error)
-    );
-  }
-}, [user]);
+      registerServiceWorker().catch((error) =>
+        console.error("Service Worker registration failed:", error)
+      );
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data && event.data.type === "PLAY_SOUND") {
+          const audio = new Audio(event.data.url);
+          audio.play();
+        }
+      });
+    }
+  }, [user]);
 
   const value: NotificationsState = {
     fetchNotifications,
