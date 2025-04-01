@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Post } from "@/utils/api";
 import {
   Select,
@@ -36,27 +36,51 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
   const [updatedPosts, setUpdatedPosts] = useState<Post[]>(posts);
   const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
-  useEffect(() => {
-    const initializeLikes = async () => {
-      if (!userId) return;
-      const status: { [key: number]: boolean } = {};
-      const counts: { [key: number]: number } = {};
-      const bookmarkStatusTemp: { [key: number]: boolean } = {};
+  const initializeData = useCallback(async () => {
+    if (!userId) return;
+    const status: { [key: number]: boolean } = {};
+    const counts: { [key: number]: number } = {};
+    const bookmarkStatusTemp: { [key: number]: boolean } = {};
+
+    try {
       const bookmarkedPosts = await fetchBookmarkedPosts(userId);
+      console.log("Fetched bookmarked posts:", bookmarkedPosts);
 
       for (const post of posts) {
         status[post.post_id] = await getLikeStatus(post.post_id, userId);
         counts[post.post_id] = await fetchLikeCount(post.post_id);
-        bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some(bp => bp.post_id === post.post_id);
+        bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some((bp) => {
+          const match = bp.id === post.post_id;
+          console.log(
+            `Comparing post_id ${post.post_id} with bookmark post_id ${bp.post_id}: ${match}`
+          );
+          return match;
+        });
         await fetchComments(post.post_id); // Fetch comments for each post
       }
+      console.log("Setting bookmark status:", bookmarkStatusTemp);
+
       setLikeStatus(status);
       setLikeCounts(counts);
       setBookmarkStatus(bookmarkStatusTemp);
-      setUpdatedPosts(posts);
-    };
-    initializeLikes();
-  }, [posts, userId, getLikeStatus, fetchLikeCount, fetchComments, fetchBookmarkedPosts]);
+      if (JSON.stringify(updatedPosts) !== JSON.stringify(posts)) {
+        setUpdatedPosts(posts);
+      }
+    } catch (err) {
+      console.error("Failed to initialize data:", err);
+    }
+  }, [
+    userId,
+    posts,
+    getLikeStatus,
+    fetchLikeCount,
+    fetchComments,
+    fetchBookmarkedPosts,
+  ]);
+
+  useEffect(() => {
+    initializeData();
+  }, [initializeData]);
 
   const sortedPosts = [...updatedPosts].sort((a, b) => {
     if (sortBy === "latest") return b.goal_id - a.goal_id;
@@ -84,15 +108,28 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
   const handleBookmark = async (postId: number) => {
     if (!userId) return;
     const isBookmarked = bookmarkStatus[postId] || false;
+    const newState = !isBookmarked;
+
+    setBookmarkStatus((prev) => ({ ...prev, [postId]: newState }));
+    console.log("Optimistic update:", { [postId]: newState });
+
     try {
       if (isBookmarked) {
         await unbookmarkPost(userId, postId);
       } else {
         await bookmarkPost(userId, postId);
       }
-      setBookmarkStatus((prev) => ({ ...prev, [postId]: !isBookmarked }));
+
     } catch (err) {
       console.error("Bookmark action failed:", err);
+      if (
+        err instanceof Error &&
+        err.message.includes("Bookmark already exists")
+      ) {
+        setBookmarkStatus((prev) => ({ ...prev, [postId]: true }));
+      } else {
+        setBookmarkStatus((prev) => ({ ...prev, [postId]: isBookmarked }));
+      }
     }
   };
 
