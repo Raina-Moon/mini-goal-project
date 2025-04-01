@@ -20,20 +20,32 @@ export const FollowerProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchFollowers = async (userId: number) => {
     if (!token) return;
-    const followersData = await fetchApi<User[]>(`/followers/followers/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const followersData = await fetchApi<User[]>(
+      `/followers/followers/${userId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     setFollowers(followersData);
     return followersData;
   };
 
   const followUser = async (followerId: number, followingId: number) => {
     if (!token) return;
-    await fetchApi<{ follower_id: number; following_id: number }>("/followers", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
-    });
+    await fetchApi<{ follower_id: number; following_id: number }>(
+      "/followers",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          follower_id: followerId,
+          following_id: followingId,
+        }),
+      }
+    );
     await fetchFollowers(followingId);
   };
 
@@ -41,8 +53,14 @@ export const FollowerProvider = ({ children }: { children: ReactNode }) => {
     if (!token) return;
     await fetchApi<{ message: string }>("/followers", {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ follower_id: followerId, following_id: followingId }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        follower_id: followerId,
+        following_id: followingId,
+      }),
     });
     await fetchFollowers(followingId);
   };
@@ -54,11 +72,16 @@ export const FollowerProvider = ({ children }: { children: ReactNode }) => {
     unfollowUser,
   };
 
-  return <FollowerContext.Provider value={value}>{children}</FollowerContext.Provider>;
+  return (
+    <FollowerContext.Provider value={value}>
+      {children}
+    </FollowerContext.Provider>
+  );
 };
 
 export const useFollowers = () => {
   const context = useContext(FollowerContext);
-  if (!context) throw new Error("useFollowers must be used within a FollowerProvider");
+  if (!context)
+    throw new Error("useFollowers must be used within a FollowerProvider");
   return context;
 };
