@@ -3,6 +3,7 @@
 import { createContext, useContext, ReactNode, useEffect } from "react";
 import { fetchApi } from "@/utils/api/fetch";
 import { Notification } from "@/utils/api";
+import { useAuth } from "./AuthContext";
 
 interface NotificationsState {
   fetchNotifications: (userId: number) => Promise<Notification[]>;
@@ -20,6 +21,8 @@ export const NotificationsProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  const { user } = useAuth();
+
   const fetchNotifications = async (userId: number) => {
     return await fetchApi<Notification[]>(`/notifications/${userId}`);
   };
@@ -39,15 +42,18 @@ export const NotificationsProvider = ({
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
         });
 
+        const userId = user?.id 
         await fetch("/notifications/subscribe", {
           method: "POST",
-          body: JSON.stringify(subscription),
+          body: JSON.stringify({ subscription, userId }),
           headers: { "Content-Type": "application/json" },
         });
-        console.log("Push subscription sent to server");
+        console.log("Push subscription sent to server with userId:", userId);
       };
 
-      registerServiceWorker();
+      registerServiceWorker().catch((error) =>
+        console.error("Service Worker registration failed:", error)
+      );
 
       navigator.serviceWorker.addEventListener("message", (event) => {
         if (event.data && event.data.type === "PLAY_SOUND") {
@@ -56,7 +62,7 @@ export const NotificationsProvider = ({
         }
       });
     }
-  }, []);
+  }, [user]);
 
   const value: NotificationsState = {
     fetchNotifications,
