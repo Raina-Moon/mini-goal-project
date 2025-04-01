@@ -1,7 +1,30 @@
-import express from "express";
+import express, { Request, Response, RequestHandler } from "express";
 import pool from "../db";
+import webPush from "web-push";
 
 const router = express.Router();
+
+const vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY || "PUBLIC_VAPID_KEY",
+  privateKey: process.env.VAPID_PRIVATE_KEY || "PRIVATE_VAPID_KEY",
+};
+webPush.setVapidDetails(
+  "mailto:mds6425@gmail.com",
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
+
+const subscriptions: { [userId: number]: any } = {};
+
+// ✅ Subscribe to notifications
+router.post("/subscribe", (async (req: Request, res: Response) => {
+  const { subscription, userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ message: "userId is required" });
+  }
+  subscriptions[userId] = subscription;
+  res.status(201).json({ message: "Subscribed" });
+}) as RequestHandler);
 
 // ✅ Get all notifications for a user
 router.get("/:userId", async (req, res) => {
@@ -52,6 +75,17 @@ const createNotification = async (
     "INSERT INTO notifications (user_id, sender_id, post_id, type, message) VALUES ($1, $2, $3, $4, $5)",
     [userId, senderId, postId, type, message]
   );
+
+  const subscription = subscriptions[userId];
+  if (subscription) {
+    const payload = JSON.stringify({
+      title: type.charAt(0).toUpperCase() + type.slice(1),
+      body: message,
+    });
+    webPush.sendNotification(subscription, payload).catch((error) => {
+      console.error("Failed to send push notification:", error);
+    });
+  }
 };
 
 export const createLikeNotification = async (
@@ -70,7 +104,10 @@ export const createCommentNotification = async (
   await createNotification(userId, senderId, postId, "comment");
 };
 
-export const createFollowNotification = async (userId: number, senderId: number) => {
+export const createFollowNotification = async (
+  userId: number,
+  senderId: number
+) => {
   await createNotification(userId, senderId, 0, "follow");
 };
 
@@ -92,18 +129,18 @@ router.put("/:id/read", async (req, res) => {
   }
 });
 
-// ✅ Get a notification
-router.post("/", async (req, res) => {
-  const { userId, message } = req.body;
-  try {
-    await pool.query(
-      "INSERT INTO notifications (user_id, message) VALUES ($1, $2)",
-      [userId, message]
-    );
-    res.status(201).json({ message: "Notification added successfully." });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to add notification." });
-  }
-});
+// // ✅ Get a notification
+// router.post("/", async (req, res) => {
+//   const { userId, message } = req.body;
+//   try {
+//     await pool.query(
+//       "INSERT INTO notifications (user_id, message) VALUES ($1, $2)",
+//       [userId, message]
+//     );
+//     res.status(201).json({ message: "Notification added successfully." });
+//   } catch (error) {
+//     res.status(500).json({ message: "Failed to add notification." });
+//   }
+// });
 
 export default router;
