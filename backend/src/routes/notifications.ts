@@ -1,6 +1,7 @@
 import express, { Request, Response, RequestHandler } from "express";
 import pool from "../db";
 import webPush from "web-push";
+import { PoolClient } from "pg";
 
 const router = express.Router();
 
@@ -47,9 +48,11 @@ router.get("/:userId", async (req, res) => {
 const createNotification = async (
   userId: number,
   senderId: number,
-  postId: number,
-  type: string
+  postId: number | null,
+  type: string,
+  client?: PoolClient
 ) => {
+  const db = client || pool;
   const senderResult = await pool.query(
     "SELECT username FROM users WHERE id = $1",
     [senderId]
@@ -105,10 +108,8 @@ export const createCommentNotification = async (
 };
 
 export const createFollowNotification = async (
-  userId: number,
-  senderId: number
-) => {
-  await createNotification(userId, senderId, 0, "follow");
+userId: number, senderId: number, client?: PoolClient) => {
+  await createNotification(userId, senderId, null, "follow",client);
 };
 
 // ✅ Mark a notification as read
