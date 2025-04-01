@@ -13,11 +13,10 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import { useGoals } from "@/app/contexts/GoalContext";
 import { useFollowers } from "@/app/contexts/FollowerContext";
 import { usePosts } from "@/app/contexts/PostContext";
-import { User } from "@/utils/api";
 
 const Dashboard = () => {
   const { userId } = useParams();
-  const { user, token, isLoggedIn, fetchViewUser, viewUser } = useAuth();
+  const { user, token, fetchViewUser, viewUser } = useAuth();
   const { goals, fetchGoals } = useGoals();
   const { nailedPosts, fetchNailedPosts } = usePosts();
   const { followers, fetchFollowers } = useFollowers();
@@ -39,7 +38,13 @@ const Dashboard = () => {
         fetchNailedPosts(profileId),
         fetchFollowers(profileId),
       ]);
-      setIsFollowing(followers.some((f) => f.id === viewerId));
+      const updatedFollowStatus = await fetchFollowers(profileId);
+      const isFollowingNow = (updatedFollowStatus ?? []).some(
+        (f) => f.id === viewerId
+      );
+      console.log("Initial followers:", updatedFollowStatus);
+      console.log("Initial isFollowing:", isFollowingNow);
+      setIsFollowing(isFollowingNow);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
     } finally {
@@ -51,7 +56,8 @@ const Dashboard = () => {
     if (user && token) fetchData();
   }, [userId, user, token]);
 
-  if (!user || !token || !viewUser) return <div>Please log in to view the dashboard.</div>;
+  if (!user || !token || !viewUser)
+    return <div>Please log in to view the dashboard.</div>;
 
   return (
     <div className="p-6">
