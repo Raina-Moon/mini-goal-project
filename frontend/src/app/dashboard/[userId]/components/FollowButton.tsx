@@ -24,10 +24,8 @@ const FollowButton = ({
     try {
       if (newState) {
         await followUser(storedId, userId);
-        console.log(`Followed ${userId}`);
       } else {
         await unfollowUser(storedId, userId);
-        console.log(`Unfollowed ${userId}`);
       }
       const updatedFollowers = await fetchFollowers(userId);
       const isNowFollowing = (updatedFollowers ?? []).some(

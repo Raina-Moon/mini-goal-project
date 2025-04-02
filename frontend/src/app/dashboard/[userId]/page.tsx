@@ -42,8 +42,6 @@ const Dashboard = () => {
       const isFollowingNow = (updatedFollowStatus ?? []).some(
         (f) => f.id === viewerId
       );
-      console.log("Initial followers:", updatedFollowStatus);
-      console.log("Initial isFollowing:", isFollowingNow);
       setIsFollowing(isFollowingNow);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);

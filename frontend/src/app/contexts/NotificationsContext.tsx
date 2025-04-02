@@ -46,7 +46,6 @@ export const NotificationsProvider = ({
           body: JSON.stringify({ subscription, userId }),
           headers: { "Content-Type": "application/json" },
         });
-        console.log("Push subscription sent to server with userId:", userId);
       };
 
       registerServiceWorker().catch((error) =>
