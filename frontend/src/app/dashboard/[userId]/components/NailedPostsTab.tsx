@@ -44,21 +44,16 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
 
     try {
       const bookmarkedPosts = await fetchBookmarkedPosts(userId);
-      console.log("Fetched bookmarked posts:", bookmarkedPosts);
 
       for (const post of posts) {
         status[post.post_id] = await getLikeStatus(post.post_id, userId);
         counts[post.post_id] = await fetchLikeCount(post.post_id);
         bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some((bp) => {
           const match = bp.id === post.post_id;
-          console.log(
-            `Comparing post_id ${post.post_id} with bookmark post_id ${bp.post_id}: ${match}`
-          );
           return match;
         });
         await fetchComments(post.post_id); // Fetch comments for each post
       }
-      console.log("Setting bookmark status:", bookmarkStatusTemp);
 
       setLikeStatus(status);
       setLikeCounts(counts);
@@ -101,7 +96,6 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     const newState = !isBookmarked;
 
     setBookmarkStatus((prev) => ({ ...prev, [postId]: newState }));
-    console.log("Optimistic update:", { [postId]: newState });
 
     try {
       if (isBookmarked) {
@@ -112,13 +106,14 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     } catch (err) {
       console.error("Bookmark action failed:", err);
       if (
-        err instanceof Error && err.message?.includes("Unexpected end of JSON input") &&
+        err instanceof Error &&
+        err.message?.includes("Unexpected end of JSON input") &&
         isBookmarked
       ) {
-        console.log("Assuming unbookmark succeeded despite 204 error:", {
-          [postId]: newState,
-        });
-      } else if (err instanceof Error && err.message?.includes("Bookmark already exists")) {
+      } else if (
+        err instanceof Error &&
+        err.message?.includes("Bookmark already exists")
+      ) {
         setBookmarkStatus((prev) => ({ ...prev, [postId]: true }));
       } else {
         setBookmarkStatus((prev) => ({ ...prev, [postId]: isBookmarked }));
