@@ -52,8 +52,17 @@ const ProfilePage = () => {
   }, [imagePreview]);
 
   const handleUpdateUsername = async (newUsername: string) => {
-    await updateProfile(Number(userId), newUsername);
-    setIsEditing(false);
+    try {
+      await updateProfile(Number(userId), newUsername);
+      setIsEditing(false);
+      setErrorMessage(null);
+    } catch (err: any) {
+      if (err.message === "Username is already taken") {
+        setErrorMessage("Username is already taken!");
+      } else {
+        setErrorMessage("Failed to update profile!");
+      }
+    }
   };
 
   const handleImageUpload = async () => {
@@ -212,7 +221,10 @@ const ProfilePage = () => {
           <ProfileForm
             username={user.username}
             onUpdate={handleUpdateUsername}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => {
+              setIsEditing(false);
+              setErrorMessage(null);
+            }}
           />
         </div>
       )}
