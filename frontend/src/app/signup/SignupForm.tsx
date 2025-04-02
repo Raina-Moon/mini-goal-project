@@ -7,15 +7,18 @@ import ErrorIcon from "../../../public/icons/ErrorIcon";
 import { useAuth } from "../contexts/AuthContext";
 
 const SignupForm = () => {
+  const { signup } = useAuth();
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
-  const { signup } = useAuth();
-  
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
@@ -26,8 +29,12 @@ const SignupForm = () => {
       await signup(username, email, password);
       alert("Signup successful! Please log in.");
       router.push("/login");
-    } catch (error) {
-      alert("Signup failed!");
+    } catch (error: any) {
+      if (error.message === "Username is already taken") {
+        setError("Username is already taken!");
+      } else {
+        setError("Signup failed!");
+      }
     }
   };
 
@@ -87,11 +94,21 @@ const SignupForm = () => {
           <input
             type="text"
             placeholder="Username"
-            className="border text-gray-900 border-primary-400 px-2 py-1 rounded text-sm focus:outline-none focus:border-primary-600"
+            className={`border text-gray-900 px-2 py-1 rounded text-sm focus:outline-none ${
+              error?.includes("Username")
+                ? "border-red-500"
+                : "border-primary-400 focus:border-primary-600"
+            }`}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
           />
+
+          {error && (
+            <div className="text-red-500 text-xs flex flex-row">
+              <ErrorIcon /> {error}
+            </div>
+          )}
 
           <button
             type="submit"
