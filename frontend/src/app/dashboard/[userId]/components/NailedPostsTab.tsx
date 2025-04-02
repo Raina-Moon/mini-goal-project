@@ -63,20 +63,10 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
       setLikeStatus(status);
       setLikeCounts(counts);
       setBookmarkStatus(bookmarkStatusTemp);
-      if (JSON.stringify(updatedPosts) !== JSON.stringify(posts)) {
-        setUpdatedPosts(posts);
-      }
     } catch (err) {
       console.error("Failed to initialize data:", err);
     }
-  }, [
-    userId,
-    posts,
-    getLikeStatus,
-    fetchLikeCount,
-    fetchComments,
-    fetchBookmarkedPosts,
-  ]);
+  }, [userId, posts]);
 
   useEffect(() => {
     initializeData();
@@ -119,13 +109,16 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
       } else {
         await bookmarkPost(userId, postId);
       }
-
     } catch (err) {
       console.error("Bookmark action failed:", err);
       if (
-        err instanceof Error &&
-        err.message.includes("Bookmark already exists")
+        err instanceof Error && err.message?.includes("Unexpected end of JSON input") &&
+        isBookmarked
       ) {
+        console.log("Assuming unbookmark succeeded despite 204 error:", {
+          [postId]: newState,
+        });
+      } else if (err instanceof Error && err.message?.includes("Bookmark already exists")) {
         setBookmarkStatus((prev) => ({ ...prev, [postId]: true }));
       } else {
         setBookmarkStatus((prev) => ({ ...prev, [postId]: isBookmarked }));
