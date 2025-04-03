@@ -26,6 +26,7 @@ export interface Post {
   description: string;
   like_count: number;
   liked_by_me: boolean;
+  bookmarked_by_me: boolean;
   comments: Comment[];
 }
 
