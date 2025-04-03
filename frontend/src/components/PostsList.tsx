@@ -37,15 +37,23 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     const bookmarkStatusTemp: { [key: number]: boolean } = {};
 
     try {
-      const bookmarkedPosts = await fetchBookmarkedPosts(userId);
+      if (userId) {
+        const bookmarkedPosts = await fetchBookmarkedPosts(userId);
 
-      for (const post of posts) {
-        status[post.post_id] = await getLikeStatus(post.post_id, userId);
-        counts[post.post_id] = await fetchLikeCount(post.post_id);
-        bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some(
-          (bp) => bp.post_id === post.post_id
-        );
-        await fetchComments(post.post_id);
+        for (const post of posts) {
+          status[post.post_id] = await getLikeStatus(post.post_id, userId);
+          counts[post.post_id] = await fetchLikeCount(post.post_id);
+          bookmarkStatusTemp[post.post_id] =
+            post.bookmarked_by_me ||
+            bookmarkedPosts.some((bp) => bp.post_id === post.post_id);
+          await fetchComments(post.post_id);
+        }
+      } else {
+        for (const post of posts) {
+          status[post.post_id] = false;
+          counts[post.post_id] = post.like_count || 0;
+          bookmarkStatusTemp[post.post_id] = false;
+        }
       }
 
       setLikeStatus(status);
