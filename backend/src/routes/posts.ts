@@ -65,6 +65,9 @@ router.get("/", async (req: Request, res: Response) => {
         EXISTS (
           SELECT 1 FROM likes WHERE post_id = posts.id AND user_id = $1
         ) AS liked_by_me,
+        EXISTS (
+          SELECT 1 FROM bookmarks WHERE post_id = posts.id AND user_id = $1
+        ) AS bookmarked_by_me,
         COALESCE(
           (
             SELECT json_agg(json_build_object(
@@ -84,6 +87,7 @@ router.get("/", async (req: Request, res: Response) => {
       JOIN goals ON posts.goal_id = goals.id
       JOIN users ON posts.user_id = users.id
       LEFT JOIN likes ON posts.id = likes.post_id
+      LEFT JOIN bookmarks ON posts.id = bookmarks.post_id
       WHERE goals.status = 'nailed it'
       GROUP BY posts.id, goals.title, goals.duration, posts.image_url, posts.description, users.username, users.profile_image
       ORDER BY posts.id DESC
