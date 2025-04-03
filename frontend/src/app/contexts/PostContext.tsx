@@ -31,7 +31,7 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchAllPosts = async () => {
-    const query = user?.id ? `?excludeUserId=${user.id}&viewerId=${user.id}` : "";
+    const query = user?.id ? `?viewerId=${user.id}` : "";
     const posts = await fetchApi<Post[]>(`/posts${query}`);
     return posts;
   };
