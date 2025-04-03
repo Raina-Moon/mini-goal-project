@@ -28,7 +28,6 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   const [bookmarkStatus, setBookmarkStatus] = useState<{
     [key: number]: boolean;
   }>({});
-  const [updatedPosts, setUpdatedPosts] = useState<Post[]>(posts);
   const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
   const initializeData = useCallback(async () => {
