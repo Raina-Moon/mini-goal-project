@@ -31,8 +31,9 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchAllPosts = async () => {
-    const posts = await fetchApi<Post[]>("/posts");
-    return user?.id ? posts.filter((post) => post.user_id !== user.id) : posts;
+    const query = user?.id ? `?excludeUserId=${user.id}&viewerId=${user.id}` : "";
+    const posts = await fetchApi<Post[]>(`/posts${query}`);
+    return posts;
   };
 
   const createPost = async (
