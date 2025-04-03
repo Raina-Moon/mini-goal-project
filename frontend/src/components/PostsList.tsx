@@ -30,8 +30,18 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   }>({});
   const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
+  console.log("Logged in user ID:", userId);
+
+
+  const filteredPosts = userId
+    ? posts.filter((post) => Number(post.user_id) !== userId)
+    : posts;
+
+    console.log("Filtered posts:", filteredPosts);
+
   const initializeData = useCallback(async () => {
     if (!userId) return;
+
     const status: { [key: number]: boolean } = {};
     const counts: { [key: number]: number } = {};
     const bookmarkStatusTemp: { [key: number]: boolean } = {};
@@ -39,14 +49,16 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     try {
       const bookmarkedPosts = await fetchBookmarkedPosts(userId);
 
-      for (const post of posts) {
-        status[post.post_id] = await getLikeStatus(post.post_id, userId);
-        counts[post.post_id] = await fetchLikeCount(post.post_id);
-        bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some((bp) => {
-          const match = bp.id === post.post_id;
-          return match;
-        });
-        await fetchComments(post.post_id); // Fetch comments for each post
+      for (const post of filteredPosts) {
+        if (post.user_id !== userId) {
+          status[post.post_id] = await getLikeStatus(post.post_id, userId);
+          counts[post.post_id] = await fetchLikeCount(post.post_id);
+          bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some((bp) => {
+            const match = bp.id === post.post_id;
+            return match;
+          });
+          await fetchComments(post.post_id); // Fetch comments for each post
+        }
       }
 
       setLikeStatus(status);
@@ -55,7 +67,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     } catch (err) {
       console.error("Failed to initialize data:", err);
     }
-  }, [userId, posts]);
+}, [userId, posts]);
 
   useEffect(() => {
     initializeData();
@@ -130,7 +142,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     <>
       <div>
         <ul className="space-y-3">
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <li
               key={post.post_id}
               className="border border-emerald-300 bg-emerald-50 rounded-lg p-4"
