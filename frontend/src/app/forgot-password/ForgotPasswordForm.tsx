@@ -46,7 +46,7 @@ const ForgotPasswordForm = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <GlobalButton type="submit" onClick={() => router.back()}>send</GlobalButton>
+          <GlobalButton type="submit">send</GlobalButton>
         </form>
       </div>
 
