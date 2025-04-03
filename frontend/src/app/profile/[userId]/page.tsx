@@ -62,6 +62,7 @@ const ProfilePage = () => {
       } else {
         setErrorMessage("Failed to update profile!");
       }
+      throw err;
     }
   };
 
