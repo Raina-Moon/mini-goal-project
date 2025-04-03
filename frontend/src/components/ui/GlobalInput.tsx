@@ -2,6 +2,7 @@ import React from "react";
 import clsx from "clsx";
 
 type InputProps = {
+  id?: string;
   label?: string;
   type?: string;
   name?: string;
@@ -15,6 +16,7 @@ type InputProps = {
 
 const GlobalInput: React.FC<InputProps> = ({
   label,
+  id,
   type = "text",
   name,
   value,
@@ -27,12 +29,12 @@ const GlobalInput: React.FC<InputProps> = ({
   return (
     <div className="flex flex-col gap-1 w-full">
       {label && (
-        <label htmlFor={name} className="text-sm font-medium text-gray-900 text-left">
+        <label htmlFor={name} className="text-sm text-gray-900 text-left pl-1">
           {label}
         </label>
       )}
       <input
-        id={name}
+        id={id}
         name={name}
         type={type}
         value={value}
@@ -40,7 +42,7 @@ const GlobalInput: React.FC<InputProps> = ({
         onChange={onChange}
         disabled={disabled}
         className={clsx(
-          "w-full px-4 py-2 border rounded-md text-sm focus:border-primary-600",
+          "w-full px-2 py-2 border rounded-md text-sm focus:border-primary-600 focus:outline-none",
           error ? "border-red-500" : "border-primary-400",
           disabled && "border-gray-300 cursor-not-allowed",
           className

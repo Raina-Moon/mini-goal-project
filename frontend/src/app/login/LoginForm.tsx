@@ -4,19 +4,49 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
+import GlobalInput from "@/components/ui/GlobalInput";
+import GlobalButton from "@/components/ui/GlobalButton";
+import GoBackArrow from "../../../public/icons/GoBackArrow";
 
 const LoginForm = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const { login, user } = useAuth();
+
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setEmailError("");
+    setPasswordError("");
+
+    if (!validateEmail(email)) {
+      setEmailError("Hmm… that doesn’t look like a real email!");
+      return;
+    }
+
+    if (!password) {
+      setPasswordError("Don’t forget to type in your password!");
+      return;
+    }
+
     try {
       await login(email, password);
-    } catch (error) {
-      alert("Failed to login");
+    } catch (error: any) {
+      if (error.message === "Invalid password") {
+        setPasswordError("Oops! That password doesn’t seem right.");
+      } else if (error.message === "Invalid email") {
+        setEmailError("We couldn’t find an account with that email.");
+      } else {
+        setPasswordError("Login didn’t work... mind trying again?");
+      }
     }
   };
 
@@ -36,50 +66,41 @@ const LoginForm = () => {
       </div>
 
       <div className=" bg-white rounded-2xl p-4">
+        <button onClick={() => router.back()}>
+          <GoBackArrow />
+        </button>
+
         <form
           onSubmit={handleSubmit}
           className="flex flex-col items-center gap-y-2"
         >
           <div className="text-gray-900 text-base my-4">Logo</div>
 
-          <label
-            htmlFor="email"
-            className="text-gray-900 text-sm self-start ml-1"
-          >
-            email
-          </label>
-          <input
+          <GlobalInput
+            label="email"
             type="email"
             id="email"
-            className="w-full h-8 bg-white rounded border border-primary-400 px-2 text-sm text-gray-900 focus:outline-none focus:border-primary-600"
-            placeholder="email"
+            name="email"
             value={email}
+            placeholder="email"
             onChange={(e) => setEmail(e.target.value)}
-            required
+            error={emailError}
           />
 
-          <label
-            htmlFor="password"
-            className="text-gray-900 text-sm self-start ml-1"
-          >
-            password
-          </label>
-          <input
+          <GlobalInput
+            label="password"
             type="password"
             id="password"
-            className="w-full h-8 bg-white rounded border border-primary-400 px-2 text-sm text-gray-900 focus:outline-none focus:border-primary-600"
-            placeholder="password"
+            name="password"
             value={password}
+            placeholder="password"
             onChange={(e) => setPassword(e.target.value)}
-            required
+            error={passwordError}
           />
 
-          <button
-            type="submit"
-            className="mt-3 w-16 h-6 bg-primary-300 rounded-full text-white text-sm hover:bg-primary-600"
-          >
+          <GlobalButton type="submit" className="mt-4">
             log in
-          </button>
+          </GlobalButton>
         </form>
 
         <Link href="/forgot-password">

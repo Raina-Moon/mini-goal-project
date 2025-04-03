@@ -49,13 +49,13 @@ router.post("/login", (async (
     ]);
 
     if (result.rows.length === 0) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      return res.status(400).json({ error: "Invalid email" });
     }
 
     const user = result.rows[0];
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      return res.status(400).json({ error: "Invalid password" });
     }
 
     const token = jwt.sign(
