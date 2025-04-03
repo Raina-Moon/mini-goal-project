@@ -15,8 +15,10 @@ export interface Goal {
 }
 
 export interface Post {
+  profile_image: string;
   id: number;
   post_id: number;
+  user_id?: number;
   goal_id: number;
   title: string;
   duration: number;
