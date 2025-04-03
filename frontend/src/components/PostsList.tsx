@@ -24,31 +24,30 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
 
   const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
   const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({});
+  const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
   const [bookmarkStatus, setBookmarkStatus] = useState<{
     [key: number]: boolean;
   }>({});
-  const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
+  const [updatedPosts, setUpdatedPosts] = useState<Post[]>(posts);
   const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
   const initializeData = useCallback(async () => {
+    if (!userId) return;
     const status: { [key: number]: boolean } = {};
     const counts: { [key: number]: number } = {};
     const bookmarkStatusTemp: { [key: number]: boolean } = {};
 
     try {
-      if (userId) {
-        for (const post of posts) {
-          status[post.post_id] = post.liked_by_me || false;
-          counts[post.post_id] = post.like_count || 0;
-          bookmarkStatusTemp[post.post_id] = post.bookmarked_by_me || false;
-          await fetchComments(post.post_id);
-        }
-      } else {
-        for (const post of posts) {
-          status[post.post_id] = false;
-          counts[post.post_id] = post.like_count || 0;
-          bookmarkStatusTemp[post.post_id] = false;
-        }
+      const bookmarkedPosts = await fetchBookmarkedPosts(userId);
+
+      for (const post of posts) {
+        status[post.post_id] = await getLikeStatus(post.post_id, userId);
+        counts[post.post_id] = await fetchLikeCount(post.post_id);
+        bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some((bp) => {
+          const match = bp.id === post.post_id;
+          return match;
+        });
+        await fetchComments(post.post_id); // Fetch comments for each post
       }
 
       setLikeStatus(status);
@@ -57,11 +56,11 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     } catch (err) {
       console.error("Failed to initialize data:", err);
     }
-  }, [userId, posts, fetchComments]);
+  }, [userId, posts]);
 
   useEffect(() => {
     initializeData();
-  }, [userId, posts, initializeData]);
+  }, [initializeData]);
 
   const handleLike = async (postId: number) => {
     if (!userId) return;
