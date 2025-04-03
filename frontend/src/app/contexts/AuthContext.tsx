@@ -100,18 +100,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signup = async (username: string, email: string, password: string) => {
-    const userData = await fetchApi<{ token: string; user: User }>(
-      "/auth/signup",
-      {
-        method: "POST",
-        body: JSON.stringify({ username, email, password }),
+    try {
+      const userData = await fetchApi<{ token: string; user: User }>(
+        "/auth/signup",
+        {
+          method: "POST",
+          body: JSON.stringify({ username, email, password }),
+        }
+      );
+      setToken(userData.token);
+      setUser(userData.user);
+      setIsLoggedIn(true);
+      localStorage.setItem(TOKEN_KEY, userData.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(userData.user));
+    } catch (err: any) {
+      if (err.message.includes("Username already exists")) {
+        throw new Error("Username is already taken");
       }
-    );
-    setToken(userData.token);
-    setUser(userData.user);
-    setIsLoggedIn(true);
-    localStorage.setItem(TOKEN_KEY, userData.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(userData.user));
+      throw err; // Re-throw other errors
+    }
   };
 
   const login = async (email: string, password: string) => {
@@ -151,15 +158,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!username || username.trim() === "") {
       throw new Error("Username cannot be empty");
     }
-    const updatedUser = await fetchApi<User>(`/profile/${userId}`, {
-      method: "PATCH",
-      headers: { 
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ username }),
-    });
-    setUser(updatedUser);
-    localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    try {
+      const updatedUser = await fetchApi<User>(`/profile/${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ username }),
+      });
+      setUser(updatedUser);
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    } catch (err: any) {
+      if (err.message === "Username already exists") {
+        throw new Error("Username is already taken");
+      }
+      throw new Error("Failed to update profile");
+    }
   };
 
   const updateProfileImage = async (userId: number, file: File) => {

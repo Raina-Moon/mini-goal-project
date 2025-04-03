@@ -38,6 +38,14 @@ router.patch("/:userId", (async (req: Request, res: Response) => {
   const { username } = req.body;
 
   try {
+    const usernameCheck = await pool.query(
+      "SELECT id FROM users WHERE username = $1 AND id != $2",
+      [username, userId]
+    );
+    if (usernameCheck.rows.length > 0) {
+      return res.status(409).json({ error: "Username already exists" });
+    }
+    
     const result = await pool.query(
       "UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username, email",
       [username, userId]

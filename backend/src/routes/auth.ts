@@ -7,33 +7,34 @@ import { sendVerificationCode } from "../utils/email";
 const router = express.Router();
 
 // ✅ User Signup
-router.post(
-  "/signup",
-  async (
-    req: Request<
-      any,
-      any,
-      { username: string; email: string; password: string }
-    >,
-    res: Response
-  ) => {
-    const { username, email, password } = req.body;
+router.post("/signup", (async (
+  req: Request<any, any, { username: string; email: string; password: string }>,
+  res: Response
+) => {
+  const { username, email, password } = req.body;
 
-    try {
-      // Hash the password before storing it
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const result = await pool.query(
-        "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email",
-        [username, email, hashedPassword]
-      );
-
-      res.json(result.rows[0]);
-    } catch (err) {
-      res.status(500).json({ error: (err as Error).message });
+  try {
+    const usernameCheck = await pool.query(
+      "SELECT id FROM users WHERE username = $1",
+      [username]
+    );
+    if (usernameCheck.rows.length > 0) {
+      return res.status(409).json({ error: "Username already exists" });
     }
+
+    // Hash the password before storing it
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email",
+      [username, email, hashedPassword]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
   }
-);
+}) as RequestHandler);
 
 // ✅ User Login
 router.post("/login", (async (
@@ -161,6 +162,5 @@ router.patch("/profile/:userId/image", (async (req: Request, res: Response) => {
     res.status(500).json({ error: (err as Error).message });
   }
 }) as RequestHandler);
-
 
 export default router;
