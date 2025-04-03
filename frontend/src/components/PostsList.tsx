@@ -30,14 +30,9 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   }>({});
   const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
-  console.log("Logged in user ID:", userId);
-
-
   const filteredPosts = userId
     ? posts.filter((post) => Number(post.user_id) !== userId)
     : posts;
-
-    console.log("Filtered posts:", filteredPosts);
 
   const initializeData = useCallback(async () => {
     if (!userId) return;
@@ -67,7 +62,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     } catch (err) {
       console.error("Failed to initialize data:", err);
     }
-}, [userId, posts]);
+  }, [userId, posts]);
 
   useEffect(() => {
     initializeData();
