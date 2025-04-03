@@ -54,6 +54,7 @@ router.get("/", async (req: Request, res: Response) => {
       `
       SELECT 
         posts.id AS post_id,
+        posts.user_id AS user_id,
         posts.goal_id,
         goals.title,
         goals.duration,
@@ -89,7 +90,7 @@ router.get("/", async (req: Request, res: Response) => {
       LEFT JOIN likes ON posts.id = likes.post_id
       LEFT JOIN bookmarks ON posts.id = bookmarks.post_id
       WHERE goals.status = 'nailed it'
-      GROUP BY posts.id, goals.title, goals.duration, posts.image_url, posts.description, users.username, users.profile_image
+      GROUP BY posts.id, posts.user_id, goals.title, goals.duration, posts.image_url, posts.description, users.username, users.profile_image
       ORDER BY posts.id DESC
       `,
       [viewerId || null]
