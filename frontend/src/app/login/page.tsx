@@ -1,9 +1,13 @@
 "use client";
 
-import LoginForm from "./LoginFrom";
+import LoginForm from "./LoginForm";
 
 const page = () => {
-  return <LoginForm />;
+  return (
+    <div className="bg-primary-500 min-h-screen font-inter">
+      <LoginForm />
+    </div>
+  );
 };
 
 export default page;
