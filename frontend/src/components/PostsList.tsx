@@ -122,109 +122,109 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
 
   return (
     <>
-    <div>
-
-  
-      <ul className="space-y-3">
-        {posts.map((post) => (
-          <li
-            key={post.post_id}
-            className="border border-emerald-300 bg-emerald-50 rounded-lg p-4"
-          >
-            <h2 className="text-lg font-semibold text-emerald-700">
-              {post.title}
-            </h2>
-            <p className="text-sm text-gray-600 mb-2">
-              Duration: {post.duration} min
-            </p>
-            {post.image_url && (
-              <img
-                src={post.image_url}
-                alt="Post Image"
-                className="w-full max-h-64 object-cover rounded mb-2"
-              />
-            )}
-            <p className="text-sm text-gray-800">{post.description}</p>
-            <div className="mt-2 flex items-center gap-3">
-              <button
-                onClick={() => handleLike(post.post_id)}
-                className="text-pink-600 hover:underline"
-              >
-                {likeStatus[post.post_id] ? "❤️ Liked" : "🤍 Like"} (
-                {likeCounts[post.post_id] || post.like_count})
-              </button>
-              <button
-                onClick={() => handleBookmark(post.post_id)}
-                className="text-primary-400 hover:underline"
-              >
-                {bookmarkStatus[post.post_id] ? "⭐ Bookmarked" : "☆ Bookmark"}
-              </button>
-            </div>
-            <div className="mt-4">
-              <input
-                value={newComments[post.post_id] || ""}
-                onChange={(e) =>
-                  setNewComments((prev) => ({
-                    ...prev,
-                    [post.post_id]: e.target.value,
-                  }))
-                }
-                placeholder="Leave a comment..."
-                className="w-full border rounded px-2 py-1 text-sm"
-              />
-              <button
-                onClick={() => submitComment(post.post_id)}
-                className="text-blue-500 text-sm mt-1"
-              >
-                Submit
-              </button>
-              <ul className="mt-2 space-y-1 text-sm">
-                {(commentsByPost[post.post_id] || post.comments || []).map(
-                  (c) => (
-                    <li key={c.id}>
-                      <strong>{c.username}:</strong> {c.content}
-                      {userId === c.user_id && (
-                        <>
-                          <input
-                            value={commentEdit[c.id] ?? c.content}
-                            onChange={(e) =>
-                              setCommentEdit((prev) => ({
-                                ...prev,
-                                [c.id]: e.target.value,
-                              }))
-                            }
-                            className="border rounded px-1 mx-1"
-                          />
-                          <button
-                            onClick={() =>
-                              handleEditComment(
-                                post.post_id,
-                                c.id,
-                                commentEdit[c.id] || c.content
-                              )
-                            }
-                            className="text-green-500"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleDeleteComment(post.post_id, c.id)
-                            }
-                            className="text-red-500"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </li>
-                  )
-                )}
-              </ul>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div>
+        <ul className="space-y-3">
+          {posts.map((post) => (
+            <li
+              key={post.post_id}
+              className="border border-emerald-300 bg-emerald-50 rounded-lg p-4"
+            >
+              <h2 className="text-lg font-semibold text-emerald-700">
+                {post.title}
+              </h2>
+              <p className="text-sm text-gray-600 mb-2">
+                Duration: {post.duration} min
+              </p>
+              {post.image_url && (
+                <img
+                  src={post.image_url}
+                  alt="Post Image"
+                  className="w-full max-h-64 object-cover rounded mb-2"
+                />
+              )}
+              <p className="text-sm text-gray-800">{post.description}</p>
+              <div className="mt-2 flex items-center gap-3">
+                <button
+                  onClick={() => handleLike(post.post_id)}
+                  className="text-pink-600 hover:underline"
+                >
+                  {likeStatus[post.post_id] ? "❤️ Liked" : "🤍 Like"} (
+                  {likeCounts[post.post_id] || post.like_count})
+                </button>
+                <button
+                  onClick={() => handleBookmark(post.post_id)}
+                  className="text-primary-400 hover:underline"
+                >
+                  {bookmarkStatus[post.post_id]
+                    ? "⭐ Bookmarked"
+                    : "☆ Bookmark"}
+                </button>
+              </div>
+              <div className="mt-4">
+                <input
+                  value={newComments[post.post_id] || ""}
+                  onChange={(e) =>
+                    setNewComments((prev) => ({
+                      ...prev,
+                      [post.post_id]: e.target.value,
+                    }))
+                  }
+                  placeholder="Leave a comment..."
+                  className="w-full border rounded px-2 py-1 text-sm"
+                />
+                <button
+                  onClick={() => submitComment(post.post_id)}
+                  className="text-blue-500 text-sm mt-1"
+                >
+                  Submit
+                </button>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {(commentsByPost[post.post_id] || post.comments || []).map(
+                    (c) => (
+                      <li key={c.id}>
+                        <strong>{c.username}:</strong> {c.content}
+                        {userId === c.user_id && (
+                          <>
+                            <input
+                              value={commentEdit[c.id] ?? c.content}
+                              onChange={(e) =>
+                                setCommentEdit((prev) => ({
+                                  ...prev,
+                                  [c.id]: e.target.value,
+                                }))
+                              }
+                              className="border rounded px-1 mx-1"
+                            />
+                            <button
+                              onClick={() =>
+                                handleEditComment(
+                                  post.post_id,
+                                  c.id,
+                                  commentEdit[c.id] || c.content
+                                )
+                              }
+                              className="text-green-500"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleDeleteComment(post.post_id, c.id)
+                              }
+                              className="text-red-500"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </>
   );
