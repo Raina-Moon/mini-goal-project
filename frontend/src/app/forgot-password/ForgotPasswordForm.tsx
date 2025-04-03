@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
+import GoBackArrow from "../../../public/icons/GoBackArrow";
+import GlobalInput from "@/components/ui/GlobalInput";
+import GlobalButton from "@/components/ui/GlobalButton";
 
 const ForgotPasswordForm = () => {
   const { requestPasswordReset } = useAuth();
@@ -22,37 +25,30 @@ const ForgotPasswordForm = () => {
   };
 
   return (
-    <div className="bg-emerald-500 w-80 h-[568px] flex flex-col items-center justify-center mx-auto font-inter">
-      <h2 className="text-neutral-100 text-center mb-3 text-sm">
+    <div className="flex flex-col items-center justify-center font-inter">
+      <h2 className="text-neutral-100 text-center mb-3 pt-[105px] text-lg font-medium">
         Drop your email
         <br />
         we'll send you the code!
       </h2>
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-56 h-36 bg-neutral-100 rounded-2xl shadow-sm px-4 py-5 flex flex-col gap-3 items-center"
-      >
-        <label htmlFor="email" className="text-xs text-emerald-800">
-          Email
-        </label>
-        <input
-          type="email"
-          id="email"
-          className="w-48 bg-white border border-emerald-500 rounded px-2 py-1 text-sm"
-          placeholder="email@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-
-        <button
-          type="submit"
-          className="mt-3 w-16 bg-emerald-300 rounded-full text-white text-xs py-1"
-        >
-          Send
+      <div className=" bg-white rounded-2xl shadow-sm px-2 py-4 flex flex-col mt-10">
+        <button onClick={() => router.back()}>
+          <GoBackArrow />
         </button>
-      </form>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 mt-7 px-4">
+          <GlobalInput
+            label="email"
+            type="email"
+            id="email"
+            placeholder="email@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <GlobalButton type="submit" onClick={() => router.back()}>send</GlobalButton>
+        </form>
+      </div>
 
       <Link
         href="/signup"
