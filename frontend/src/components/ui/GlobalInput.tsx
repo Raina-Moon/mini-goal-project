@@ -40,7 +40,7 @@ const GlobalInput: React.FC<InputProps> = ({
         onChange={onChange}
         disabled={disabled}
         className={clsx(
-          "w-full px-4 py-2 border rounded-md text-sm focus:border-primary-600",
+          "w-full px-4 py-2 border rounded-md text-sm focus:border-primary-600 focus:outline-none",
           error ? "border-red-500" : "border-primary-400",
           disabled && "border-gray-300 cursor-not-allowed",
           className
