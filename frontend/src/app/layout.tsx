@@ -12,6 +12,7 @@ import { CommentsProvider } from "./contexts/CommentsContext";
 import { Book } from "lucide-react";
 import { BookmarksProvider } from "./contexts/BookmarksContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
+import { usePathname } from "next/navigation";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 
@@ -20,6 +21,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const hideHeaderPaths = [
+    "/login",
+    "/signup",
+    "/reset-password",
+    "/verify-email",
+  ];
+  const showHeader = !hideHeaderPaths.includes(pathname);
+
   return (
     <html lang="en">
       <head>
@@ -35,8 +45,10 @@ export default function RootLayout({
                     <CommentsProvider>
                       <LikesProvider>
                         <FollowerProvider>
-                          <Header />
-                          <main className="pt-16">{children}</main>
+                          {showHeader && <Header />}
+                          <main className={showHeader ? "pt-16" : "pt-0"}>
+                            {children}
+                          </main>
                           <GlobalModal />
                         </FollowerProvider>
                       </LikesProvider>
