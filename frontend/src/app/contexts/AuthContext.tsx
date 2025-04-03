@@ -158,16 +158,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!username || username.trim() === "") {
       throw new Error("Username cannot be empty");
     }
-    const updatedUser = await fetchApi<User>(`/profile/${userId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ username }),
-    });
-    setUser(updatedUser);
-    localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    try {
+      const updatedUser = await fetchApi<User>(`/profile/${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ username }),
+      });
+      setUser(updatedUser);
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    } catch (err: any) {
+      if (err.message === "Username already exists") {
+        throw new Error("Username is already taken");
+      }
+      throw new Error("Failed to update profile");
+    }
   };
 
   const updateProfileImage = async (userId: number, file: File) => {
