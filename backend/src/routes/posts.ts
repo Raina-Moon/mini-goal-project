@@ -46,6 +46,57 @@ router.post("/upload-image", upload.single("image"), (async (
   }
 }) as RequestHandler);
 
+// ✅ Get all "nailed it" posts (for homepage feed)
+router.get("/", async (req: Request, res: Response) => {
+  const { excludeUserId, viewerId } = req.query;
+  try {
+    const result = await pool.query(
+      `
+      SELECT 
+        posts.id AS post_id,
+        posts.goal_id,
+        goals.title,
+        goals.duration,
+        posts.image_url,
+        posts.description,
+        users.username,
+        users.profile_image,
+        CAST(COUNT(likes.id) AS INTEGER) AS like_count,
+        EXISTS (
+          SELECT 1 FROM likes WHERE post_id = posts.id AND user_id = $2
+        ) AS liked_by_me,
+        COALESCE(
+          (
+            SELECT json_agg(json_build_object(
+              'id', comments.id,
+              'user_id', comments.user_id,
+              'username', users_c.username,
+              'content', comments.content,
+              'created_at', comments.created_at
+            ))
+            FROM comments
+            JOIN users AS users_c ON users_c.id = comments.user_id
+            WHERE comments.post_id = posts.id
+          ),
+          '[]'::json
+        ) AS comments
+      FROM posts
+      JOIN goals ON posts.goal_id = goals.id
+      JOIN users ON posts.user_id = users.id
+      LEFT JOIN likes ON posts.id = likes.post_id
+      WHERE goals.status = 'nailed it'
+      ${excludeUserId ? "AND posts.user_id != $1" : ""}
+      GROUP BY posts.id, goals.title, goals.duration, posts.image_url, posts.description, users.username, users.profile_image
+      ORDER BY posts.id DESC
+      `,
+      excludeUserId ? [excludeUserId, viewerId || null] : [null, viewerId || null]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 // ✅ Get "nailed it" goals + post data for a user
 router.get("/nailed/:userId", async (req: Request, res: Response) => {
   const profileUserId = req.params.userId;
