@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 interface ProfileFormProps {
   username: string;
-  onUpdate: (nickname: string) => void;
+  onUpdate: (nickname: string) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -22,11 +22,11 @@ const ProfileForm = ({ username, onUpdate, onCancel }: ProfileFormProps) => {
       onCancel(); // No change, just close the form
       return;
     }
-    
+
     setError(null);
 
     try {
-      onUpdate(nickname);
+      await onUpdate(nickname);
       setError(null);
     } catch (err: any) {
       if (err.message === "Username is already taken") {
