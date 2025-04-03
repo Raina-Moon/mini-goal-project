@@ -26,7 +26,7 @@ const Page = () => {
 
   useEffect(() => {
     fetchAndShufflePosts();
-  }, [fetchAndShufflePosts]);
+  }, [fetchAndShufflePosts, user]);
 
   const router = useRouter();
   const handleGoalCreated = () => {
@@ -38,7 +38,7 @@ const Page = () => {
   return (
     <>
       <GoalForm onGoalCreated={handleGoalCreated} />
-      <PostsList posts={posts} userId={user?.id || null} />
+      <PostsList posts={posts} userId={user ? Number(user.id) : null} />
     </>
   );
 };
