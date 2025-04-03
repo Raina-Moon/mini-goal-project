@@ -28,14 +28,14 @@ const LoginForm = () => {
   }, [user, router]);
 
   return (
-    <div className="bg-primary-500 w-80 h-[568px] relative overflow-hidden font-inter mx-auto">
-      <div className="w-52 h-24 absolute left-[55px] top-[56px] text-center text-neutral-100 text-base leading-none">
+    <div className="flex flex-col items-center justify-center gap-[45px]">
+      <div className="text-center text-neutral-100 text-xl pt-[105px] font-bold">
         Stay On, Badge Up
         <br />
         Share the Win!
       </div>
 
-      <div className="w-56 h-80 absolute left-[49px] top-[165px] bg-neutral-100 rounded-2xl shadow-sm p-4">
+      <div className=" bg-white rounded-2xl p-4">
         <form
           onSubmit={handleSubmit}
           className="flex flex-col items-center gap-y-2"

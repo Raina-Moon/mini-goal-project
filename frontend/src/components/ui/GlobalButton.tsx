@@ -12,12 +12,12 @@ type ButtonProps = {
   className?: string;
 };
 
-const baseStyles = "rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
+const baseStyles = "rounded-[100px] font-medium text-sm";
 
 const variantStyles = {
-  primary: "bg-emerald-500 text-white hover:bg-emerald-600 focus:ring-emerald-400",
-  secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400",
-  outline: "border border-gray-300 text-gray-800 hover:bg-gray-100 focus:ring-gray-400",
+  primary: "bg-primary-500 text-white hover:bg-primary-700",
+  secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300",
+  outline: "border border-gray-300 text-gray-800 hover:bg-gray-300 hover:text-gray-800",
 };
 
 const sizeStyles = {
