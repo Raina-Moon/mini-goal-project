@@ -26,7 +26,7 @@ export default function RootLayout({
     "/login",
     "/signup",
     "/reset-password",
-    "/verify-email",
+    "/forgot-password",
   ];
   const showHeader = !hideHeaderPaths.includes(pathname);
 

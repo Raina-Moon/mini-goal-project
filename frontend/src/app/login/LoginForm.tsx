@@ -59,7 +59,7 @@ const LoginForm = () => {
 
   return (
     <div className="flex flex-col items-center justify-center gap-[45px]">
-      <div className="text-center text-neutral-100 text-xl pt-[105px] font-bold">
+      <div className="text-center text-neutral-100 text-xl pt-[105px] font-medium">
         Stay On, Badge Up
         <br />
         Share the Win!
