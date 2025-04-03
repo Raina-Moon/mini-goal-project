@@ -27,7 +27,7 @@ const GlobalInput: React.FC<InputProps> = ({
   return (
     <div className="flex flex-col gap-1 w-full">
       {label && (
-        <label htmlFor={name} className="text-sm font-medium text-gray-900 text-left">
+        <label htmlFor={name} className="text-sm font-medium text-gray-900 text-left pl-1">
           {label}
         </label>
       )}
