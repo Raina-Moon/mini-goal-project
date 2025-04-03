@@ -132,8 +132,18 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     commentId: number,
     content: string
   ) => {
-    await editComment(postId, commentId, content);
-    setCommentEdit((prev) => ({ ...prev, [commentId]: "" }));
+    try {
+      await editComment(postId, commentId, content);
+      const updatedComments = (commentsByPost[postId] || []).map((comment) =>
+        comment.id === commentId ? { ...comment, content } : comment
+      );
+
+      fetchComments(postId);
+
+      setCommentEdit((prev) => ({ ...prev, [commentId]: "" }));
+    } catch (err) {
+      console.error("Failed to edit comment:", err);
+    }
   };
 
   const handleDeleteComment = async (postId: number, commentId: number) => {
@@ -209,7 +219,8 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
               <ul className="mt-2 space-y-1 text-sm">
                 {(commentsByPost[post.post_id] || []).map((c) => (
                   <li key={c.id}>
-                    <strong>{c.username}:</strong> {c.content}
+                    <strong>{c.username}:</strong>{" "}
+                    {c.content}
                     <input
                       value={commentEdit[c.id] ?? c.content}
                       onChange={(e) =>
