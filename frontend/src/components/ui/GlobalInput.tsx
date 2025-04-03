@@ -27,7 +27,7 @@ const GlobalInput: React.FC<InputProps> = ({
   return (
     <div className="flex flex-col gap-1 w-full">
       {label && (
-        <label htmlFor={name} className="text-sm font-medium text-gray-700">
+        <label htmlFor={name} className="text-sm font-medium text-gray-900 text-left">
           {label}
         </label>
       )}
@@ -40,9 +40,9 @@ const GlobalInput: React.FC<InputProps> = ({
         onChange={onChange}
         disabled={disabled}
         className={clsx(
-          "w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition",
-          error ? "border-red-500" : "border-gray-300",
-          disabled && "bg-gray-100 cursor-not-allowed",
+          "w-full px-4 py-2 border rounded-md text-sm focus:border-primary-600",
+          error ? "border-red-500" : "border-primary-400",
+          disabled && "border-gray-300 cursor-not-allowed",
           className
         )}
       />
