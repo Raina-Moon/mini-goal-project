@@ -133,7 +133,7 @@ const ResetPasswordForm = () => {
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleCodeChange(index, e.target.value)}
-                className="w-[10%] h-16 bg-primary-100 rounded-lg border border-primary-400 text-center text-xl focus:outline-none focus:border-primary-600"
+                className="w-[15%] h-16 bg-primary-100 rounded-lg border border-primary-400 text-center text-xl focus:outline-none focus:border-primary-600"
                 required
               />
             ))}
@@ -162,7 +162,7 @@ const ResetPasswordForm = () => {
                 : "Please verify the code first"
             }
             error={passwordError.join(", ")}
-            className={`w-48 h-8 rounded border px-2 py-1 text-sm focus:outline-none ${
+            className={` ${
               isCodeValid ? "border-emerald-500" : "border-gray-300"
             }`}
           />
@@ -179,7 +179,7 @@ const ResetPasswordForm = () => {
                 : "Please verify the code first"
             }
             error={confirmPasswordError}
-            className={`w-48 h-8 rounded border px-2 py-1 text-sm focus:outline-none ${
+            className={`${
               isCodeValid ? "border-emerald-500" : "border-gray-300"
             }`}
           />
