@@ -3,10 +3,12 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { fetchApi } from "@/utils/api/fetch";
 import { Post } from "@/utils/api";
+import { useAuth } from "./AuthContext";
 
 interface PostState {
   nailedPosts: Post[];
   fetchNailedPosts: (userId: number) => Promise<Post[]>;
+  fetchAllPosts: () => Promise<Post[]>;
   createPost: (
     userId: number,
     goalId: number,
@@ -20,10 +22,17 @@ const PostContext = createContext<PostState | undefined>(undefined);
 
 export const PostProvider = ({ children }: { children: ReactNode }) => {
   const [nailedPosts, setNailedPosts] = useState<Post[]>([]);
+  const { user } = useAuth();
 
   const fetchNailedPosts = async (userId: number) => {
     const posts = await fetchApi<Post[]>(`/posts/nailed/${userId}`);
     setNailedPosts(posts);
+    return posts;
+  };
+
+  const fetchAllPosts = async () => {
+    const query = user?.id ? `?viewerId=${user.id}` : "";
+    const posts = await fetchApi<Post[]>(`/posts${query}`);
     return posts;
   };
 
@@ -58,6 +67,7 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
   const value: PostState = {
     nailedPosts,
     fetchNailedPosts,
+    fetchAllPosts,
     createPost,
     uploadPostImage,
   };

@@ -15,8 +15,10 @@ export interface Goal {
 }
 
 export interface Post {
+  profile_image: string;
   id: number;
   post_id: number;
+  user_id?: number;
   goal_id: number;
   title: string;
   duration: number;
@@ -24,6 +26,7 @@ export interface Post {
   description: string;
   like_count: number;
   liked_by_me: boolean;
+  bookmarked_by_me: boolean;
   comments: Comment[];
 }
 
