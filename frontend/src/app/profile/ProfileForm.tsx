@@ -18,10 +18,15 @@ const ProfileForm = ({ username, onUpdate, onCancel }: ProfileFormProps) => {
       setError("Username cannot be empty!");
       return;
     }
+    if (nickname === username) {
+      onCancel(); // No change, just close the form
+      return;
+    }
+    
     setError(null);
 
     try {
-      await onUpdate(nickname);
+      onUpdate(nickname);
       setError(null);
     } catch (err: any) {
       if (err.message === "Username is already taken") {
