@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ErrorIcon from "../../../public/icons/ErrorIcon";
 import { useAuth } from "../contexts/AuthContext";
+import GlobalInput from "@/components/ui/GlobalInput";
+import GlobalButton from "@/components/ui/GlobalButton";
 
 const SignupForm = () => {
   const { signup } = useAuth();
@@ -14,11 +16,52 @@ const SignupForm = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const validatePassword = (password: string) => {
+    const errors = [];
+    if (!/[A-Z]/.test(password)) errors.push("uppercase");
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push("special char");
+    if (!/\d/.test(password)) errors.push("number");
+    if (password.length < 7) errors.push("7+ chars");
+
+    if (errors.length === 0) return [];
+    if (errors.length === 4)
+      return ["Password needs uppercase, special char, number, and 7+ chars!"];
+    if (errors.length === 1) return [`Add a ${errors[0]} and you’re good!`];
+    return [`Missing ${errors.length}: ${errors.join(", ")}.`];
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    const errors = validatePassword(newPassword);
+    setPasswordErrors(errors);
+  };
+
+  const handleConfirmPasswordChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newConfirmPassword = e.target.value;
+    setConfirmPassword(newConfirmPassword);
+    setConfirmPasswordError(
+      newConfirmPassword && newConfirmPassword !== password
+        ? "Oops, these don’t match yet."
+        : ""
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const passwordValidationErrors = validatePassword(password);
+    if (passwordValidationErrors.length > 0) {
+      setPasswordErrors(passwordValidationErrors);
+      return;
+    }
 
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
@@ -31,7 +74,7 @@ const SignupForm = () => {
       router.push("/login");
     } catch (error: any) {
       if (error.message === "Username is already taken") {
-        setError("Username is already taken!");
+        setError("username is already taken!");
       } else {
         setError("Signup failed!");
       }
@@ -39,69 +82,54 @@ const SignupForm = () => {
   };
 
   return (
-    <div className="bg-primary-500 w-80 h-[568px] relative overflow-hidden font-inter mx-auto">
-      <div className="absolute left-1/2 top-[50px] transform -translate-x-1/2 text-center text-neutral-100 text-base">
+    <div className="flex flex-col h-screen items-center justify-center bg-gradient-to-b from-primary-300 to-primary-600">
+      <div className="text-neutral-100 text-center mb-3 mt-[5px] text-lg font-medium">
         Step Up, Badge Up
         <br />
         Create Your Account!
       </div>
 
-      <div className="w-56 bg-neutral-100 rounded-2xl shadow-sm px-4 py-5 absolute left-1/2 top-[140px] transform -translate-x-1/2">
+      <div className="bg-white rounded-2xl px-4 py-4 flex flex-col mt-4 w-[80%]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-y-2">
           <div className="text-gray-900 text-base text-center">Logo</div>
 
-          <label className="text-gray-900 text-sm">email</label>
-          <input
+          <GlobalInput
+            label="email"
             type="email"
-            placeholder="Email"
-            className="border text-gray-900 border-primary-400 px-2 py-1 rounded text-sm focus:outline-none focus:border-primary-600"
+            placeholder="user@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
 
-          <label className="text-gray-900 text-sm">password</label>
-          <input
+          <GlobalInput
+            label="password"
             type="password"
-            placeholder="Password"
-            className="border text-gray-900 border-primary-400 px-2 py-1 rounded text-sm focus:outline-none focus:border-primary-600"
+            placeholder="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            onChange={handlePasswordChange}
+            error={passwordErrors.length > 0 ? passwordErrors.join(" ") : ""}
           />
 
-          <label className="text-gray-900 text-sm">confirm password</label>
-          <input
+          <GlobalInput
+            label="confirm password"
             type="password"
-            placeholder="Confirm Password"
-            className={`border px-2 py-1 focus:outline-none rounded text-sm ${
-              confirmPassword && password !== confirmPassword
-                ? "border-red-500"
-                : "border-primary-400 focus:border-primary-600"
-            }`}
+            placeholder="confirm Password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
+            onChange={handleConfirmPasswordChange}
+            error={confirmPasswordError}
           />
 
-          {password !== confirmPassword && confirmPassword && (
-            <div className="text-red-500 text-xs flex flex-row">
-              <ErrorIcon /> No match, try again!
-            </div>
-          )}
-
-          <label className="text-gray-900 text-sm">username</label>
-          <input
+          <GlobalInput
+            label="username"
             type="text"
             placeholder="Username"
-            className={`border text-gray-900 px-2 py-1 rounded text-sm focus:outline-none ${
+            className={`${
               error?.includes("Username")
                 ? "border-red-500"
                 : "border-primary-400 focus:border-primary-600"
             }`}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            required
           />
 
           {error && (
@@ -110,12 +138,7 @@ const SignupForm = () => {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="bg-primary-300 rounded-full text-white text-sm mt-2 py-1 self-center w-20 hover:bg-primary-600"
-          >
-            sign up
-          </button>
+          <GlobalButton type="submit">sign </GlobalButton>
         </form>
 
         <Link href="/login">
