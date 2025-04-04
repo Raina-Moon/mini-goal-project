@@ -9,10 +9,10 @@ import { FollowerProvider } from "./contexts/FollowerContext";
 import dynamic from "next/dynamic";
 import { LikesProvider } from "./contexts/LikesContext";
 import { CommentsProvider } from "./contexts/CommentsContext";
-import { Book } from "lucide-react";
 import { BookmarksProvider } from "./contexts/BookmarksContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { usePathname } from "next/navigation";
+import { Toaster } from "sonner";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 
@@ -45,6 +45,7 @@ export default function RootLayout({
                     <CommentsProvider>
                       <LikesProvider>
                         <FollowerProvider>
+                          <Toaster position="top-center"/>
                           {showHeader && <Header />}
                           <main className={showHeader ? "pt-16" : "pt-0"}>
                             {children}

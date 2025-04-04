@@ -7,6 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
 import GoBackArrow from "../../../public/icons/GoBackArrow";
+import { toast } from "sonner";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -52,7 +53,7 @@ const LoginForm = () => {
 
   useEffect(() => {
     if (user) {
-      alert(`Welcome back, ${user.username}!`);
+      toast.success(`Welcome back, ${user.username}!`);
       router.push("/");
     }
   }, [user, router]);
