@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Post } from "@/utils/api";
@@ -147,12 +147,15 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
 
   const CommentsModalContent = ({ postId }: { postId: number }) => {
     const [newComment, setNewComment] = useState("");
+    const [editText, setEditText] = useState<string>("");
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const closeModal = () => {
       setModalPostId(null);
       setDropdownOpen(null);
       setEditingCommentId(null);
       setDeleteConfirmId(null);
+      setEditText("");
     };
 
     const submitComment = async () => {
@@ -171,6 +174,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
         await editComment(postId, commentId, content);
         setEditingCommentId(null);
         setCommentEdit((prev) => ({ ...prev, [commentId]: "" }));
+        setEditText("");
       } catch (err) {
         console.error("Failed to edit comment:", err);
       }
@@ -192,7 +196,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
 
     const startEditing = (commentId: number, content: string) => {
       setEditingCommentId(commentId);
-      setCommentEdit((prev) => ({ ...prev, [commentId]: content }));
+      setEditText(content);
       setDropdownOpen(null);
     };
 
@@ -200,6 +204,12 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
       setDeleteConfirmId(commentId);
       setDropdownOpen(null);
     };
+
+    useEffect(() => {
+      if (editingCommentId && inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, [editingCommentId]);
 
     return (
       <>
@@ -240,14 +250,10 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
                     </div>
                     {editingCommentId === c.id ? (
                       <div className="pl-8 flex items-center gap-2">
-                        <input
-                          value={commentEdit[c.id] ?? c.content}
-                          onChange={(e) =>
-                            setCommentEdit((prev) => ({
-                              ...prev,
-                              [c.id]: e.target.value,
-                            }))
-                          }
+                        <textarea
+                          ref={inputRef}
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
                           className="w-full px-2 py-1 text-sm border rounded"
                         />
                         <button
