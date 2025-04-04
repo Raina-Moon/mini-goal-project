@@ -9,6 +9,7 @@ import { useGoals } from "@/app/contexts/GoalContext";
 import { usePosts } from "@/app/contexts/PostContext";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { toast } from "sonner";
 
 const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const { createGoal, updateGoal } = useGoals();
@@ -34,7 +35,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const handleFailOut = async () => {
     if (goalId) {
       await updateGoal(goalId, "failed out");
-      alert("😢 Failed out");
+      toast.error("😢 Failed out");
       setSecondsLeft(null);
     }
   };
@@ -42,8 +43,14 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !user.id) {
-      alert("User ID not found. Please log in.");
-      router.push("/login");
+      toast("Oops! looks like you're not logged in.", {
+        action: {
+          label: "Login",
+          onClick: () => {
+            router.push("/login");
+          },
+        },
+      });
       return;
     }
     try {
@@ -51,7 +58,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       startTimer(newGoal.id, duration);
       onGoalCreated();
     } catch (err) {
-      alert("Error creating goal");
+      toast.error("error creating goal");
     }
   };
 
@@ -75,14 +82,14 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       updateGoal(goalId, "nailed it")
         .then(() => {
           celebrate();
-          alert("💪 Nailed it!");
+          toast.success("💪 Nailed it!");
           setCompletedGoal({ id: goalId, title, duration });
           setShowPostModal(true);
           setSecondsLeft(null);
         })
         .catch((err) => {
           console.error("Error updating goal:", err);
-          alert("Error updating goal status. Please try again.");
+          toast.error("Error updating goal status. Please try again.");
         });
       return;
     }
@@ -104,7 +111,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
         e.returnValue = "";
         updateGoal(goalId, "failed out").catch((err) => {
           console.error("Error updating goal:", err);
-          alert("Error updating goal status. Please try again.");
+          toast.error("Error updating goal status. Please try again.");
         });
       }
     };
@@ -119,12 +126,12 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       if (document.hidden && secondsLeft !== null && goalId !== null) {
         updateGoal(goalId, "failed out")
           .then(() => {
-            alert("😢 You left the page. Failed out.");
+            toast.error("😢 You left the page. Failed out.");
             setSecondsLeft(null);
           })
           .catch((err) => {
             console.error("Error updating goal:", err);
-            alert("Error updating goal status. Please try again.");
+            toast.error("Error updating goal status. Please try again.");
           });
       }
     };
@@ -133,16 +140,16 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [secondsLeft, goalId,updateGoal]);
+  }, [secondsLeft, goalId, updateGoal]);
 
   return (
     <>
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 mx-7 mt-20 p-4 border border-primary-500 rounded-[20px]"
+        className="space-y-4 mx-10 mt-10 mb-[30px] p-4 border border-primary-500 rounded-[20px]"
       >
         <div className="flex flex-row items-center justify-center gap-4">
-          <h1 className="font-medium text-xl text-center text-gray-900">
+          <h1 className="text-xl text-center text-gray-900">
             lowkey timer drip!
           </h1>
           <img src="/images/TimerLogo.png" className="w-7 h-7" />
@@ -150,12 +157,14 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
         {secondsLeft === null ? (
           <>
             <GlobalInput
+            label="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="title"
               className="border p-2 w-full focus:outline-none"
             />
             <GlobalInput
+            label="duration"
               type="number"
               value={String(duration)}
               onChange={(e) => setDuration(Number(e.target.value))}
