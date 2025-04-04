@@ -4,7 +4,7 @@ import LoginForm from "./LoginForm";
 
 const page = () => {
   return (
-    <div className="bg-primary-500 min-h-screen font-inter">
+    <div className="flex flex-col h-screen items-center justify-center bg-gradient-to-b from-primary-300 to-primary-600">
       <LoginForm />
     </div>
   );
