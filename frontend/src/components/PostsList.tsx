@@ -142,6 +142,15 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
               key={post.post_id}
               className="border border-emerald-300 bg-emerald-50 rounded-lg p-4"
             >
+              <img
+                src={post.profile_image || "/default-profile.png"}
+                alt={`${post.username}'s profile`}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <span className="text-sm font-medium text-gray-800">
+                {post.username || "Unknown User"}
+              </span>
+
               <h2 className="text-lg font-semibold text-emerald-700">
                 {post.title}
               </h2>
