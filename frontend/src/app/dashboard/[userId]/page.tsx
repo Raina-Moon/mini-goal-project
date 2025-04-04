@@ -13,6 +13,7 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import { useGoals } from "@/app/contexts/GoalContext";
 import { useFollowers } from "@/app/contexts/FollowerContext";
 import { usePosts } from "@/app/contexts/PostContext";
+import { useGlobalLoading } from "@/app/contexts/LoadingContext";
 
 const Dashboard = () => {
   const { userId } = useParams();
@@ -24,12 +25,14 @@ const Dashboard = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
-  const [loading, setLoading] = useState(true);
+  const { setLoading } = useGlobalLoading();
 
   const fetchData = async () => {
     if (!userId || !user?.id || !token) return;
     const profileId = Number(userId);
     const viewerId = user.id;
+
+    setLoading(true);
 
     try {
       await Promise.all([
@@ -94,7 +97,7 @@ const Dashboard = () => {
           <TabsTrigger value="failed">Failed It</TabsTrigger>
         </TabsList>
         <TabsContent value="all">
-          <GoalsTab goals={goals} loading={loading} />
+          <GoalsTab goals={goals}/>
         </TabsContent>
         <TabsContent value="nailed">
           <NailedPostsTab posts={nailedPosts} userId={user.id} />
