@@ -111,7 +111,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
         e.returnValue = "";
         updateGoal(goalId, "failed out").catch((err) => {
           console.error("Error updating goal:", err);
-         toast.error("Error updating goal status. Please try again.");
+          toast.error("Error updating goal status. Please try again.");
         });
       }
     };
@@ -146,10 +146,10 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     <>
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 mx-7 mt-20 p-4 border border-primary-500 rounded-[20px]"
+        className="space-y-4 mx-10 mt-10 mb-[30px] p-4 border border-primary-500 rounded-[20px]"
       >
         <div className="flex flex-row items-center justify-center gap-4">
-          <h1 className="font-medium text-xl text-center text-gray-900">
+          <h1 className="text-xl text-center text-gray-900">
             lowkey timer drip!
           </h1>
           <img src="/images/TimerLogo.png" className="w-7 h-7" />
@@ -157,12 +157,14 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
         {secondsLeft === null ? (
           <>
             <GlobalInput
+            label="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="title"
               className="border p-2 w-full focus:outline-none"
             />
             <GlobalInput
+            label="duration"
               type="number"
               value={String(duration)}
               onChange={(e) => setDuration(Number(e.target.value))}
