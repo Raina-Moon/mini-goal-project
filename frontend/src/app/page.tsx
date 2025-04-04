@@ -1,11 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import GoalForm from "../components/GoalForm";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "./contexts/AuthContext";
 import { usePosts } from "./contexts/PostContext";
-import { useCallback, useEffect, useState } from "react";
 import { Post } from "@/utils/api";
+import GoalForm from "../components/GoalForm";
 import PostsList from "@/components/PostsList";
 
 const Page = () => {
@@ -28,16 +27,9 @@ const Page = () => {
     fetchAndShufflePosts();
   }, [fetchAndShufflePosts, user]);
 
-  const router = useRouter();
-  const handleGoalCreated = () => {
-    if (user) {
-      router.push(`/dashboard/${user.id}`);
-    }
-  };
-
   return (
     <>
-      <GoalForm onGoalCreated={handleGoalCreated} />
+      <GoalForm />
       <PostsList posts={posts} userId={user ? Number(user.id) : null} />
     </>
   );
