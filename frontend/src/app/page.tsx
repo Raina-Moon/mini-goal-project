@@ -30,6 +30,7 @@ const Page = () => {
   return (
     <>
       <GoalForm />
+      <hr className="mb-5 border-t mx-5 border-primary-200" />
       <PostsList posts={posts} userId={user ? Number(user.id) : null} />
     </>
   );
