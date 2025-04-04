@@ -5,7 +5,7 @@ import AuthForm from "./SignupForm";
 
 const page = () => {
   return (
-    <div className="bg-primary-500 min-h-screen font-inter">
+    <div className="min-h-screen">
       <AuthForm />
     </div>
   );
