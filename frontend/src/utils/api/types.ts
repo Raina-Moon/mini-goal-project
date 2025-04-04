@@ -42,6 +42,7 @@ export interface Comment {
   username: string;
   content: string;
   created_at: string;
+  profile_image?: string;
 }
 
 export interface Follower {
