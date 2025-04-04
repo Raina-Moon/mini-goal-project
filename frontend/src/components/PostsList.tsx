@@ -1,18 +1,17 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { Post } from "@/utils/api";
 import { useLikes } from "@/app/contexts/LikesContext";
 import { useComments } from "@/app/contexts/CommentsContext";
 import { useBookmarks } from "@/app/contexts/BookmarksContext";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import HeartEmpty from "../../public/icons/HeartEmpty";
 import HeartFull from "../../public/icons/HeartFull";
 import MessageIcon from "../../public/icons/MessageIcon";
 import BookmarkEmpty from "../../public/icons/BookmarkEmpty";
 import BookmarkFull from "../../public/icons/BookmarkFull";
-import { useModal } from "@/stores/useModal";
 
 interface PostsListProps {
   posts: Post[];
@@ -30,13 +29,13 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   } = useComments();
   const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
   const router = useRouter();
-  const { open } = useModal();
 
   const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
   const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({});
   const [bookmarkStatus, setBookmarkStatus] = useState<{
     [key: number]: boolean;
   }>({});
+  const [modalPostId, setModalPostId] = useState<number | null>(null);
   const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
   const filteredPosts = userId
@@ -44,25 +43,28 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     : posts;
 
   const initializeData = useCallback(async () => {
-    if (!userId) return;
+    // if (!userId) return;
 
     const status: { [key: number]: boolean } = {};
     const counts: { [key: number]: number } = {};
     const bookmarkStatusTemp: { [key: number]: boolean } = {};
 
     try {
-      const bookmarkedPosts = await fetchBookmarkedPosts(userId);
-
       await Promise.all(
         filteredPosts.map(async (post) => {
-          status[post.post_id] = userId
-            ? await getLikeStatus(post.post_id, userId)
-            : false;
-          counts[post.post_id] = await fetchLikeCount(post.post_id);
-          bookmarkStatusTemp[post.post_id] = userId
-            ? bookmarkedPosts.some((bp) => bp.id === post.post_id)
-            : false;
           await fetchComments(post.post_id);
+          counts[post.post_id] = await fetchLikeCount(post.post_id);
+
+          if (userId) {
+            status[post.post_id] = await getLikeStatus(post.post_id, userId);
+            const bookmarkedPosts = await fetchBookmarkedPosts(userId);
+            bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some(
+              (bp) => bp.id === post.post_id
+            );
+          } else {
+            status[post.post_id] = false;
+            bookmarkStatusTemp[post.post_id] = false;
+          }
         })
       );
 
@@ -141,99 +143,102 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   const CommentsModalContent = ({ postId }: { postId: number }) => {
     const [newComment, setNewComment] = useState("");
 
-    useEffect(() => {
-      fetchComments(postId);
-    }, [postId, fetchComments]);
-
     const submitComment = async () => {
       if (!userId || !newComment.trim()) return;
       try {
         await addComment(userId, postId, newComment);
         setNewComment("");
-        await fetchComments(postId);
       } catch (err) {
         console.error("Failed to submit comment:", err);
       }
     };
 
     const handleEditComment = async (commentId: number, content: string) => {
+      if (!userId) return;
       try {
         await editComment(postId, commentId, content);
         setCommentEdit((prev) => ({ ...prev, [commentId]: "" }));
-        await fetchComments(postId);
       } catch (err) {
         console.error("Failed to edit comment:", err);
       }
     };
 
     const handleDeleteComment = async (commentId: number) => {
+      if (!userId) return;
       try {
         await deleteComment(postId, commentId);
-        await fetchComments(postId);
       } catch (err) {
         console.error("Failed to delete comment:", err);
       }
     };
 
     return (
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Comments</h2>
-        <ul className="space-y-2 max-h-[50vh] overflow-y-auto">
-          {commentsByPost[postId]?.length > 0 ? (
-            commentsByPost[postId].map((c) => (
-              <li key={c.id} className="text-sm">
-                <strong>{c.username}:</strong> {c.content}
-                {userId === c.user_id && (
-                  <div className="mt-1">
-                    <input
-                      value={commentEdit[c.id] ?? c.content}
-                      onChange={(e) =>
-                        setCommentEdit((prev) => ({
-                          ...prev,
-                          [c.id]: e.target.value,
-                        }))
-                      }
-                      className="border rounded px-1 mr-2 text-sm"
-                    />
-                    <button
-                      onClick={() =>
-                        handleEditComment(c.id, commentEdit[c.id] || c.content)
-                      }
-                      className="text-green-500 mr-2"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => handleDeleteComment(c.id)}
-                      className="text-red-500"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))
-          ) : (
-            <li className="text-sm text-gray-500">No comments yet.</li>
-          )}
-        </ul>
-        <div className="mb-4">
-          <textarea
-            value={newComment}
-            onChange={(e) => {
-              console.log("Textarea value:", e.target.value);
-              setNewComment(e.target.value);
-            }}
-            placeholder="Leave a comment..."
-            className="w-full border rounded px-2 py-1 text-sm"
-            disabled={!userId}
-          />
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="bg-white p-4 rounded-lg max-w-md w-full">
+          <h2 className="text-lg font-semibold mb-4">Comments</h2>
+          <ul className="space-y-2 max-h-[50vh] overflow-y-auto">
+            {commentsByPost[postId]?.length > 0 ? (
+              commentsByPost[postId].map((c) => (
+                <li key={c.id} className="text-sm">
+                  <strong>{c.username}:</strong> {c.content}
+                  {userId === c.user_id && (
+                    <div className="mt-1">
+                      <input
+                        value={commentEdit[c.id] ?? c.content}
+                        onChange={(e) =>
+                          setCommentEdit((prev) => ({
+                            ...prev,
+                            [c.id]: e.target.value,
+                          }))
+                        }
+                        className="border rounded px-1 mr-2 text-sm"
+                      />
+                      <button
+                        onClick={() =>
+                          handleEditComment(
+                            c.id,
+                            commentEdit[c.id] || c.content
+                          )
+                        }
+                        className="text-green-500 mr-2"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => handleDeleteComment(c.id)}
+                        className="text-red-500"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-gray-500">No comments yet.</li>
+            )}
+          </ul>
+          <div className="mb-4">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Leave a comment..."
+              className="w-full border rounded px-2 py-1 text-sm"
+              disabled={!userId}
+            />
+            <button
+              onClick={submitComment}
+              className="text-blue-500 text-sm mt-1"
+              disabled={!userId}
+            >
+              Submit
+            </button>
+          </div>
           <button
-            onClick={submitComment}
-            className="text-blue-500 text-sm mt-1"
-            disabled={!userId}
+            onClick={() => setModalPostId(null)}
+            className="text-red-500 text-sm"
           >
-            Submit
+            Close
           </button>
         </div>
       </div>
@@ -241,7 +246,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   };
 
   const openCommentsModal = (postId: number) => {
-    open(<CommentsModalContent postId={postId} />);
+    setModalPostId(postId);
   };
 
   return (
@@ -323,6 +328,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
           })}
         </ul>
       </div>
+      {modalPostId && <CommentsModalContent postId={modalPostId} />}
     </>
   );
 };
