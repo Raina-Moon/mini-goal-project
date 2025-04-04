@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import Lottie from "lottie-react";
 import timerAnimation from "@/assets/timerAnimation.json";
 
-const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
+const GoalForm = () => {
   const { createGoal, updateGoal } = useGoals();
   const { createPost } = usePosts();
   const { user } = useAuth();
@@ -58,7 +58,6 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     try {
       const newGoal = await createGoal(user.id, title, duration);
       startTimer(newGoal.id, duration);
-      onGoalCreated();
     } catch (err) {
       toast.error("error creating goal");
     }
@@ -75,6 +74,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
 
     await createPost(user.id, goalId, imageUrl, description);
     setShowPostModal(false);
+    router.push(`/dashboard/${user.id}`);
   };
 
   useEffect(() => {
