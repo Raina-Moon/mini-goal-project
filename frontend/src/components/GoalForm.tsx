@@ -9,6 +9,7 @@ import { useGoals } from "@/app/contexts/GoalContext";
 import { usePosts } from "@/app/contexts/PostContext";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { toast } from "sonner";
 
 const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const { createGoal, updateGoal } = useGoals();
@@ -34,7 +35,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const handleFailOut = async () => {
     if (goalId) {
       await updateGoal(goalId, "failed out");
-      alert("😢 Failed out");
+      toast.error("😢 Failed out");
       setSecondsLeft(null);
     }
   };
@@ -42,8 +43,14 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !user.id) {
-      alert("User ID not found. Please log in.");
-      router.push("/login");
+      toast("Oops! looks like you're not logged in.", {
+        action: {
+          label: "Login",
+          onClick: () => {
+            router.push("/login");
+          },
+        },
+      });
       return;
     }
     try {
@@ -51,7 +58,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       startTimer(newGoal.id, duration);
       onGoalCreated();
     } catch (err) {
-      alert("Error creating goal");
+      toast.error("error creating goal");
     }
   };
 
@@ -75,14 +82,14 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       updateGoal(goalId, "nailed it")
         .then(() => {
           celebrate();
-          alert("💪 Nailed it!");
+          toast.success("💪 Nailed it!");
           setCompletedGoal({ id: goalId, title, duration });
           setShowPostModal(true);
           setSecondsLeft(null);
         })
         .catch((err) => {
           console.error("Error updating goal:", err);
-          alert("Error updating goal status. Please try again.");
+          toast.error("Error updating goal status. Please try again.");
         });
       return;
     }
@@ -104,7 +111,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
         e.returnValue = "";
         updateGoal(goalId, "failed out").catch((err) => {
           console.error("Error updating goal:", err);
-          alert("Error updating goal status. Please try again.");
+         toast.error("Error updating goal status. Please try again.");
         });
       }
     };
@@ -119,12 +126,12 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
       if (document.hidden && secondsLeft !== null && goalId !== null) {
         updateGoal(goalId, "failed out")
           .then(() => {
-            alert("😢 You left the page. Failed out.");
+            toast.error("😢 You left the page. Failed out.");
             setSecondsLeft(null);
           })
           .catch((err) => {
             console.error("Error updating goal:", err);
-            alert("Error updating goal status. Please try again.");
+            toast.error("Error updating goal status. Please try again.");
           });
       }
     };
@@ -133,7 +140,7 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [secondsLeft, goalId,updateGoal]);
+  }, [secondsLeft, goalId, updateGoal]);
 
   return (
     <>
