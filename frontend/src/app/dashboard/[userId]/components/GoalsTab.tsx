@@ -1,14 +1,17 @@
 import { Goal } from "@/utils/api";
+import { useGlobalLoading } from "@/app/contexts/LoadingContext";
 
-  interface GoalsTabProps {
-    goals: Goal[];
-    loading: boolean;
-  }
+interface GoalsTabProps {
+  goals: Goal[];
+}
+
+const GoalsTab = ({ goals }: GoalsTabProps) => {
+  const { loading } = useGlobalLoading();
   
-  const GoalsTab = ({ goals, loading }: GoalsTabProps) => (
+  return (
     <>
       {loading ? (
-        <p>Loading goals...</p>
+        <p></p>
       ) : goals.length === 0 ? (
         <p className="text-gray-500">No goals yet! Let&apos;s start one! 💡</p>
       ) : (
@@ -27,7 +30,9 @@ import { Goal } from "@/utils/api";
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-lg font-semibold">{goal.title}</h2>
-                  <p className="text-sm text-gray-600">Duration: {goal.duration} min</p>
+                  <p className="text-sm text-gray-600">
+                    Duration: {goal.duration} min
+                  </p>
                   <p className="text-sm text-gray-400">
                     Created: {new Date(goal.created_at).toLocaleString()}
                   </p>
@@ -50,5 +55,6 @@ import { Goal } from "@/utils/api";
       )}
     </>
   );
-  
-  export default GoalsTab;
+};
+
+export default GoalsTab;
