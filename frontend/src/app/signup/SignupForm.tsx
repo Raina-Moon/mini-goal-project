@@ -91,8 +91,6 @@ const SignupForm = () => {
 
       <div className="bg-white rounded-2xl px-4 py-4 flex flex-col mt-4 w-[80%]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-y-2">
-          <div className="text-gray-900 text-base text-center">Logo</div>
-
           <GlobalInput
             label="email"
             type="email"
@@ -123,22 +121,14 @@ const SignupForm = () => {
             label="username"
             type="text"
             placeholder="Username"
-            className={`${
-              error?.includes("Username")
-                ? "border-red-500"
-                : "border-primary-400 focus:border-primary-600"
-            }`}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            error={error || ""}
           />
 
-          {error && (
-            <div className="text-red-500 text-xs flex flex-row">
-              <ErrorIcon /> {error}
-            </div>
-          )}
-
-          <GlobalButton type="submit">sign </GlobalButton>
+          <GlobalButton type="submit" className="mt-2">
+            sign up
+          </GlobalButton>
         </form>
 
         <Link href="/login">
