@@ -39,9 +39,11 @@ export interface Like {
 export interface Comment {
   id: number;
   user_id: number;
+  post_id?: number;
   username: string;
   content: string;
   created_at: string;
+  profile_image?: string;
 }
 
 export interface Follower {

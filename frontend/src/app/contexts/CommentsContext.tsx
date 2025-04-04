@@ -1,13 +1,9 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { fetchApi } from "@/utils/api/fetch";
 import { Comment } from "@/utils/api/types";
+import { useAuth } from "./AuthContext";
 
 interface CommentState {
   commentsByPost: { [postId: number]: Comment[] };
@@ -31,6 +27,7 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
   const [commentsByPost, setCommentsByPost] = useState<{
     [postId: number]: Comment[];
   }>({});
+  const { user } = useAuth();
 
   // ✅ Fetch comments
   const fetchComments = async (postId: number) => {
@@ -42,23 +39,50 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Add comment
+  // ✅ Add comment with optimistic UI update
   const addComment = async (
     userId: number,
     postId: number,
     content: string
   ) => {
+    const tempComment: Comment = {
+      id: Date.now(), // Temporary ID for optimistic update
+      user_id: userId,
+      post_id: postId,
+      content,
+      username: user?.username || "You",
+      profile_image: user?.profile_image || "/images/DefaultProfile.png",
+      created_at: new Date().toISOString(),
+    };
+
+    const previousComments = commentsByPost[postId] || [];
+
+    setCommentsByPost((prev) => ({
+      ...prev,
+      [postId]: [tempComment, ...(prev[postId] || [])],
+    }));
+
     try {
       const newComment = await fetchApi<Comment>("/comments", {
         method: "POST",
         body: JSON.stringify({ user_id: userId, post_id: postId, content }),
       });
+      const mergedComments = {
+        ...tempComment,
+        ...newComment,
+      };
       setCommentsByPost((prev) => ({
         ...prev,
-        [postId]: [newComment, ...(prev[postId] || [])],
+        [postId]: prev[postId].map((c) =>
+          c.id === tempComment.id ? mergedComments : c
+        ),
       }));
     } catch (err) {
       console.error("Error adding comment:", err);
+      setCommentsByPost((prev) => ({
+        ...prev,
+        [postId]: previousComments,
+      }));
     }
   };
 

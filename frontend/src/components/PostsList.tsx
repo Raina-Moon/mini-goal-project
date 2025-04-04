@@ -12,6 +12,8 @@ import HeartFull from "../../public/icons/HeartFull";
 import MessageIcon from "../../public/icons/MessageIcon";
 import BookmarkEmpty from "../../public/icons/BookmarkEmpty";
 import BookmarkFull from "../../public/icons/BookmarkFull";
+import PaperPlaneIcon from "../../public/icons/PaperPlaneIcon";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 interface PostsListProps {
   posts: Post[];
@@ -28,6 +30,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     deleteComment,
   } = useComments();
   const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
+  const { user } = useAuth();
   const router = useRouter();
 
   const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
@@ -143,6 +146,10 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   const CommentsModalContent = ({ postId }: { postId: number }) => {
     const [newComment, setNewComment] = useState("");
 
+    const closeModal = () => {
+      setModalPostId(null);
+    };
+
     const submitComment = async () => {
       if (!userId || !newComment.trim()) return;
       try {
@@ -173,75 +180,89 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div className="bg-white p-4 rounded-lg max-w-md w-full">
-          <h2 className="text-lg font-semibold mb-4">Comments</h2>
-          <ul className="space-y-2 max-h-[50vh] overflow-y-auto">
-            {commentsByPost[postId]?.length > 0 ? (
-              commentsByPost[postId].map((c) => (
-                <li key={c.id} className="text-sm">
-                  <strong>{c.username}:</strong> {c.content}
-                  {userId === c.user_id && (
-                    <div className="mt-1">
-                      <input
-                        value={commentEdit[c.id] ?? c.content}
-                        onChange={(e) =>
-                          setCommentEdit((prev) => ({
-                            ...prev,
-                            [c.id]: e.target.value,
-                          }))
-                        }
-                        className="border rounded px-1 mr-2 text-sm"
-                      />
-                      <button
-                        onClick={() =>
-                          handleEditComment(
-                            c.id,
-                            commentEdit[c.id] || c.content
-                          )
-                        }
-                        className="text-green-500 mr-2"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => handleDeleteComment(c.id)}
-                        className="text-red-500"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </li>
-              ))
-            ) : (
-              <li className="text-sm text-gray-500">No comments yet.</li>
-            )}
-          </ul>
-          <div className="mb-4">
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Leave a comment..."
-              className="w-full border rounded px-2 py-1 text-sm"
-              disabled={!userId}
-            />
-            <button
-              onClick={submitComment}
-              className="text-blue-500 text-sm mt-1"
-              disabled={!userId}
-            >
-              Submit
-            </button>
-          </div>
-          <button
-            onClick={() => setModalPostId(null)}
-            className="text-red-500 text-sm"
+      <>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white p-4 rounded-lg shadow-lg w-[90%] min-w-[300px]"
+            onClick={(e) => e.stopPropagation()}
           >
-            Close
-          </button>
+            <h2 className="text-lg text-gray-900 font-semibold mb-2">
+              comments{" "}
+              {commentsByPost[postId]?.length > 0 && (
+                <span>{commentsByPost[postId].length}</span>
+              )}
+            </h2>
+
+            <hr className="border-t border-primary-200 mb-1" />
+
+            <ul className="space-y-2 max-h-[50vh] overflow-y-auto">
+              {commentsByPost[postId]?.length > 0 ? (
+                commentsByPost[postId].map((c) => (
+                  <li key={c.id} className="text-sm py-1">
+                    <div className="flex flex-row gap-1">
+                      <img
+                        src={c.profile_image || "/images/DefaultProfile.png"}
+                        alt={`${c.username}'s profile`}
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                      <span className="font-medium">{c.username}</span>
+                    </div>
+                    <div className="pl-7">{c.content}</div>
+                    {userId === c.user_id && (
+                      <div className="">
+                        <input
+                          value={commentEdit[c.id] ?? c.content}
+                          onChange={(e) =>
+                            setCommentEdit((prev) => ({
+                              ...prev,
+                              [c.id]: e.target.value,
+                            }))
+                          }
+                          className="px-1 mr-2 text-sm"
+                        />
+                        <button
+                          onClick={() =>
+                            handleEditComment(
+                              c.id,
+                              commentEdit[c.id] || c.content
+                            )
+                          }
+                          className="text-green-500 mr-2"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComment(c.id)}
+                          className="text-red-500"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                ))
+              ) : (
+                <li className="text-sm text-gray-500">No comments yet.</li>
+              )}
+            </ul>
+            <div className="border-t border-primary-200 mb-4 flex flex-row items-center gap-2 mt-2">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Leave a comment..."
+                className="w-full px-2 py-1 text-sm mt-2 focus:outline-none"
+                disabled={!userId}
+              />
+              <button onClick={submitComment} disabled={!userId}>
+                <PaperPlaneIcon />
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   };
 
