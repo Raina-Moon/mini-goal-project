@@ -13,6 +13,8 @@ import { BookmarksProvider } from "./contexts/BookmarksContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { usePathname } from "next/navigation";
 import { Toaster } from "sonner";
+import { LoadingProvider } from "./contexts/LoadingContext";
+import GlobalLoadingOverlay from "@/components/ui/GlobalLoadingBar";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 
@@ -45,12 +47,15 @@ export default function RootLayout({
                     <CommentsProvider>
                       <LikesProvider>
                         <FollowerProvider>
-                          <Toaster position="top-center"/>
-                          {showHeader && <Header />}
-                          <main className={showHeader ? "pt-16" : "pt-0"}>
-                            {children}
-                          </main>
-                          <GlobalModal />
+                          <LoadingProvider>
+                            <GlobalLoadingOverlay />
+                            <Toaster position="top-center" />
+                            {showHeader && <Header />}
+                            <main className={showHeader ? "pt-16" : "pt-0"}>
+                              {children}
+                            </main>
+                            <GlobalModal />
+                          </LoadingProvider>
                         </FollowerProvider>
                       </LikesProvider>
                     </CommentsProvider>
