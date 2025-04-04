@@ -12,6 +12,7 @@ import HeartFull from "../../public/icons/HeartFull";
 import MessageIcon from "../../public/icons/MessageIcon";
 import BookmarkEmpty from "../../public/icons/BookmarkEmpty";
 import BookmarkFull from "../../public/icons/BookmarkFull";
+import PaperPlaneIcon from "../../public/icons/PaperPlaneIcon";
 
 interface PostsListProps {
   posts: Post[];
@@ -175,14 +176,29 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
         <div className="bg-white p-4 rounded-lg max-w-md w-full">
-          <h2 className="text-lg font-semibold mb-4">Comments</h2>
-          <ul className="space-y-2 max-h-[50vh] overflow-y-auto">
+          <h2 className="text-lg text-gray-900 font-semibold mb-2">
+            comments{" "}
+            {commentsByPost[postId]?.length > 0 && (
+              <span>{commentsByPost[postId].length}</span>
+            )}
+          </h2>
+
+          <hr className="border-t border-primary-200" />
+          <ul className="space-y-2 max-h-[70vh] overflow-y-auto">
             {commentsByPost[postId]?.length > 0 ? (
               commentsByPost[postId].map((c) => (
-                <li key={c.id} className="text-sm">
-                  <strong>{c.username}:</strong> {c.content}
+                <li key={c.id} className="text-sm py-1">
+                  <div className="flex flex-row gap-1">
+                    <img
+                      src={c.profile_image || "/default-profile.png"}
+                      alt={`${c.username}'s profile`}
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                    <span className="font-medium">{c.username}</span>
+                  </div>
+                  <div className="pl-7">{c.content}</div>
                   {userId === c.user_id && (
-                    <div className="mt-1">
+                    <div className="">
                       <input
                         value={commentEdit[c.id] ?? c.content}
                         onChange={(e) =>
@@ -191,7 +207,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
                             [c.id]: e.target.value,
                           }))
                         }
-                        className="border rounded px-1 mr-2 text-sm"
+                        className="px-1 mr-2 text-sm"
                       />
                       <button
                         onClick={() =>
@@ -218,28 +234,18 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
               <li className="text-sm text-gray-500">No comments yet.</li>
             )}
           </ul>
-          <div className="mb-4">
+          <div className="border-t border-primary-200 mb-4 flex flex-row items-center gap-2 mt-2">
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Leave a comment..."
-              className="w-full border rounded px-2 py-1 text-sm"
+              className="w-full px-2 py-1 text-sm mt-2"
               disabled={!userId}
             />
-            <button
-              onClick={submitComment}
-              className="text-blue-500 text-sm mt-1"
-              disabled={!userId}
-            >
-              Submit
+            <button onClick={submitComment} disabled={!userId}>
+              <PaperPlaneIcon />
             </button>
           </div>
-          <button
-            onClick={() => setModalPostId(null)}
-            className="text-red-500 text-sm"
-          >
-            Close
-          </button>
         </div>
       </div>
     );
