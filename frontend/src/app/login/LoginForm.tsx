@@ -58,15 +58,15 @@ const LoginForm = () => {
   }, [user, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-[45px]">
-      <div className="text-center text-neutral-100 text-xl pt-[105px] font-medium">
+    <div className="flex flex-col items-center justify-center gap-[35px] w-[80%]">
+      <div className="text-center text-neutral-100 text-xl font-medium">
         Stay On, Badge Up
         <br />
         Share the Win!
       </div>
 
-      <div className=" bg-white rounded-2xl p-4">
-        <button onClick={() => router.back()}>
+      <div className=" bg-white w-full rounded-2xl p-4">
+        <button onClick={() => router.push("/")}>
           <GoBackArrow />
         </button>
 
