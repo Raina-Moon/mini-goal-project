@@ -144,6 +144,10 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   const CommentsModalContent = ({ postId }: { postId: number }) => {
     const [newComment, setNewComment] = useState("");
 
+    const closeModal = () => {
+      setModalPostId(null);
+    };
+
     const submitComment = async () => {
       if (!userId || !newComment.trim()) return;
       try {
@@ -174,80 +178,91 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div className="bg-white p-4 rounded-lg max-w-md w-full">
-          <h2 className="text-lg text-gray-900 font-semibold mb-2">
-            comments{" "}
-            {commentsByPost[postId]?.length > 0 && (
-              <span>{commentsByPost[postId].length}</span>
-            )}
-          </h2>
+      <>
+        
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            onClick={closeModal}
+          >
+            <div
+              className="bg-white p-4 rounded-lg shadow-lg w-[90%] min-w-[300px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-lg text-gray-900 font-semibold mb-2">
+                comments{" "}
+                {commentsByPost[postId]?.length > 0 && (
+                  <span>{commentsByPost[postId].length}</span>
+                )}
+              </h2>
 
-          <hr className="border-t border-primary-200" />
-          <ul className="space-y-2 max-h-[70vh] overflow-y-auto">
-            {commentsByPost[postId]?.length > 0 ? (
-              commentsByPost[postId].map((c) => (
-                <li key={c.id} className="text-sm py-1">
-                  <div className="flex flex-row gap-1">
-                    <img
-                      src={c.profile_image || "/default-profile.png"}
-                      alt={`${c.username}'s profile`}
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
-                    <span className="font-medium">{c.username}</span>
-                  </div>
-                  <div className="pl-7">{c.content}</div>
-                  {userId === c.user_id && (
-                    <div className="">
-                      <input
-                        value={commentEdit[c.id] ?? c.content}
-                        onChange={(e) =>
-                          setCommentEdit((prev) => ({
-                            ...prev,
-                            [c.id]: e.target.value,
-                          }))
-                        }
-                        className="px-1 mr-2 text-sm"
-                      />
-                      <button
-                        onClick={() =>
-                          handleEditComment(
-                            c.id,
-                            commentEdit[c.id] || c.content
-                          )
-                        }
-                        className="text-green-500 mr-2"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => handleDeleteComment(c.id)}
-                        className="text-red-500"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </li>
-              ))
-            ) : (
-              <li className="text-sm text-gray-500">No comments yet.</li>
-            )}
-          </ul>
-          <div className="border-t border-primary-200 mb-4 flex flex-row items-center gap-2 mt-2">
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Leave a comment..."
-              className="w-full px-2 py-1 text-sm mt-2"
-              disabled={!userId}
-            />
-            <button onClick={submitComment} disabled={!userId}>
-              <PaperPlaneIcon />
-            </button>
+              <hr className="border-t border-primary-200 mb-1" />
+
+              <ul className="space-y-2 max-h-[70vh] overflow-y-auto">
+                {commentsByPost[postId]?.length > 0 ? (
+                  commentsByPost[postId].map((c) => (
+                    <li key={c.id} className="text-sm py-1">
+                      <div className="flex flex-row gap-1">
+                        <img
+                          src={c.profile_image || "/default-profile.png"}
+                          alt={`${c.username}'s profile`}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                        <span className="font-medium">{c.username}</span>
+                      </div>
+                      <div className="pl-7">{c.content}</div>
+                      {userId === c.user_id && (
+                        <div className="">
+                          <input
+                            value={commentEdit[c.id] ?? c.content}
+                            onChange={(e) =>
+                              setCommentEdit((prev) => ({
+                                ...prev,
+                                [c.id]: e.target.value,
+                              }))
+                            }
+                            className="px-1 mr-2 text-sm"
+                          />
+                          <button
+                            onClick={() =>
+                              handleEditComment(
+                                c.id,
+                                commentEdit[c.id] || c.content
+                              )
+                            }
+                            className="text-green-500 mr-2"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => handleDeleteComment(c.id)}
+                            className="text-red-500"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-sm text-gray-500">No comments yet.</li>
+                )}
+              </ul>
+              <div className="border-t border-primary-200 mb-4 flex flex-row items-center gap-2 mt-2">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Leave a comment..."
+                  className="w-full px-2 py-1 text-sm mt-2 focus:outline-none"
+                  disabled={!userId}
+                />
+                <button onClick={submitComment} disabled={!userId}>
+                  <PaperPlaneIcon />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        
+      </>
     );
   };
 
