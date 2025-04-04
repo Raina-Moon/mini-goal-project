@@ -177,15 +177,17 @@ const GoalForm = () => {
             </div>
           </>
         ) : (
-          <div className="text-center space-y-4">
-            <Lottie
-              animationData={timerAnimation}
-              loop={true}
-              style={{ width: 20, height: 20 }}
-            />
-            <p className="text-2xl font-semibold text-primary-600">
-              {formatTime(secondsLeft)}
-            </p>
+          <div className="flex flex-col items-center justify-between mt-2 gap-2">
+            <div className="flex flex-row gap-4 items-center justify-center mb-4">
+              <Lottie
+                animationData={timerAnimation}
+                loop={true}
+                style={{ width: 40, height: 40 }}
+              />
+              <p className="text-4xl font-semibold text-primary-600">
+                {formatTime(secondsLeft)}
+              </p>
+            </div>
             <GlobalButton onClick={handleFailOut}>Fail Out</GlobalButton>
           </div>
         )}
