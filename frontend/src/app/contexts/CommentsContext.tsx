@@ -92,6 +92,15 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
     commentId: number,
     content: string
   ) => {
+    const previousComments = commentsByPost[postId] || [];
+
+    setCommentsByPost((prev) => ({
+      ...prev,
+      [postId]: prev[postId].map((c) =>
+        c.id === commentId ? { ...c, content } : c
+      ),
+    }));
+
     try {
       const updatedComment = await fetchApi<Comment>(`/comments/${commentId}`, {
         method: "PATCH",
@@ -105,6 +114,10 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
       }));
     } catch (err) {
       console.error("Error editing comment:", err);
+      setCommentsByPost((prev) => ({
+        ...prev,
+        [postId]: previousComments,
+      }));
     }
   };
 
