@@ -28,6 +28,7 @@ export interface Post {
   liked_by_me: boolean;
   bookmarked_by_me: boolean;
   comments: Comment[];
+  username: string;
 }
 
 export interface Like {
