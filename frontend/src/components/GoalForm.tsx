@@ -10,6 +10,8 @@ import { usePosts } from "@/app/contexts/PostContext";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { toast } from "sonner";
+import Lottie from "lottie-react";
+import timerAnimation from "@/assets/timerAnimation.json";
 
 const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
   const { createGoal, updateGoal } = useGoals();
@@ -146,9 +148,9 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
     <>
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 mx-10 mt-10 mb-[30px] p-4 border border-primary-500 rounded-[20px]"
+        className="mx-10 mt-10 mb-[30px] p-4 border border-primary-500 rounded-[20px]"
       >
-        <div className="flex flex-row items-center justify-center gap-4">
+        <div className="flex flex-row items-center justify-center pb-4">
           <h1 className="text-xl text-center text-gray-900">
             lowkey timer drip!
           </h1>
@@ -157,27 +159,32 @@ const GoalForm = ({ onGoalCreated }: { onGoalCreated: () => void }) => {
         {secondsLeft === null ? (
           <>
             <GlobalInput
-            label="title"
+              label="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="title"
-              className="border p-2 w-full focus:outline-none"
+              className="mb-[9px]"
             />
             <GlobalInput
-            label="duration"
+              label="duration"
               type="number"
               value={String(duration)}
               onChange={(e) => setDuration(Number(e.target.value))}
-              className="border p-2 w-full"
+              className=""
             />
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-[23px]">
               <GlobalButton type="submit">hit the drip</GlobalButton>
             </div>
           </>
         ) : (
           <div className="text-center space-y-4">
-            <p className="text-2xl font-bold text-emerald-600">
-              ⏳ {formatTime(secondsLeft)}
+            <Lottie
+              animationData={timerAnimation}
+              loop={true}
+              style={{ width: 20, height: 20 }}
+            />
+            <p className="text-2xl font-semibold text-primary-600">
+              {formatTime(secondsLeft)}
             </p>
             <GlobalButton onClick={handleFailOut}>Fail Out</GlobalButton>
           </div>
