@@ -122,7 +122,7 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
                 ...updatedComment,
                 username: c.username,
                 profile_image: c.profile_image,
-              } // 기존 정보 유지
+              }
             : c
         ),
       }));

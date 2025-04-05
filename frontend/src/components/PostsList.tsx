@@ -198,13 +198,6 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     };
 
     const startEditing = (commentId: number, content: string) => {
-      //Debugging log
-      console.log(
-        "Start editing - Comment ID:",
-        commentId,
-        "Content:",
-        content
-      );
       setEditText(content);
       setEditingCommentId(commentId);
       setDropdownOpen(null);
@@ -218,13 +211,6 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     useEffect(() => {
       if (editingCommentId && inputRef.current) {
         inputRef.current.focus();
-        //Debugging log
-        console.log(
-          "Editing comment ID:",
-          editingCommentId,
-          "editText:",
-          editText
-        );
       }
     }, [editingCommentId]);
 
