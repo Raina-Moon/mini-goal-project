@@ -26,7 +26,7 @@ const PostItem = ({
   onBookmark,
 }: PostItemProps) => (
   <li className="">
-    <PostHeader username={post.username} profileImage={post.profile_image} />
+    <PostHeader userId={post.user_id ?? null} username={post.username} profileImage={post.profile_image} />
     <div className="border border-primary-200 rounded-lg p-4 bg-white shadow-sm">
       <PostContent
         title={post.title}
