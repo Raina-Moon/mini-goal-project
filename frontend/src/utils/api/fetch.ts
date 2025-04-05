@@ -13,6 +13,10 @@ export const fetchApi = async <T>(
     ...options,
   });
 
+  if (res.status === 204) {
+    return undefined as T;
+  }
+
   const data = await res.json();
   if (!res.ok)
     throw new Error(

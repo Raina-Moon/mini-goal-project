@@ -101,8 +101,11 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     const newState = !isBookmarked;
     setBookmarkStatus((prev) => ({ ...prev, [postId]: newState }));
     try {
-      if (isBookmarked) await unbookmarkPost(userId, postId);
-      else await bookmarkPost(userId, postId);
+      if (isBookmarked) {
+        await unbookmarkPost(userId, postId);
+      } else {
+        await bookmarkPost(userId, postId);
+      }
     } catch (err) {
       console.error("Bookmark action failed:", err);
       setBookmarkStatus((prev) => ({ ...prev, [postId]: isBookmarked }));
