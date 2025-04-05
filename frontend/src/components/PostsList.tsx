@@ -271,7 +271,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
                           onClick={() => handleEditComment(c.id)}
                           className="text-green-500 hover:text-green-700"
                         >
-                          Save
+                          save
                         </button>
 
                         <button
@@ -285,7 +285,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
                           }}
                           className="text-gray-500 hover:text-gray-700"
                         >
-                          Cancel
+                          cancel
                         </button>
                       </div>
                     ) : (
