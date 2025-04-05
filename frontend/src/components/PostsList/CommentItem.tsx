@@ -11,6 +11,7 @@ interface CommentItemProps {
   onDelete: () => void;
   onToggleDropdown: () => void;
   onSaveEdit: (commentId: number) => void;
+  onCancelEdit: () => void;
   inputRef: React.RefObject<HTMLTextAreaElement>;
 }
 
@@ -25,6 +26,7 @@ const CommentItem = ({
   onDelete,
   onToggleDropdown,
   onSaveEdit,
+  onCancelEdit,
   inputRef,
 }: CommentItemProps) => {
   const handleEditClick = () => {
@@ -36,6 +38,10 @@ const CommentItem = ({
   const handleDeleteClick = () => {
     onDelete();
     onToggleDropdown();
+  };
+
+  const handleCancelClick = () => {
+    onCancelEdit();
   };
 
   return (
@@ -76,9 +82,7 @@ const CommentItem = ({
             save
           </button>
           <button
-            onClick={() =>
-              setEditTextMap((prev: any) => ({ ...prev, [comment.id]: "" }))
-            }
+            onClick={handleCancelClick}
             className="text-gray-500 hover:text-gray-700"
           >
             cancel
