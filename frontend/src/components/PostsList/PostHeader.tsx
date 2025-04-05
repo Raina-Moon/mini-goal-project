@@ -1,4 +1,5 @@
 import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 
 interface PostHeaderProps {
   userId: number | null;
@@ -9,9 +10,15 @@ interface PostHeaderProps {
 const PostHeader = ({ userId, username, profileImage }: PostHeaderProps) => {
   const router = useRouter();
 
+  const handleProfileClick = useCallback(() => {
+    if (userId !== null) {
+      router.push(`/dashboard/${userId}`);
+    }
+  }, [router, userId]);
+
   return (
-    <div className="flex flex-row items-center gap-2 mb-2">
-      <button onClick={() => router.push(`/dashboard/${userId}`)}>
+    <div className="flex items-center gap-2 mb-2">
+      <button onClick={handleProfileClick} className="flex flex-row items-center gap-2">
         <img
           src={profileImage || "/images/DefaultProfile.png"}
           alt={`${username}'s profile`}
