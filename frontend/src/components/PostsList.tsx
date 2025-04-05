@@ -235,13 +235,15 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
               {commentsByPost[postId]?.length > 0 ? (
                 commentsByPost[postId].map((c) => (
                   <li key={c.id} className="text-sm py-1 relative">
-                    <div className="flex flex-row gap-2 items-center">
-                      <img
-                        src={c.profile_image || "/images/DefaultProfile.png"}
-                        alt={`${c.username}'s profile`}
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
-                      <span className="font-medium">{c.username}</span>
+                    <div className="flex flex-row items-center justify-between">
+                      <div className="flex flex-row items-center gap-2">
+                        <img
+                          src={c.profile_image || "/images/DefaultProfile.png"}
+                          alt={`${c.username}'s profile`}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                        <span className="font-medium">{c.username}</span>
+                      </div>
                       {userId === c.user_id && (
                         <button
                           onClick={() => toggleDropdown(c.id)}
@@ -262,14 +264,28 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
                               [c.id]: e.target.value,
                             }))
                           }
-                          className="w-full px-2 py-1 text-sm border rounded"
+                          className="w-full px-2 py-1 text-sm border rounded focus:outline-none resize-none"
                         />
 
                         <button
                           onClick={() => handleEditComment(c.id)}
                           className="text-green-500 hover:text-green-700"
                         >
-                          Save
+                          save
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setEditingCommentId(null);
+                            setEditTextMap((prev) => {
+                              const newMap = { ...prev };
+                              delete newMap[c.id];
+                              return newMap;
+                            });
+                          }}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          cancel
                         </button>
                       </div>
                     ) : (
