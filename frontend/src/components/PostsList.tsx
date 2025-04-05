@@ -148,6 +148,9 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   const CommentsModalContent = ({ postId }: { postId: number }) => {
     const [newComment, setNewComment] = useState("");
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const [editTextMap, setEditTextMap] = useState<{ [key: number]: string }>(
+      {}
+    );
 
     const closeModal = () => {
       setModalPostId(null);
@@ -168,11 +171,13 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     };
 
     const handleEditComment = async (commentId: number) => {
+      const newContent = editTextMap[commentId];
+
       if (!userId || !editText.trim()) return;
       try {
-        await editComment(postId, commentId, editText);
+        await editComment(postId, commentId, newContent);
         setEditingCommentId(null);
-        setEditText("");
+        setEditTextMap((prev) => ({ ...prev, [commentId]: "" }));
       } catch (err) {
         console.error("Failed to edit comment:", err);
       }
@@ -264,10 +269,16 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
                       <div className="pl-8 flex items-center gap-2">
                         <textarea
                           ref={inputRef}
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
+                          value={editTextMap[c.id] ?? c.content}
+                          onChange={(e) =>
+                            setEditTextMap((prev) => ({
+                              ...prev,
+                              [c.id]: e.target.value,
+                            }))
+                          }
                           className="w-full px-2 py-1 text-sm border rounded"
                         />
+
                         <button
                           onClick={() => handleEditComment(c.id)}
                           className="text-green-500 hover:text-green-700"
