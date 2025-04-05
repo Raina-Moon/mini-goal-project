@@ -38,10 +38,10 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     [key: number]: boolean;
   }>({});
   const [modalPostId, setModalPostId] = useState<number | null>(null);
-  const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
   const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [editText, setEditText] = useState<string>("");
 
   const filteredPosts = userId
     ? posts.filter((post) => Number(post.user_id) !== userId)
@@ -147,7 +147,6 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
 
   const CommentsModalContent = ({ postId }: { postId: number }) => {
     const [newComment, setNewComment] = useState("");
-    const [editText, setEditText] = useState<string>("");
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const closeModal = () => {
@@ -168,12 +167,11 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
       }
     };
 
-    const handleEditComment = async (commentId: number, content: string) => {
-      if (!userId) return;
+    const handleEditComment = async (commentId: number) => {
+      if (!userId || !editText.trim()) return;
       try {
-        await editComment(postId, commentId, content);
+        await editComment(postId, commentId, editText);
         setEditingCommentId(null);
-        setCommentEdit((prev) => ({ ...prev, [commentId]: "" }));
         setEditText("");
       } catch (err) {
         console.error("Failed to edit comment:", err);
@@ -195,8 +193,15 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     };
 
     const startEditing = (commentId: number, content: string) => {
-      setEditingCommentId(commentId);
+      //Debugging log
+      console.log(
+        "Start editing - Comment ID:",
+        commentId,
+        "Content:",
+        content
+      );
       setEditText(content);
+      setEditingCommentId(commentId);
       setDropdownOpen(null);
     };
 
@@ -208,6 +213,13 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     useEffect(() => {
       if (editingCommentId && inputRef.current) {
         inputRef.current.focus();
+        //Debugging log
+        console.log(
+          "Editing comment ID:",
+          editingCommentId,
+          "editText:",
+          editText
+        );
       }
     }, [editingCommentId]);
 
@@ -257,12 +269,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
                           className="w-full px-2 py-1 text-sm border rounded"
                         />
                         <button
-                          onClick={() =>
-                            handleEditComment(
-                              c.id,
-                              commentEdit[c.id] || c.content
-                            )
-                          }
+                          onClick={() => handleEditComment(c.id)}
                           className="text-green-500 hover:text-green-700"
                         >
                           Save
@@ -353,7 +360,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
               <li key={post.post_id} className="">
                 <div className="flex flex-row items-center gap-2 mb-2">
                   <img
-                    src={post.profile_image || "/default-profile.png"}
+                    src={post.profile_image || "/images/DefaultProfile.png"}
                     alt={`${post.username}'s profile`}
                     className="w-8 h-8 rounded-full object-cover"
                   />
