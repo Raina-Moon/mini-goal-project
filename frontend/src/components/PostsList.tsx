@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Post } from "@/utils/api";
@@ -41,9 +41,11 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const filteredPosts = userId
-    ? posts.filter((post) => Number(post.user_id) !== userId)
-    : posts;
+  const filteredPosts = useMemo(
+    () =>
+      userId ? posts.filter((post) => Number(post.user_id) !== userId) : posts,
+    [posts, userId]
+  );
 
   const initializeData = useCallback(async () => {
     const status: { [key: number]: boolean } = {};
@@ -73,7 +75,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     } catch (err) {
       console.error("Failed to initialize data:", err);
     }
-  }, [userId, posts]);
+  }, [userId, filteredPosts]);
 
   // Load more posts when the user scrolls to the bottom of the page
   const loadPosts = useCallback(() => {
