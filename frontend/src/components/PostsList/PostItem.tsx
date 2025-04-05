@@ -17,7 +17,6 @@ interface PostItemProps {
 
 const PostItem = ({
   post,
-  userId,
   likeStatus,
   likeCount,
   commentCount,
