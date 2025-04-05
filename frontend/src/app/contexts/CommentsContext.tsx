@@ -93,7 +93,14 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
     content: string
   ) => {
     const previousComments = commentsByPost[postId] || [];
+    const commentToEdit = previousComments.find((c) => c.id === commentId);
 
+    if (!commentToEdit) {
+      console.error("Comment not found for editing:", commentId);
+      return;
+    }
+
+    // Optimistic update
     setCommentsByPost((prev) => ({
       ...prev,
       [postId]: prev[postId].map((c) =>
@@ -109,7 +116,14 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
       setCommentsByPost((prev) => ({
         ...prev,
         [postId]: prev[postId].map((c) =>
-          c.id === commentId ? updatedComment : c
+          c.id === commentId
+            ? {
+                ...c,
+                ...updatedComment,
+                username: c.username,
+                profile_image: c.profile_image,
+              } // 기존 정보 유지
+            : c
         ),
       }));
     } catch (err) {
@@ -118,6 +132,7 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         [postId]: previousComments,
       }));
+      throw err;
     }
   };
 
