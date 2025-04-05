@@ -92,6 +92,22 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
     commentId: number,
     content: string
   ) => {
+    const previousComments = commentsByPost[postId] || [];
+    const commentToEdit = previousComments.find((c) => c.id === commentId);
+
+    if (!commentToEdit) {
+      console.error("Comment not found for editing:", commentId);
+      return;
+    }
+
+    // Optimistic update
+    setCommentsByPost((prev) => ({
+      ...prev,
+      [postId]: prev[postId].map((c) =>
+        c.id === commentId ? { ...c, content } : c
+      ),
+    }));
+
     try {
       const updatedComment = await fetchApi<Comment>(`/comments/${commentId}`, {
         method: "PATCH",
@@ -100,11 +116,23 @@ export const CommentsProvider = ({ children }: { children: ReactNode }) => {
       setCommentsByPost((prev) => ({
         ...prev,
         [postId]: prev[postId].map((c) =>
-          c.id === commentId ? updatedComment : c
+          c.id === commentId
+            ? {
+                ...c,
+                ...updatedComment,
+                username: c.username,
+                profile_image: c.profile_image,
+              }
+            : c
         ),
       }));
     } catch (err) {
       console.error("Error editing comment:", err);
+      setCommentsByPost((prev) => ({
+        ...prev,
+        [postId]: previousComments,
+      }));
+      throw err;
     }
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Post } from "@/utils/api";
@@ -13,7 +13,7 @@ import MessageIcon from "../../public/icons/MessageIcon";
 import BookmarkEmpty from "../../public/icons/BookmarkEmpty";
 import BookmarkFull from "../../public/icons/BookmarkFull";
 import PaperPlaneIcon from "../../public/icons/PaperPlaneIcon";
-import { useAuth } from "@/app/contexts/AuthContext";
+import VerticalDots from "../../public/icons/VerticalDots";
 
 interface PostsListProps {
   posts: Post[];
@@ -30,7 +30,6 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     deleteComment,
   } = useComments();
   const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
-  const { user } = useAuth();
   const router = useRouter();
 
   const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
@@ -39,7 +38,10 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     [key: number]: boolean;
   }>({});
   const [modalPostId, setModalPostId] = useState<number | null>(null);
-  const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [editText, setEditText] = useState<string>("");
 
   const filteredPosts = userId
     ? posts.filter((post) => Number(post.user_id) !== userId)
@@ -145,9 +147,17 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
 
   const CommentsModalContent = ({ postId }: { postId: number }) => {
     const [newComment, setNewComment] = useState("");
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const [editTextMap, setEditTextMap] = useState<{ [key: number]: string }>(
+      {}
+    );
 
     const closeModal = () => {
       setModalPostId(null);
+      setDropdownOpen(null);
+      setEditingCommentId(null);
+      setDeleteConfirmId(null);
+      setEditText("");
     };
 
     const submitComment = async () => {
@@ -160,11 +170,14 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
       }
     };
 
-    const handleEditComment = async (commentId: number, content: string) => {
-      if (!userId) return;
+    const handleEditComment = async (commentId: number) => {
+      const newContent = editTextMap[commentId];
+
+      if (!userId || !editText.trim()) return;
       try {
-        await editComment(postId, commentId, content);
-        setCommentEdit((prev) => ({ ...prev, [commentId]: "" }));
+        await editComment(postId, commentId, newContent);
+        setEditingCommentId(null);
+        setEditTextMap((prev) => ({ ...prev, [commentId]: "" }));
       } catch (err) {
         console.error("Failed to edit comment:", err);
       }
@@ -174,10 +187,32 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
       if (!userId) return;
       try {
         await deleteComment(postId, commentId);
+        setDeleteConfirmId(null);
       } catch (err) {
         console.error("Failed to delete comment:", err);
       }
     };
+
+    const toggleDropdown = (commentId: number) => {
+      setDropdownOpen(dropdownOpen === commentId ? null : commentId);
+    };
+
+    const startEditing = (commentId: number, content: string) => {
+      setEditText(content);
+      setEditingCommentId(commentId);
+      setDropdownOpen(null);
+    };
+
+    const confirmDelete = (commentId: number) => {
+      setDeleteConfirmId(commentId);
+      setDropdownOpen(null);
+    };
+
+    useEffect(() => {
+      if (editingCommentId && inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, [editingCommentId]);
 
     return (
       <>
@@ -186,7 +221,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
           onClick={closeModal}
         >
           <div
-            className="bg-white p-4 rounded-lg shadow-lg w-[90%] min-w-[300px]"
+            className="bg-white p-4 rounded-lg shadow-lg w-[90%] min-w-[300px] max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg text-gray-900 font-semibold mb-2">
@@ -195,48 +230,62 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
                 <span>{commentsByPost[postId].length}</span>
               )}
             </h2>
-
             <hr className="border-t border-primary-200 mb-1" />
-
-            <ul className="space-y-2 max-h-[50vh] overflow-y-auto">
+            <ul className="space-y-2 max-h-[400px] overflow-y-auto">
               {commentsByPost[postId]?.length > 0 ? (
                 commentsByPost[postId].map((c) => (
-                  <li key={c.id} className="text-sm py-1">
-                    <div className="flex flex-row gap-1">
+                  <li key={c.id} className="text-sm py-1 relative">
+                    <div className="flex flex-row gap-2 items-center">
                       <img
                         src={c.profile_image || "/images/DefaultProfile.png"}
                         alt={`${c.username}'s profile`}
                         className="w-6 h-6 rounded-full object-cover"
                       />
                       <span className="font-medium">{c.username}</span>
+                      {userId === c.user_id && (
+                        <button
+                          onClick={() => toggleDropdown(c.id)}
+                          className="ml-2"
+                        >
+                          <VerticalDots />
+                        </button>
+                      )}
                     </div>
-                    <div className="pl-7">{c.content}</div>
-                    {userId === c.user_id && (
-                      <div className="">
-                        <input
-                          value={commentEdit[c.id] ?? c.content}
+                    {editingCommentId === c.id ? (
+                      <div className="pl-8 flex items-center gap-2">
+                        <textarea
+                          ref={inputRef}
+                          value={editTextMap[c.id] ?? c.content}
                           onChange={(e) =>
-                            setCommentEdit((prev) => ({
+                            setEditTextMap((prev) => ({
                               ...prev,
                               [c.id]: e.target.value,
                             }))
                           }
-                          className="px-1 mr-2 text-sm"
+                          className="w-full px-2 py-1 text-sm border rounded"
                         />
+
                         <button
-                          onClick={() =>
-                            handleEditComment(
-                              c.id,
-                              commentEdit[c.id] || c.content
-                            )
-                          }
-                          className="text-green-500 mr-2"
+                          onClick={() => handleEditComment(c.id)}
+                          className="text-green-500 hover:text-green-700"
                         >
                           Save
                         </button>
+                      </div>
+                    ) : (
+                      <div className="pl-8">{c.content}</div>
+                    )}
+                    {dropdownOpen === c.id && userId === c.user_id && (
+                      <div className="absolute right-2 top-8 bg-white border rounded shadow-lg z-10">
                         <button
-                          onClick={() => handleDeleteComment(c.id)}
-                          className="text-red-500"
+                          onClick={() => startEditing(c.id, c.content)}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => confirmDelete(c.id)}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-gray-100"
                         >
                           Delete
                         </button>
@@ -262,6 +311,29 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
             </div>
           </div>
         </div>
+
+        {/* Delete confirmation modal */}
+        {deleteConfirmId && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+            <div className="bg-white p-4 rounded-lg shadow-lg">
+              <p className="text-sm mb-4">say bye-bye to this comment? </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="px-3 py-1 text-sm text-gray-700 border rounded hover:bg-gray-100"
+                >
+                  Nah
+                </button>
+                <button
+                  onClick={() => handleDeleteComment(deleteConfirmId)}
+                  className="px-3 py-1 text-sm text-white bg-red-500 rounded hover:bg-red-600"
+                >
+                  Bet
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   };
@@ -285,7 +357,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
               <li key={post.post_id} className="">
                 <div className="flex flex-row items-center gap-2 mb-2">
                   <img
-                    src={post.profile_image || "/default-profile.png"}
+                    src={post.profile_image || "/images/DefaultProfile.png"}
                     alt={`${post.username}'s profile`}
                     className="w-8 h-8 rounded-full object-cover"
                   />
