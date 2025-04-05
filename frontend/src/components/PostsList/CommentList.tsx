@@ -63,6 +63,7 @@ const CommentList = ({
               setDropdownOpen(dropdownOpen === comment.id ? null : comment.id)
             }
             onSaveEdit={handleEditComment}
+            onCancelEdit={() => setEditingCommentId(null)}
             inputRef={inputRef}
           />
         ))
