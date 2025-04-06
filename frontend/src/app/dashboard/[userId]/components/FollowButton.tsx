@@ -48,13 +48,13 @@ const FollowButton = ({
   return (
     <button
       onClick={handleFollowToggle}
-      className={`mb-2 px-3 py-2 rounded text-white ${
+      className={`px-[6px] py-[6px] rounded-[100px] text-white text-xs ${
         isFollowing
           ? "bg-gray-500 hover:bg-gray-600"
           : "bg-emerald-600 hover:bg-emerald-700"
       }`}
     >
-      {isFollowing ? "Unfollow" : "Follow"}
+      {isFollowing ? "bye-bye vibe" : "vibe with you"}
     </button>
   );
 };
