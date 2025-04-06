@@ -202,7 +202,7 @@ const ChartComponent = ({
                 position: "insideLeft",
                 fill: "#6b7280",
               }}
-              domain={[5, maxDuration + 10]}
+              domain={[0, maxDuration + 10]}
               tickCount={Math.ceil((maxDuration + 10) / 10)}
             />
             <ChartTooltip
@@ -213,12 +213,14 @@ const ChartComponent = ({
               dataKey="nailedDuration"
               fill="var(--color-nailedDuration)"
               radius={4}
+              barSize={10}
             />
             {isOwnProfile && (
               <Bar
                 dataKey="failedDuration"
                 fill="var(--color-failedDuration)"
                 radius={4}
+                barSize={10}
               />
             )}
           </BarChart>
