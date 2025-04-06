@@ -14,6 +14,21 @@ import { useGoals } from "@/app/contexts/GoalContext";
 import { useFollowers } from "@/app/contexts/FollowerContext";
 import { usePosts } from "@/app/contexts/PostContext";
 import { useGlobalLoading } from "@/app/contexts/LoadingContext";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const Dashboard = () => {
   const { userId } = useParams();
@@ -24,7 +39,10 @@ const Dashboard = () => {
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("nailed");
+  const [chartPeriod, setChartPeriod] = useState<
+    "day" | "week" | "month" | "year"
+  >("week");
   const { setLoading } = useGlobalLoading();
 
   const fetchData = async () => {
@@ -33,7 +51,6 @@ const Dashboard = () => {
     const viewerId = user.id;
 
     setLoading(true);
-
     try {
       await Promise.all([
         fetchViewUser(profileId),
@@ -63,11 +80,48 @@ const Dashboard = () => {
   const displayedFollowers = followers.slice(0, 3);
   const extraFollowersCount = followers.length > 3 ? followers.length - 3 : 0;
 
+  const isOwnProfile = user.id === viewUser.id;
+
+  // calculate the number of nailed posts
+  const getChartData = () => {
+    const durationByDate = nailedPosts.reduce((acc, post) => {
+      const date = new Date(post.created_at).toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      acc[date] = (acc[date] || 0) + post.duration;
+      return acc;
+    }, {} as { [key: string]: number });
+
+    let filteredData = Object.entries(durationByDate).map(
+      ([date, duration]) => ({
+        date,
+        duration,
+      })
+    );
+
+    if (chartPeriod === "day") filteredData = filteredData.slice(-1);
+    else if (chartPeriod === "week") filteredData = filteredData.slice(-7);
+    else if (chartPeriod === "month") filteredData = filteredData.slice(-30);
+
+    return filteredData;
+  };
+
+  const chartData = getChartData();
+
+  const chartConfig = {
+    duration: {
+      label: "Duration (min)",
+      color: "hsl(var(--chart-1))",
+    },
+  } satisfies ChartConfig;
+
   return (
     <div className="p-3">
+
       <div className="flex items-end justify-between mb-4">
         <div className="flex gap-4">
-          {" "}
           <ProfileHeader
             userId={viewUser.id}
             storedId={user.id}
@@ -102,7 +156,7 @@ const Dashboard = () => {
                 )}
               </div>
             ) : (
-              <span className="text-gray-500 self-end">No followers yet</span>
+              <span className="text-gray-500">No followers yet</span>
             )}
           </div>
         </div>
@@ -122,7 +176,106 @@ const Dashboard = () => {
         {viewUser.username}'s grab goals
       </h1>
 
-      {/* Followers list modal */}
+      <Tabs defaultValue="nailed" onValueChange={setActiveTab} className="mt-6">
+        <TabsList className="mb-4">
+          {isOwnProfile && <TabsTrigger value="all">All</TabsTrigger>}
+          <TabsTrigger value="nailed">Nailed It</TabsTrigger>
+          {isOwnProfile && <TabsTrigger value="failed">Failed It</TabsTrigger>}
+          {isOwnProfile && <TabsTrigger value="chart">Chart</TabsTrigger>}
+        </TabsList>
+        {isOwnProfile && (
+          <TabsContent value="all">
+            <GoalsTab goals={goals} />
+          </TabsContent>
+        )}
+        <TabsContent value="nailed">
+          <NailedPostsTab posts={nailedPosts} userId={user.id} />
+        </TabsContent>
+        {isOwnProfile && (
+          <TabsContent value="failed">
+            <FailedGoalsTab goals={goals} />
+          </TabsContent>
+        )}
+        {isOwnProfile && (
+          <TabsContent value="chart">
+            <div className="flex justify-end mb-4">
+              <div className="space-x-2">
+                <Button
+                  variant={chartPeriod === "day" ? "default" : "outline"}
+                  onClick={() => setChartPeriod("day")}
+                >
+                  Day
+                </Button>
+                <Button
+                  variant={chartPeriod === "week" ? "default" : "outline"}
+                  onClick={() => setChartPeriod("week")}
+                >
+                  Week
+                </Button>
+                <Button
+                  variant={chartPeriod === "month" ? "default" : "outline"}
+                  onClick={() => setChartPeriod("month")}
+                >
+                  Month
+                </Button>
+                <Button
+                  variant={chartPeriod === "year" ? "default" : "outline"}
+                  onClick={() => setChartPeriod("year")}
+                >
+                  Year
+                </Button>
+              </div>
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Success Duration</CardTitle>
+                <CardDescription>
+                  {chartPeriod === "day" && "Last Day"}
+                  {chartPeriod === "week" && "Last 7 Days"}
+                  {chartPeriod === "month" && "Last 30 Days"}
+                  {chartPeriod === "year" && "This Year"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={chartConfig} className="h-[400px]">
+                  <BarChart accessibilityLayer data={chartData}>
+                    <CartesianGrid vertical={false} stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      tickMargin={10}
+                      axisLine={false}
+                      tickFormatter={(value) => value.slice(0, 6)}
+                      tick={{ fill: "#6b7280", fontSize: 12 }}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "#6b7280", fontSize: 12 }}
+                      label={{
+                        value: "Duration (min)",
+                        angle: -90,
+                        position: "insideLeft",
+                        fill: "#6b7280",
+                      }}
+                    />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent indicator="dashed" />}
+                    />
+                    <Bar
+                      dataKey="duration"
+                      fill="var(--color-duration)"
+                      radius={4}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+      </Tabs>
+
       {isFollowersModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -144,23 +297,6 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-
-      <Tabs defaultValue="all" onValueChange={setActiveTab} className="mt-6">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="nailed">Nailed It</TabsTrigger>
-          <TabsTrigger value="failed">Failed It</TabsTrigger>
-        </TabsList>
-        <TabsContent value="all">
-          <GoalsTab goals={goals} />
-        </TabsContent>
-        <TabsContent value="nailed">
-          <NailedPostsTab posts={nailedPosts} userId={user.id} />
-        </TabsContent>
-        <TabsContent value="failed">
-          <FailedGoalsTab goals={goals} />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
