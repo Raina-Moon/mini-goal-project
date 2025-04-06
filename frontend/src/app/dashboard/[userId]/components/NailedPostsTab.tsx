@@ -10,6 +10,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
 
@@ -147,7 +148,9 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
       {/* filter section */}
       <div className="flex justify-end mb-4">
         <Select onValueChange={setSortBy} defaultValue="latest">
-          <SelectTrigger className="w-40" />
+          <SelectTrigger className="w-40">
+          <SelectValue placeholder="Latest" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="latest">Latest</SelectItem>
             <SelectItem value="oldest">Oldest</SelectItem>
