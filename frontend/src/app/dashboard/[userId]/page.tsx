@@ -85,7 +85,7 @@ const Dashboard = () => {
                     key={follower.id}
                     src={follower.profile_image || "/images/DefaultProfile.png"}
                     alt={`${follower.username}'s profile`}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-white"
+                    className="w-7 h-7 rounded-full object-cover border-2 border-white"
                     style={{
                       marginLeft: index > 0 ? "-15px" : "0",
                       zIndex: displayedFollowers.length - index,
