@@ -51,7 +51,7 @@ const FollowButton = ({
       className={`px-[6px] py-[6px] rounded-[100px] text-white text-xs ${
         isFollowing
           ? "bg-gray-500 hover:bg-gray-600"
-          : "bg-emerald-600 hover:bg-emerald-700"
+          : "bg-primary-500 hover:bg-primary-600"
       }`}
     >
       {isFollowing ? "bye-bye vibe" : "vibe with you"}
