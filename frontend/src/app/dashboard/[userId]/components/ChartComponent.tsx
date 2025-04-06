@@ -34,11 +34,7 @@ const ChartComponent = ({
   isOwnProfile,
 }: ChartComponentProps) => {
   const chartData: ChartData[] = useMemo(() => {
-    if (!nailedPosts || nailedPosts.length === 0) {
-      console.log("No nailedPosts data available:", nailedPosts);
-      return [];
-    }
-    console.log("Processing nailedPosts:", nailedPosts); // Debugging line
+    if (!nailedPosts || nailedPosts.length === 0) return [];
 
     const processData = (posts: Goal[]): ChartData[] => {
       if (chartPeriod === "day") {
@@ -107,7 +103,7 @@ const ChartComponent = ({
         return Object.entries(durationByMonth).map(([date, duration]) => ({
           date,
           nailedDuration: duration,
-        }))
+        }));
       }
       return [];
     };
