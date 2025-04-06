@@ -1,23 +1,22 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Post } from "@/utils/api";
-import PostDetail from "./postDetail";
 import { usePosts } from "@/app/contexts/PostContext";
+import { useAuth } from "@/app/contexts/AuthContext";
+import PostDetail from "./PostDetail";
 
 const PostDetailPage = () => {
+  const { user } = useAuth();
   const { fetchNailedPosts } = usePosts();
   const { userId, postId } = useParams() as { userId: string; postId: string };
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
-  const [hasAutoScrolled, setHasAutoScrolled] = useState(false);
-
   const containerRef = useRef<HTMLDivElement>(null);
-  const selectedPostRef = useRef<HTMLDivElement>(null);
+  const postRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Fetch all posts for the user and set the selected index based on postId
   useEffect(() => {
     if (!userId) return;
     const numericUserId = Number(userId);
@@ -35,36 +34,28 @@ const PostDetailPage = () => {
   }, [userId, postId, fetchNailedPosts]);
 
   useEffect(() => {
-    if (hasAutoScrolled) return;
-    if (posts.length > 0 && selectedPostRef.current && containerRef.current) {
-      const container = containerRef.current;
-      const selectedEl = selectedPostRef.current;
-      const containerHeight = container.clientHeight;
-      const elTop = selectedEl.offsetTop;
-      const elHeight = selectedEl.clientHeight;
-      const scrollPos = elTop - containerHeight / 2 + elHeight / 2;
-      container.scrollTo({ top: scrollPos, behavior: "smooth" });
-      setHasAutoScrolled(true);
-    }
-  }, [posts, selectedIndex, hasAutoScrolled]);
-
-  // Handle vertical scroll to navigate between posts
+    if (posts.length === 0 || !containerRef.current) return;
+    const container = containerRef.current;
+    const selectedEl = postRefs.current[selectedIndex];
+    if (!selectedEl) return;
+    const containerHeight = container.clientHeight;
+    const elTop = selectedEl.offsetTop;
+    const elHeight = selectedEl.clientHeight;
+    const scrollPos = elTop - containerHeight / 2 + elHeight / 2;
+    container.scrollTo({ top: scrollPos, behavior: "smooth" });
+  }, [posts, selectedIndex]);
 
   if (posts.length === 0) return <div>Loading...</div>;
 
   return (
     <div ref={containerRef} className="fixed inset-0 bg-white overflow-y-auto">
-      {posts.map((post, index) => (
-        <div
-          key={post.post_id}
-          ref={index === selectedIndex ? selectedPostRef : null}
-          className="mb-4"
-        >
-          <PostDetail post={post} />
-        </div>
-      ))}
-    </div>
-  );
+    {posts.map((post, index) => (
+        <div key={post.post_id} ref={(el) => { postRefs.current[index] = el; }}>
+        <PostDetail post={post} userId={user?.id ?? null} />
+      </div>
+    ))}
+  </div>
+);
 };
 
 export default PostDetailPage;
