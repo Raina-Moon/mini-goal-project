@@ -72,7 +72,7 @@ const PostContent = ({
           className="w-full max-w-[600px] max-h-[750px] object-cover rounded-lg mb-2 mx-auto block"
         />
       )}
-      <p className="text-sm text-gray-900">{description}</p>
+      <p className="text-sm text-gray-900 whitespace-pre-wrap">{description}</p>
 
       {isShareModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
