@@ -23,7 +23,7 @@ const Dashboard = () => {
   const { followers, fetchFollowers } = useFollowers();
 
   const [isFollowing, setIsFollowing] = useState(false);
-  const [showFollowers, setShowFollowers] = useState(false);
+  const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const { setLoading } = useGlobalLoading();
 
@@ -60,36 +60,90 @@ const Dashboard = () => {
   if (!user || !token || !viewUser)
     return <div>Please log in to view the dashboard.</div>;
 
+  const displayedFollowers = followers.slice(0, 3);
+  const extraFollowersCount = followers.length > 3 ? followers.length - 3 : 0;
+
   return (
-    <div className="p-6">
-      <ProfileHeader
-        userId={viewUser.id}
-        storedId={user.id}
-        username={viewUser.username}
-        profileImage={viewUser.profile_image || "images/DefaultProfile.png"}
-      />
-      {user.id !== viewUser.id && (
-        <FollowButton
-          storedId={user.id}
-          userId={viewUser.id}
-          isFollowing={isFollowing}
-          setIsFollowing={setIsFollowing}
-        />
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-4">
+          <ProfileHeader
+            userId={viewUser.id}
+            storedId={user.id}
+            username={viewUser.username}
+            profileImage={viewUser.profile_image || "images/DefaultProfile.png"}
+          />
+
+          <div
+            className="flex items-center cursor-pointer"
+            onClick={() => setIsFollowersModalOpen(true)}
+          >
+            {displayedFollowers.length > 0 ? (
+              <div className="flex">
+                {displayedFollowers.map((follower, index) => (
+                  <img
+                    key={follower.id}
+                    src={follower.profile_image || "/images/DefaultProfile.png"}
+                    alt={`${follower.username}'s profile`}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white"
+                    style={{
+                      marginLeft: index > 0 ? "-15px" : "0",
+                      zIndex: displayedFollowers.length - index,
+                    }}
+                  />
+                ))}
+                {extraFollowersCount > 0 && (
+                  <span
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-300 text-white font-medium text-sm border-2 border-white"
+                    style={{ marginLeft: "-15px", zIndex: 0 }}
+                  >
+                    +{extraFollowersCount}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-gray-500">No followers yet</span>
+            )}
+          </div>
+        </div>
+
+        {user.id !== viewUser.id && (
+          <FollowButton
+            storedId={user.id}
+            userId={viewUser.id}
+            isFollowing={isFollowing}
+            setIsFollowing={setIsFollowing}
+          />
+        )}
+      </div>
+
+      <h1 className="text-2xl font-medium mb-4 text-gray-900">
+        {viewUser.username}'s grab goals
+      </h1>
+
+      {/* Followers list modal */}
+      {isFollowersModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Followers</h3>
+              <button
+                onClick={() => setIsFollowersModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <FollowersList
+              followers={followers.map((follower) => ({
+                ...follower,
+                profile_image: follower.profile_image ?? null,
+              }))}
+            />
+          </div>
+        </div>
       )}
-      <button
-        onClick={() => setShowFollowers(!showFollowers)}
-        className="mb-4 px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
-      >
-        {showFollowers ? "Hide Followers" : "Show Followers"}
-      </button>
-      {showFollowers && (
-        <FollowersList
-          followers={followers.map((follower) => ({
-            ...follower,
-            profile_image: follower.profile_image ?? null,
-          }))}
-        />
-      )}
+
       <Tabs defaultValue="all" onValueChange={setActiveTab} className="mt-6">
         <TabsList className="mb-4">
           <TabsTrigger value="all">All</TabsTrigger>
@@ -97,7 +151,7 @@ const Dashboard = () => {
           <TabsTrigger value="failed">Failed It</TabsTrigger>
         </TabsList>
         <TabsContent value="all">
-          <GoalsTab goals={goals}/>
+          <GoalsTab goals={goals} />
         </TabsContent>
         <TabsContent value="nailed">
           <NailedPostsTab posts={nailedPosts} userId={user.id} />
