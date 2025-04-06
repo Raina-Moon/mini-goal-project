@@ -64,18 +64,18 @@ const Dashboard = () => {
   const extraFollowersCount = followers.length > 3 ? followers.length - 3 : 0;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-4">
+    <div className="p-3">
+      <div className="flex items-end justify-between mb-4">
+        <div className="flex gap-4">
+          {" "}
           <ProfileHeader
             userId={viewUser.id}
             storedId={user.id}
             username={viewUser.username}
             profileImage={viewUser.profile_image || "images/DefaultProfile.png"}
           />
-
           <div
-            className="flex items-center cursor-pointer"
+            className="flex items-end cursor-pointer"
             onClick={() => setIsFollowersModalOpen(true)}
           >
             {displayedFollowers.length > 0 ? (
@@ -94,7 +94,7 @@ const Dashboard = () => {
                 ))}
                 {extraFollowersCount > 0 && (
                   <span
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-300 text-white font-medium text-sm border-2 border-white"
+                    className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-300 text-white font-medium text-sm border-2 border-white"
                     style={{ marginLeft: "-15px", zIndex: 0 }}
                   >
                     +{extraFollowersCount}
@@ -102,18 +102,19 @@ const Dashboard = () => {
                 )}
               </div>
             ) : (
-              <span className="text-gray-500">No followers yet</span>
+              <span className="text-gray-500 self-end">No followers yet</span>
             )}
           </div>
         </div>
-
         {user.id !== viewUser.id && (
-          <FollowButton
-            storedId={user.id}
-            userId={viewUser.id}
-            isFollowing={isFollowing}
-            setIsFollowing={setIsFollowing}
-          />
+          <div className="flex items-end">
+            <FollowButton
+              storedId={user.id}
+              userId={viewUser.id}
+              isFollowing={isFollowing}
+              setIsFollowing={setIsFollowing}
+            />
+          </div>
         )}
       </div>
 
