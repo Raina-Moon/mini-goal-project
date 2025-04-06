@@ -11,6 +11,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
 
 interface NailedPostsTabProps {
   posts: Post[];
@@ -19,15 +20,26 @@ interface NailedPostsTabProps {
 
 const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
   const { likePost, unlikePost, getLikeStatus, fetchLikeCount } = useLikes();
-  const { commentsByPost, fetchComments, addComment, editComment, deleteComment } = useComments();
+  const {
+    commentsByPost,
+    fetchComments,
+    addComment,
+    editComment,
+    deleteComment,
+  } = useComments();
   const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
+  const router = useRouter();
 
-  const [selectedPostIndex, setSelectedPostIndex] = useState<number | null>(null);
+  const [selectedPostIndex, setSelectedPostIndex] = useState<number | null>(
+    null
+  );
   const [sortBy, setSortBy] = useState("latest");
   const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
   const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({});
   const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
-  const [bookmarkStatus, setBookmarkStatus] = useState<{ [key: number]: boolean }>({});
+  const [bookmarkStatus, setBookmarkStatus] = useState<{
+    [key: number]: boolean;
+  }>({});
   const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
   const initializeData = useCallback(async () => {
@@ -41,7 +53,9 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
       for (const post of posts) {
         status[post.post_id] = await getLikeStatus(post.post_id, userId);
         counts[post.post_id] = await fetchLikeCount(post.post_id);
-        bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some((bp) => bp.id === post.post_id);
+        bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some(
+          (bp) => bp.id === post.post_id
+        );
         await fetchComments(post.post_id);
       }
       setLikeStatus(status);
@@ -68,7 +82,9 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     if (!userId) return;
     const alreadyLiked = likeStatus[postId] || false;
     try {
-      const newCount = alreadyLiked ? await unlikePost(userId, postId) : await likePost(userId, postId);
+      const newCount = alreadyLiked
+        ? await unlikePost(userId, postId)
+        : await likePost(userId, postId);
       const newLikeStatus = await getLikeStatus(postId, userId);
       setLikeStatus((prev) => ({ ...prev, [postId]: newLikeStatus }));
       setLikeCounts((prev) => ({ ...prev, [postId]: newCount }));
@@ -97,7 +113,11 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     setNewComments((prev) => ({ ...prev, [postId]: "" }));
   };
 
-  const handleEditComment = async (postId: number, commentId: number, content: string) => {
+  const handleEditComment = async (
+    postId: number,
+    commentId: number,
+    content: string
+  ) => {
     try {
       await editComment(postId, commentId, content);
       fetchComments(postId);
@@ -111,7 +131,6 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     await deleteComment(postId, commentId);
   };
 
-  const openPostModal = (index: number) => setSelectedPostIndex(index);
   const closePostModal = () => setSelectedPostIndex(null);
 
   const handleScroll = (e: React.WheelEvent) => {
@@ -140,11 +159,15 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
 
       {/* 3row grid */}
       <div className="grid grid-cols-3 gap-1">
-        {sortedPosts.map((post, index) => (
+        {sortedPosts.map((post) => (
           <div
             key={post.post_id}
             className="aspect-square cursor-pointer"
-            onClick={() => openPostModal(index)}
+            onClick={() => {
+              console.log("Post object keys:", Object.keys(post));
+              console.log("Post data:", post);
+              router.push(`${post.user_id}/post/${post.post_id}`);
+            }}
           >
             {post.image_url ? (
               <img
@@ -169,8 +192,13 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
         >
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-semibold">{sortedPosts[selectedPostIndex].title}</h2>
-              <button onClick={closePostModal} className="text-gray-500 hover:text-gray-700">
+              <h2 className="text-lg font-semibold">
+                {sortedPosts[selectedPostIndex].title}
+              </h2>
+              <button
+                onClick={closePostModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 ✕
               </button>
             </div>
@@ -190,23 +218,35 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
               </p>
               <div className="flex items-center gap-4 mb-4">
                 <button
-                  onClick={() => handleLike(sortedPosts[selectedPostIndex].post_id)}
+                  onClick={() =>
+                    handleLike(sortedPosts[selectedPostIndex].post_id)
+                  }
                   className="text-pink-600 hover:underline"
                 >
-                  {likeStatus[sortedPosts[selectedPostIndex].post_id] ? "❤️ Liked" : "🤍 Like"} (
+                  {likeStatus[sortedPosts[selectedPostIndex].post_id]
+                    ? "❤️ Liked"
+                    : "🤍 Like"}{" "}
+                  (
                   {likeCounts[sortedPosts[selectedPostIndex].post_id] ||
-                    sortedPosts[selectedPostIndex].like_count})
+                    sortedPosts[selectedPostIndex].like_count}
+                  )
                 </button>
                 <button
-                  onClick={() => handleBookmark(sortedPosts[selectedPostIndex].post_id)}
+                  onClick={() =>
+                    handleBookmark(sortedPosts[selectedPostIndex].post_id)
+                  }
                   className="text-yellow-500 hover:underline"
                 >
-                  {bookmarkStatus[sortedPosts[selectedPostIndex].post_id] ? "⭐ Bookmarked" : "☆ Bookmark"}
+                  {bookmarkStatus[sortedPosts[selectedPostIndex].post_id]
+                    ? "⭐ Bookmarked"
+                    : "☆ Bookmark"}
                 </button>
               </div>
               <div>
                 <input
-                  value={newComments[sortedPosts[selectedPostIndex].post_id] || ""}
+                  value={
+                    newComments[sortedPosts[selectedPostIndex].post_id] || ""
+                  }
                   onChange={(e) =>
                     setNewComments((prev) => ({
                       ...prev,
@@ -217,19 +257,26 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
                   className="w-full border rounded px-2 py-1 text-sm mb-2"
                 />
                 <button
-                  onClick={() => submitComment(sortedPosts[selectedPostIndex].post_id)}
+                  onClick={() =>
+                    submitComment(sortedPosts[selectedPostIndex].post_id)
+                  }
                   className="text-blue-500 text-sm"
                 >
                   Post
                 </button>
                 <ul className="mt-2 space-y-2 text-sm">
-                  {(commentsByPost[sortedPosts[selectedPostIndex].post_id] || []).map((c) => (
+                  {(
+                    commentsByPost[sortedPosts[selectedPostIndex].post_id] || []
+                  ).map((c) => (
                     <li key={c.id} className="flex items-center gap-2">
                       <strong>{c.username}:</strong>
                       <input
                         value={commentEdit[c.id] ?? c.content}
                         onChange={(e) =>
-                          setCommentEdit((prev) => ({ ...prev, [c.id]: e.target.value }))
+                          setCommentEdit((prev) => ({
+                            ...prev,
+                            [c.id]: e.target.value,
+                          }))
                         }
                         className="border rounded px-1 flex-1"
                       />
@@ -246,7 +293,12 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
                         Save
                       </button>
                       <button
-                        onClick={() => handleDeleteComment(sortedPosts[selectedPostIndex].post_id, c.id)}
+                        onClick={() =>
+                          handleDeleteComment(
+                            sortedPosts[selectedPostIndex].post_id,
+                            c.id
+                          )
+                        }
                         className="text-red-500"
                       >
                         Delete
