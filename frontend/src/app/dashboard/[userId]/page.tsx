@@ -87,7 +87,7 @@ const Dashboard = () => {
             profileImage={viewUser.profile_image || "images/DefaultProfile.png"}
           />
           <div
-            className="flex items-end cursor-pointer"
+            className="flex items-end cursor-pointer gap-6"
             onClick={() => setIsFollowersModalOpen(true)}
           >
             {displayedFollowers.length > 0 ? (
@@ -106,8 +106,8 @@ const Dashboard = () => {
                 ))}
                 {extraFollowersCount > 0 && (
                   <span
-                    className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-300 text-white font-medium text-sm border-2 border-white"
-                    style={{ marginLeft: "-15px", zIndex: 0 }}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-300 text-white font-medium text-sm border-2 border-white"
+                    style={{ zIndex: 0 }}
                   >
                     +{extraFollowersCount}
                   </span>
