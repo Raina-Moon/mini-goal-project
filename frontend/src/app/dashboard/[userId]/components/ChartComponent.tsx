@@ -34,11 +34,7 @@ const ChartComponent = ({
   isOwnProfile,
 }: ChartComponentProps) => {
   const chartData: ChartData[] = useMemo(() => {
-    if (!nailedPosts || nailedPosts.length === 0) {
-      console.log("No nailedPosts data available:", nailedPosts);
-      return [];
-    }
-    console.log("Processing nailedPosts:", nailedPosts); // Debugging line
+    if (!nailedPosts || nailedPosts.length === 0) return [];
 
     const processData = (posts: Goal[]): ChartData[] => {
       if (chartPeriod === "day") {
@@ -107,7 +103,7 @@ const ChartComponent = ({
         return Object.entries(durationByMonth).map(([date, duration]) => ({
           date,
           nailedDuration: duration,
-        }))
+        }));
       }
       return [];
     };
@@ -202,7 +198,7 @@ const ChartComponent = ({
                 position: "insideLeft",
                 fill: "#6b7280",
               }}
-              domain={[5, maxDuration + 10]}
+              domain={[0, maxDuration + 10]}
               tickCount={Math.ceil((maxDuration + 10) / 10)}
             />
             <ChartTooltip
@@ -213,12 +209,14 @@ const ChartComponent = ({
               dataKey="nailedDuration"
               fill="var(--color-nailedDuration)"
               radius={4}
+              barSize={10}
             />
             {isOwnProfile && (
               <Bar
                 dataKey="failedDuration"
                 fill="var(--color-failedDuration)"
                 radius={4}
+                barSize={10}
               />
             )}
           </BarChart>
