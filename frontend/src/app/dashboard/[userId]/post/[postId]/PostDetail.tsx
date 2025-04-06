@@ -15,6 +15,7 @@ import BookmarkFull from "../../../../../../public/icons/BookmarkFull";
 import BookmarkEmpty from "../../../../../../public/icons/BookmarkEmpty";
 import { toast } from "sonner";
 import ExternalLink from "../../../../../../public/icons/ExternalLink";
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 
 interface PostDetailProps {
   post: Post;
@@ -153,9 +154,26 @@ const PostDetail = ({ post, userId }: PostDetailProps) => {
                 <ExternalLink />
               </button>
             </div>
-            <p className="text-sm text-gray-600 mb-2">
-              Duration: {post.duration} min
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Duration: {post.duration} min
+              </p>
+              {(() => {
+                console.log(
+                  "post.created_at:",
+                  post.created_at,
+                  typeof post.created_at
+                );
+                return post.created_at !== undefined &&
+                  post.created_at !== null ? (
+                  <p className="text-xs text-gray-500">
+                    {formatTimeAgo(String(post.created_at))}
+                  </p>
+                ) : (
+                  <p className="text-xs text-red-500">Created_at missing</p>
+                );
+              })()}
+            </div>
           </div>
 
           {post.image_url && (
