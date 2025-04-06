@@ -111,6 +111,7 @@ router.get("/nailed/:userId", async (req: Request, res: Response) => {
       SELECT 
         posts.id AS post_id,
         posts.user_id,
+        posts.created_at,
         posts.goal_id AS goal_id,
         goals.title,
         goals.duration,

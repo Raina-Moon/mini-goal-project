@@ -51,7 +51,7 @@ const PostDetailPage = () => {
   if (posts.length === 0) return <div>Loading...</div>;
 
   return (
-    <div ref={containerRef} className="fixed inset-0 bg-white overflow-y-auto">
+    <div ref={containerRef} className="fixed my-16 inset-0 bg-white overflow-y-auto">
       {posts.map((post, index) => (
         <div
           key={post.post_id}

@@ -26,7 +26,9 @@ const Dashboard = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("nailed");
-  const [chartPeriod, setChartPeriod] = useState<"day" | "week" | "month" | "year">("week");
+  const [chartPeriod, setChartPeriod] = useState<
+    "day" | "week" | "month" | "year"
+  >("week");
   const { setLoading } = useGlobalLoading();
 
   const fetchData = async () => {
@@ -43,7 +45,9 @@ const Dashboard = () => {
         fetchFollowers(profileId),
       ]);
       const updatedFollowStatus = await fetchFollowers(profileId);
-      const isFollowingNow = (updatedFollowStatus ?? []).some((f) => f.id === viewerId);
+      const isFollowingNow = (updatedFollowStatus ?? []).some(
+        (f) => f.id === viewerId
+      );
       setIsFollowing(isFollowingNow);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
@@ -64,7 +68,8 @@ const Dashboard = () => {
     if (user && token) fetchData();
   }, [userId, user, token]);
 
-  if (!user || !token || !viewUser) return <div>Please log in to view the dashboard.</div>;
+  if (!user || !token || !viewUser)
+    return <div>Please log in to view the dashboard.</div>;
 
   const displayedFollowers = followers.slice(0, 3);
   const extraFollowersCount = followers.length > 3 ? followers.length - 3 : 0;
@@ -81,7 +86,10 @@ const Dashboard = () => {
             username={viewUser.username}
             profileImage={viewUser.profile_image || "images/DefaultProfile.png"}
           />
-          <div className="flex items-end cursor-pointer" onClick={() => setIsFollowersModalOpen(true)}>
+          <div
+            className="flex items-end cursor-pointer gap-6"
+            onClick={() => setIsFollowersModalOpen(true)}
+          >
             {displayedFollowers.length > 0 ? (
               <div className="flex">
                 {displayedFollowers.map((follower, index) => (
@@ -90,20 +98,23 @@ const Dashboard = () => {
                     src={follower.profile_image || "/images/DefaultProfile.png"}
                     alt={`${follower.username}'s profile`}
                     className="w-7 h-7 rounded-full object-cover border-2 border-white"
-                    style={{ marginLeft: index > 0 ? "-15px" : "0", zIndex: displayedFollowers.length - index }}
+                    style={{
+                      marginLeft: index > 0 ? "-15px" : "0",
+                      zIndex: displayedFollowers.length - index,
+                    }}
                   />
                 ))}
                 {extraFollowersCount > 0 && (
                   <span
-                    className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-300 text-white font-medium text-sm border-2 border-white"
-                    style={{ marginLeft: "-15px", zIndex: 0 }}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-300 text-white font-medium text-sm border-2 border-white"
+                    style={{ zIndex: 0 }}
                   >
                     +{extraFollowersCount}
                   </span>
                 )}
               </div>
             ) : (
-              <span className="text-gray-500">No followers yet</span>
+              <span className="text-gray-500 text-xs">Be the first to vibe</span>
             )}
           </div>
         </div>
@@ -119,9 +130,11 @@ const Dashboard = () => {
         )}
       </div>
 
-      <h1 className="text-2xl font-medium mb-4 text-gray-900">{viewUser.username}'s grab goals</h1>
+      <h1 className="text-2xl font-medium mb-4 text-gray-900">
+        {viewUser.username}'s grab goals
+      </h1>
 
-      <Tabs defaultValue="nailed" onValueChange={setActiveTab} className="mt-6">
+      <Tabs defaultValue="nailed" onValueChange={setActiveTab} className="my-6">
         <TabsList className="mb-4">
           {isOwnProfile && <TabsTrigger value="all">All</TabsTrigger>}
           <TabsTrigger value="nailed">Nailed It</TabsTrigger>
@@ -153,13 +166,16 @@ const Dashboard = () => {
       </Tabs>
 
       {isFollowersModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setIsFollowersModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 w-[85%] max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Followers</h3>
-              <button onClick={() => setIsFollowersModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-                ✕
-              </button>
+              <h3 className="text-lg font-semibold">Followers {followers.length}</h3>
             </div>
             <FollowersList
               followers={followers.map((follower) => ({
