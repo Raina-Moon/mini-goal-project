@@ -7,16 +7,28 @@ interface ProfileHeaderProps {
   profileImage: string | null;
 }
 
-const ProfileHeader = ({ userId, storedId, username, profileImage }: ProfileHeaderProps) => (
+const ProfileHeader = ({
+  userId,
+  username,
+  storedId,
+  profileImage,
+}: ProfileHeaderProps) => (
   <>
     {userId === storedId ? (
       <Link href={`/profile/${userId}`}>
-        <img src={profileImage ?? "/images/DefaultProfile.png"} className="w-[70px] h-[70px] rounded-full" />
+        <img
+          src={profileImage ?? "/images/DefaultProfile.png"}
+          className="w-[70px] h-[70px] rounded-full"
+          alt={`${username}'s profile`}
+        />
       </Link>
     ) : (
-      <img src={profileImage ?? "/images/DefaultProfile.png"} className="w-[70px] h-[70px] rounded-full" />
+      <img
+        src={profileImage ?? "/images/DefaultProfile.png"}
+        className="w-[70px] h-[70px] rounded-full"
+        alt={`${username}'s profile`}
+      />
     )}
-    <h1 className="text-2xl font-bold mb-4 text-emerald-600">📋 {username}&apos;s grab goals</h1>
   </>
 );
 
