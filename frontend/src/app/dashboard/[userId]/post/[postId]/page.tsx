@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Post } from "@/utils/api";
 import PostDetail from "./postDetail";
@@ -12,6 +12,10 @@ const PostDetailPage = () => {
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [hasAutoScrolled, setHasAutoScrolled] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const selectedPostRef = useRef<HTMLDivElement>(null);
 
   // Fetch all posts for the user and set the selected index based on postId
   useEffect(() => {
@@ -28,35 +32,37 @@ const PostDetailPage = () => {
       .catch((err) => {
         console.error("Error fetching posts", err);
       });
-  }, [userId, postId]);
+  }, [userId, postId, fetchNailedPosts]);
 
-  // Memoize the selected post for rendering
-  const selectedPost = useMemo(
-    () => posts[selectedIndex],
-    [posts, selectedIndex]
-  );
+  useEffect(() => {
+    if (hasAutoScrolled) return;
+    if (posts.length > 0 && selectedPostRef.current && containerRef.current) {
+      const container = containerRef.current;
+      const selectedEl = selectedPostRef.current;
+      const containerHeight = container.clientHeight;
+      const elTop = selectedEl.offsetTop;
+      const elHeight = selectedEl.clientHeight;
+      const scrollPos = elTop - containerHeight / 2 + elHeight / 2;
+      container.scrollTo({ top: scrollPos, behavior: "smooth" });
+      setHasAutoScrolled(true);
+    }
+  }, [posts, selectedIndex, hasAutoScrolled]);
 
   // Handle vertical scroll to navigate between posts
-  const handleScroll = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (e.deltaY > 0 && selectedIndex < posts.length - 1) {
-      const newIndex = selectedIndex + 1;
-      setSelectedIndex(newIndex);
-      router.push(`/dashboard/${userId}/post/${posts[newIndex].post_id}`);
-    } else if (e.deltaY < 0 && selectedIndex > 0) {
-      const newIndex = selectedIndex - 1;
-      setSelectedIndex(newIndex);
-      router.push(`/dashboard/${userId}/post/${posts[newIndex].post_id}`);
-    }
-  };
 
   if (posts.length === 0) return <div>Loading...</div>;
 
   return (
-    <div
-      className="fixed inset-0 bg-white overflow-y-auto"
-      onWheel={handleScroll}
-    >
-      <PostDetail post={selectedPost} />
+    <div ref={containerRef} className="fixed inset-0 bg-white overflow-y-auto">
+      {posts.map((post, index) => (
+        <div
+          key={post.post_id}
+          ref={index === selectedIndex ? selectedPostRef : null}
+          className="mb-4"
+        >
+          <PostDetail post={post} />
+        </div>
+      ))}
     </div>
   );
 };
