@@ -143,13 +143,20 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     }
   };
 
+  const handlePostClick = useCallback(
+    (userId: number, postId: number) => {
+      router.push(`${userId}/post/${postId}`);
+    },
+    [router]
+  );
+
   return (
     <>
       {/* filter section */}
       <div className="flex justify-end mb-4">
         <Select onValueChange={setSortBy} defaultValue="latest">
           <SelectTrigger className="w-40">
-          <SelectValue placeholder="Latest" />
+            <SelectValue placeholder="Latest" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="latest">Latest</SelectItem>
@@ -166,11 +173,7 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
           <div
             key={post.post_id}
             className="aspect-square cursor-pointer"
-            onClick={() => {
-              console.log("Post object keys:", Object.keys(post));
-              console.log("Post data:", post);
-              router.push(`${post.user_id}/post/${post.post_id}`);
-            }}
+            onClick={() => handlePostClick(post.user_id ?? 0, post.post_id)}
           >
             {post.image_url ? (
               <img
