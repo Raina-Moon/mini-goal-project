@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import ProfileHeader from "./components/ProfileHeader";
 import FollowButton from "./components/FollowButton";
@@ -51,6 +51,14 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+  const nailedGoals = useMemo(() => {
+    return goals.filter((goal) => goal.status === "nailed it");
+  }, [goals]);
+
+  const failedPosts = useMemo(() => {
+    return goals.filter((goal) => goal.status === "failed it");
+  }, [goals]);
 
   useEffect(() => {
     if (user && token) fetchData();
@@ -135,9 +143,11 @@ const Dashboard = () => {
         )}
         <TabsContent value="chart">
           <ChartComponent
-            nailedPosts={nailedPosts}
+            nailedPosts={nailedGoals}
+            failedPosts={isOwnProfile ? failedPosts : undefined}
             chartPeriod={chartPeriod}
             setChartPeriod={setChartPeriod}
+            isOwnProfile={isOwnProfile}
           />
         </TabsContent>
       </Tabs>
