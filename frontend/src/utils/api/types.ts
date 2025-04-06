@@ -64,3 +64,10 @@ export interface Notification {
   created_at: string;
   sender_username: string;
 }
+
+export interface ChartData {
+  time?: string; // day
+  date?: string; // week, month, year
+  nailedDuration: number;
+  failedDuration?: number;
+}
