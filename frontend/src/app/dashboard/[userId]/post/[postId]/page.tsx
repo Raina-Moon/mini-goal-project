@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Post } from "@/utils/api";
 import PostDetail from "./postDetail";
 import { usePosts } from "@/app/contexts/PostContext";
@@ -9,7 +9,7 @@ import { usePosts } from "@/app/contexts/PostContext";
 const PostDetailPage = () => {
   const { fetchNailedPosts } = usePosts();
   const { userId, postId } = useParams() as { userId: string; postId: string };
-  const router = useRouter();
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [hasAutoScrolled, setHasAutoScrolled] = useState(false);
