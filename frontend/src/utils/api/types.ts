@@ -15,6 +15,7 @@ export interface Goal {
 }
 
 export interface Post {
+  created_at: string | number | Date;
   profile_image: string;
   id: number;
   post_id: number;
