@@ -14,6 +14,7 @@ const PostDetailPage = () => {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [initialScrollDone, setInitialScrollDone] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const postRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -34,7 +35,8 @@ const PostDetailPage = () => {
   }, [userId, postId, fetchNailedPosts]);
 
   useEffect(() => {
-    if (posts.length === 0 || !containerRef.current) return;
+    if (initialScrollDone || posts.length === 0 || !containerRef.current)
+      return;
     const container = containerRef.current;
     const selectedEl = postRefs.current[selectedIndex];
     if (!selectedEl) return;
@@ -43,19 +45,25 @@ const PostDetailPage = () => {
     const elHeight = selectedEl.clientHeight;
     const scrollPos = elTop - containerHeight / 2 + elHeight / 2;
     container.scrollTo({ top: scrollPos, behavior: "smooth" });
-  }, [posts, selectedIndex]);
+    setInitialScrollDone(true);
+  }, [posts, selectedIndex, initialScrollDone]);
 
   if (posts.length === 0) return <div>Loading...</div>;
 
   return (
     <div ref={containerRef} className="fixed inset-0 bg-white overflow-y-auto">
-    {posts.map((post, index) => (
-        <div key={post.post_id} ref={(el) => { postRefs.current[index] = el; }}>
-        <PostDetail post={post} userId={user?.id ?? null} />
-      </div>
-    ))}
-  </div>
-);
+      {posts.map((post, index) => (
+        <div
+          key={post.post_id}
+          ref={(el) => {
+            postRefs.current[index] = el;
+          }}
+        >
+          <PostDetail post={post} userId={user?.id ?? null} />
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export default PostDetailPage;
