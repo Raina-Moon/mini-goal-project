@@ -158,21 +158,13 @@ const PostDetail = ({ post, userId }: PostDetailProps) => {
               <p className="text-sm text-gray-600">
                 Duration: {post.duration} min
               </p>
-              {(() => {
-                console.log(
-                  "post.created_at:",
-                  post.created_at,
-                  typeof post.created_at
-                );
-                return post.created_at !== undefined &&
-                  post.created_at !== null ? (
-                  <p className="text-xs text-gray-500">
-                    {formatTimeAgo(String(post.created_at))}
-                  </p>
-                ) : (
-                  <p className="text-xs text-red-500">Created_at missing</p>
-                );
-              })()}
+              {post.created_at !== undefined && post.created_at !== null ? (
+                <p className="text-xs text-gray-500">
+                  {formatTimeAgo(String(post.created_at))}
+                </p>
+              ) : (
+                <p className="text-xs text-red-500">Created_at missing</p>
+              )}
             </div>
           </div>
 
