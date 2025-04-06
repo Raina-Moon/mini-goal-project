@@ -114,7 +114,7 @@ const Dashboard = () => {
                 )}
               </div>
             ) : (
-              <span className="text-gray-500">No followers yet</span>
+              <span className="text-gray-500 text-xs">Be the first to vibe</span>
             )}
           </div>
         </div>
@@ -134,7 +134,7 @@ const Dashboard = () => {
         {viewUser.username}'s grab goals
       </h1>
 
-      <Tabs defaultValue="nailed" onValueChange={setActiveTab} className="mt-6">
+      <Tabs defaultValue="nailed" onValueChange={setActiveTab} className="my-6">
         <TabsList className="mb-4">
           {isOwnProfile && <TabsTrigger value="all">All</TabsTrigger>}
           <TabsTrigger value="nailed">Nailed It</TabsTrigger>
