@@ -14,6 +14,8 @@ import LockIcon from "../../../../public/icons/LockIcon";
 import { Switch } from "@/components/ui/switch";
 import SavedIcon from "../../../../public/icons/SavedIcon";
 import ArrowRightIcon from "../../../../public/icons/ArrowRightIcon";
+import GoBackArrow from "../../../../public/icons/GoBackArrow";
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 
 const ProfilePage = () => {
   const {
@@ -261,15 +263,13 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-
       <div className="w-full text-center text-white text-[6px] mb-4">
         Made by @Raina
       </div>
-
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
+          <div className="bg-white p-6 rounded-lg max-w-sm w-[90%] text-center">
             <p className="text-gray-900 text-lg mb-4">
               Logging out already? We'll miss you! 😢
             </p>
@@ -284,7 +284,7 @@ const ProfilePage = () => {
                 Bye for now 👋
               </button>
               <button
-                className="text-white bg-primary-500 px-4 py-2 rounded-full hover:bg-primary-600"
+                className="text-white bg-primary-400 px-3 py-2 rounded-full hover:bg-primary-600"
                 onClick={() => setShowLogoutConfirm(false)}
               >
                 Stay a bit longer 🫶
@@ -293,59 +293,66 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
-      
       {/* Bookmarked Posts View */}
       {showBookmarkedPosts && (
-        <div className="fixed inset-0 bg-white p-4">
-          <button
-            className="mb-4 text-zinc-600 text-xs"
-            onClick={() => setShowBookmarkedPosts(false)}
-          >
-            Close
-          </button>
-          <div className="grid grid-cols-3 gap-2">
-            {bookmarkedPosts.map((post) => (
-              <img
-                key={post.post_id}
-                src={post.image_url}
-                alt="Bookmarked Post"
-                className="w-full h-auto aspect-square object-cover"
-                onClick={() => setSelectedPost(post)}
-              />
-            ))}
+        <div className="fixed top-16 left-0 right-0 bottom-0 bg-white flex flex-col z-10">          <div className="flex items-center justify-start p-4 border-b border-gray-200">
+            <button
+              className="text-zinc-600"
+              onClick={() => setShowBookmarkedPosts(false)}
+            >
+              <GoBackArrow />
+            </button>
+            <h2 className="text-lg font-semibold ml-4">Saved Posts</h2>
+          </div>
+          <div className="flex-1 p-4 overflow-y-auto">
+            <div className="grid grid-cols-3 gap-2">
+              {bookmarkedPosts.map((post) => (
+                <img
+                  key={post.post_id}
+                  src={post.image_url}
+                  alt="Bookmarked Post"
+                  className="w-full h-auto aspect-square object-cover"
+                  onClick={() => setSelectedPost(post)}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
-
       {/* Notification Log Section */}
       {showNotifications && (
-        <div className="fixed inset-0 bg-white p-4">
-          <button
-            className="mb-4 text-zinc-600 text-xs"
-            onClick={() => setShowNotifications(false)}
-          >
-            Close
-          </button>
-          <ul className="space-y-2">
-            {notifications.map((notif) => (
-              <li
-                key={notif.id}
-                className={`p-2 ${
-                  notif.is_read ? "bg-gray-100" : "bg-blue-100"
-                } cursor-pointer`}
-                onClick={() => handleMarkAsRead(notif.id)}
-              >
-                <span>{notif.message}</span>
-                <span className="text-xs text-gray-500"> ({notif.type})</span>
-              </li>
-            ))}
-          </ul>
+        <div className="fixed top-16 left-0 right-0 bottom-0 bg-white flex flex-col z-50">          <div className="flex items-center justify-start p-4 border-b border-gray-200 bg-gray-50">
+            <button
+              className="text-zinc-600"
+              onClick={() => setShowNotifications(false)}
+            >
+              <GoBackArrow />
+            </button>
+            <h2 className="text-lg font-semibold ml-4">Notifications</h2>
+          </div>
+          <div className="flex-1 p-4 overflow-y-auto">
+            <ul className="space-y-2">
+              {notifications.map((notif) => (
+                <li
+                  key={notif.id}
+                  className={`p-2 flex justify-between items-center ${
+                    notif.is_read ? "bg-gray-100" : "bg-blue-100"
+                  } cursor-pointer`}
+                  onClick={() => handleMarkAsRead(notif.id)}
+                >
+                  <span>{notif.message}</span>
+                  <span className="text-xs text-gray-500">
+                    {formatTimeAgo(notif.created_at || "")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
-
       {/* Post Detail Modal */}
       {selectedPost && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed top-16 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
           <div className="bg-white p-4 rounded-lg max-w-md w-full">
             <h2 className="text-lg font-semibold">{selectedPost.title}</h2>
             <img
