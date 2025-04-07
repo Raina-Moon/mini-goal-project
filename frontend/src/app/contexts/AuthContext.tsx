@@ -34,6 +34,15 @@ interface AuthState {
     enteredCode: number,
     newPassword: string
   ) => Promise<{ message: string }>;
+  verifyCurrentPassword: (
+    email: string,
+    currentPassword: string
+  ) => Promise<boolean>;
+  changePassword: (
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -72,6 +81,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error("Token verification failed:", err);
       return false;
+    }
+  };
+
+  // Function to verify the current password
+  const verifyCurrentPassword = async (
+    email: string,
+    currentPassword: string
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/auth/verify-current-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, currentPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Current password is incorrect");
+      }
+      return true;
+    } catch (err: any) {
+      throw new Error(err.message || "Error verifying current password");
+    }
+  };
+
+  // Function to change the password
+  const changePassword = async (
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> => {
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, currentPassword, newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to change password");
+      }
+    } catch (err: any) {
+      throw new Error(err.message || "Error changing password");
     }
   };
 
@@ -236,6 +287,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     requestPasswordReset,
     verifyResetCode,
     resetPassword,
+    verifyCurrentPassword,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
