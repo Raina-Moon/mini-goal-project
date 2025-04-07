@@ -188,53 +188,69 @@ const ProfilePage = () => {
         )}
 
         {/* Profile Sections */}
-        <div className="flex flex-col space-y-2">
-          <button className="text-zinc-600 text-xs" onClick={loadNotifications}>
-            <BellIcon />
-            notifications
-            <ArrowRightIcon />
-          </button>
-          <button
-            className="text-zinc-600 text-xs"
-            onClick={async () => {
-              if (user) {
-                const posts = await fetchBookmarkedPosts(user.id);
-                setBookmarkedPosts(posts);
-                setShowBookmarkedPosts(true);
-              }
-            }}
-          >
-            <SavedIcon />
-            saved <ArrowRightIcon />
-          </button>
-          <label className="text-zinc-600 text-xs flex items-center justify-center gap-1">
-            <input
-              type="checkbox"
-              checked={notificationEnabled}
-              onChange={handleNotificationToggle}
-            />
-            <BellIcon />
-            Notification
-            <Switch />
-          </label>
-        </div>
+        <div className="flex flex-col">
+          <div className="flex flex-col items-center justify-center gap-1 mb-4 border border-primary-200 rounded-2xl px-4 py-2">
+            <button
+              className="w-full flex justify-between items-center text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded"
+              onClick={loadNotifications}
+            >
+              <div className="flex items-center gap-2">
+                <BellIcon />
+                <span>notifications</span>
+              </div>
+              <ArrowRightIcon />
+            </button>
+            <button
+              className="w-full flex justify-between items-center text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded"
+              onClick={async () => {
+                if (user) {
+                  const posts = await fetchBookmarkedPosts(user.id);
+                  setBookmarkedPosts(posts);
+                  setShowBookmarkedPosts(true);
+                }
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <SavedIcon />
+                <span>saved</span>
+              </div>
+              <ArrowRightIcon />
+            </button>
 
-        {/* Logout Button */}
-        <div className="mt-6 text-center">
-          <div className="text-zinc-600 text-xs">
-            <LockIcon />
-            change password <ArrowRightIcon />
+            <div className="w-full flex justify-between items-center text-zinc-600 text-xs py-2">
+              <div className="flex items-center gap-2">
+                <BellIcon />
+                <span>Notification</span>
+              </div>
+              <Switch
+                checked={notificationEnabled}
+                onCheckedChange={handleNotificationToggle}
+              />
+            </div>
           </div>
-          <button
-            className="text-red-700 text-xs"
-            onClick={() => {
-              logout();
-              window.location.href = "/";
-            }}
-          >
-            <LogoutIcon />
-            logout
-          </button>
+
+          {/* Logout Button */}
+          <div className="flex flex-col items-center justify-center gap-1 mb-4 border border-primary-200 rounded-2xl px-4 py-2">
+            <div className="w-full flex justify-between items-center text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded">
+              <div className="flex items-center gap-2">
+                <LockIcon />
+                <span>change password</span>
+              </div>
+              <ArrowRightIcon />
+            </div>
+            <button
+              className="w-full flex justify-start items-center text-red-700 text-xs py-2 hover:bg-gray-100 rounded"
+              onClick={() => {
+                logout();
+                window.location.href = "/";
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <LogoutIcon />
+                <span>logout</span>
+              </div>{" "}
+            </button>
+          </div>
         </div>
       </div>
 
