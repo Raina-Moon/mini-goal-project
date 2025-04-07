@@ -84,7 +84,6 @@ const ProfilePage = () => {
   const handleShowBookmarks = async () => {
     if (user) {
       const posts = await fetchBookmarkedPosts(user.id);
-      console.log("Fetched bookmarked posts:", posts); // Debugging line
       setBookmarkedPosts(posts);
       setShowBookmarkedPosts(true);
     }
@@ -96,17 +95,11 @@ const ProfilePage = () => {
   };
 
   const handleBookmarkChange = (postId: number, isBookmarked: boolean) => {
-    console.log("Bookmark changed:", { postId, isBookmarked }); // Debugging line
     setBookmarkedPosts((prev) =>
       isBookmarked
         ? [...prev, { ...selectedPost!, post_id: postId }]
         : prev.filter((p) => p.post_id !== postId)
     );
-  };
-
-  const handleSelectPost = (post: Post) => {
-    console.log("Selected post:", post); // Debugging line
-    setSelectedPost(post);
   };
 
   if (!user) return <div>Loading...</div>;

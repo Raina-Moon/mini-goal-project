@@ -44,21 +44,13 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("Post in PostDetailModal:", post); // Debugging line
-    if (!post.id) {
-      setError("Post ID is missing");
-      return;
-    }
-
-  // Fetch initial data when the component mounts or user changes
+    // Fetch initial data when the component mounts or user changes
     const initializeData = async () => {
       try {
         const likeStatus = await getLikeStatus(post.id, user.id);
         const count = await fetchLikeCount(post.id);
         const bookmarkedPosts = await fetchBookmarkedPosts(user.id);
-        const bookmarkStatus = bookmarkedPosts.some(
-          (bp) => bp.id === post.id
-        );
+        const bookmarkStatus = bookmarkedPosts.some((bp) => bp.id === post.id);
         await fetchComments(post.id);
 
         setIsLiked(likeStatus);
@@ -73,11 +65,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     if (user.id) {
       initializeData();
     }
-  }, [
-    post.id,
-    user.id,
-   
-  ]);
+  }, [post.id, user.id]);
 
   const handleProfileClick = useCallback(() => {
     router.push(`/dashboard/${post.user_id}`);
@@ -90,7 +78,6 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     }
     try {
       setError(null);
-      console.log("Liking post:", post.id); // Debugging line
       const newCount = isLiked
         ? await unlikePost(user.id, post.id)
         : await likePost(user.id, post.id);
@@ -110,7 +97,6 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     }
     try {
       setError(null);
-      console.log("Bookmarking post:", post.id); // Debugging line
       const newState = !isBookmarked;
       newState
         ? await bookmarkPost(user.id, post.id)
