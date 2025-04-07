@@ -8,6 +8,7 @@ import { useAuth } from "./AuthContext";
 interface NotificationsState {
   fetchNotifications: (userId: number) => Promise<Notification[]>;
   markAsRead: (notificationId: number) => Promise<void>;
+  deleteNotification: (notificationId: number) => Promise<void>;
 }
 
 const NotificationsContext = createContext<NotificationsState | undefined>(
@@ -29,6 +30,10 @@ export const NotificationsProvider = ({
 
   const markAsRead = async (notificationId: number) => {
     await fetchApi(`/notifications/${notificationId}/read`, { method: "PUT" });
+  };
+
+  const deleteNotification = async (notificationId: number) => {
+    await fetchApi(`/notifications/${notificationId}`, { method: "DELETE" });
   };
 
   useEffect(() => {
@@ -63,6 +68,7 @@ export const NotificationsProvider = ({
   const value: NotificationsState = {
     fetchNotifications,
     markAsRead,
+    deleteNotification,
   };
 
   return (
