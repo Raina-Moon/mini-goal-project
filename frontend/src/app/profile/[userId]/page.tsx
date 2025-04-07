@@ -28,7 +28,8 @@ const ProfilePage = () => {
     updateProfileImage,
   } = useAuth();
   const { fetchBookmarkedPosts } = useBookmarks();
-  const { fetchNotifications, markAsRead } = useNotifications();
+  const { fetchNotifications, markAsRead, deleteNotification } =
+    useNotifications();
 
   const { userId } = useParams();
   const router = useRouter();
@@ -112,6 +113,17 @@ const ProfilePage = () => {
   const handleLogout = () => {
     logout();
     window.location.href = "/";
+  };
+
+  const handleDeleteNotification = async (notificationId: number) => {
+    try {
+      await deleteNotification(notificationId);
+      setNotifications((prev) =>
+        prev.filter((notif) => notif.id !== notificationId)
+      );
+    } catch (err) {
+      console.error("Failed to delete notification:", err);
+    }
   };
 
   if (!user) return <div>Loading...</div>;
@@ -295,7 +307,9 @@ const ProfilePage = () => {
       )}
       {/* Bookmarked Posts View */}
       {showBookmarkedPosts && (
-        <div className="fixed top-16 left-0 right-0 bottom-0 bg-white flex flex-col z-10">          <div className="flex items-center justify-start p-4 border-b border-gray-200">
+        <div className="fixed top-16 left-0 right-0 bottom-0 bg-white flex flex-col z-10">
+          {" "}
+          <div className="flex items-center justify-start p-4 border-b border-gray-200">
             <button
               className="text-zinc-600"
               onClick={() => setShowBookmarkedPosts(false)}
@@ -321,7 +335,9 @@ const ProfilePage = () => {
       )}
       {/* Notification Log Section */}
       {showNotifications && (
-        <div className="fixed top-16 left-0 right-0 bottom-0 bg-white flex flex-col z-50">          <div className="flex items-center justify-start p-4 border-b border-gray-200 bg-gray-50">
+        <div className="fixed top-16 left-0 right-0 bottom-0 bg-white flex flex-col z-50">
+          {" "}
+          <div className="flex items-center justify-start p-4 border-b border-gray-200 bg-gray-50">
             <button
               className="text-zinc-600"
               onClick={() => setShowNotifications(false)}
@@ -336,14 +352,22 @@ const ProfilePage = () => {
                 <li
                   key={notif.id}
                   className={`p-2 flex justify-between items-center ${
-                    notif.is_read ? "bg-gray-100" : "bg-blue-100"
+                    notif.is_read ? "bg-gray-100" : "bg-primary-100"
                   } cursor-pointer`}
                   onClick={() => handleMarkAsRead(notif.id)}
                 >
                   <span>{notif.message}</span>
-                  <span className="text-xs text-gray-500">
-                    {formatTimeAgo(notif.created_at || "")}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">
+                      {formatTimeAgo(notif.created_at || "")}
+                    </span>
+                    <button
+                      className="text-red-500 hover:text-red-700 text-xs"
+                      onClick={() => handleDeleteNotification(notif.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
