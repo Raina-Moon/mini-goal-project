@@ -13,8 +13,6 @@ import { useLikes } from "@/app/contexts/LikesContext";
 import { useComments } from "@/app/contexts/CommentsContext";
 import CommentsModal from "@/components/PostsList/CommentsModal";
 import { formatTimeAgo } from "@/utils/formatTimeAgo";
-import { useAuth } from "@/app/contexts/AuthContext";
-import { useGoals } from "@/app/contexts/GoalContext";
 
 interface PostDetailModalProps {
   post: Post;
@@ -24,7 +22,7 @@ interface PostDetailModalProps {
 }
 
 const PostDetailModal: React.FC<PostDetailModalProps> = ({
-  post,
+  post: initialPost,
   onClose,
   user,
   onBookmarkChange,
@@ -37,42 +35,59 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     editComment,
     deleteComment,
   } = useComments();
-  const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
+  const { bookmarkPost, unbookmarkPost, fetchBookmarkedPostDetail } =
+    useBookmarks();
   const router = useRouter();
 
-  const [isLiked, setIsLiked] = useState(post.liked_by_me || false);
-  const [likeCount, setLikeCount] = useState(post.like_count || 0);
+  const [post, setPost] = useState<Post>(initialPost);
+  const [isLiked, setIsLiked] = useState(initialPost.liked_by_me || false);
+  const [likeCount, setLikeCount] = useState(initialPost.like_count || 0);
   const [isBookmarked, setIsBookmarked] = useState(
-    post.bookmarked_by_me || false
+    initialPost.bookmarked_by_me || false
   );
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  console.log("Post in PostDetailModal:", post);
 
   useEffect(() => {
     // Fetch initial data when the component mounts or user changes
     const initializeData = async () => {
       try {
-        const likeStatus = await getLikeStatus(post.id, user.id);
-        const count = await fetchLikeCount(post.id);
-        const bookmarkedPosts = await fetchBookmarkedPosts(user.id);
-        console.log("Bookmarked Posts:", bookmarkedPosts); // Debugging line
+        const bookmarkedPosts = await fetchBookmarkedPostDetail(user.id);
+        const detailedPost = bookmarkedPosts.find(
+          (bp) => bp.post_id === initialPost.id
+        );
+        if (detailedPost) {
+          setPost(detailedPost);
+          setIsLiked(detailedPost.liked_by_me || false);
+          setLikeCount(detailedPost.like_count || 0);
+          setIsBookmarked(detailedPost.bookmarked_by_me || false);
+        }
 
-        const bookmarkStatus = bookmarkedPosts.some((bp) => bp.id === post.id);
-        await fetchComments(post.id);
+        const likeStatus = await getLikeStatus(initialPost.id, user.id);
+        const count = await fetchLikeCount(initialPost.id);
+        await fetchComments(initialPost.id);
 
         setIsLiked(likeStatus);
         setLikeCount(count);
-        setIsBookmarked(bookmarkStatus);
       } catch (err) {
         console.error("Failed to initialize post data:", err);
         setError("Failed to load post data");
       }
     };
 
-    if (user.id && post.id) {
+    if (user.id && initialPost.id) {
       initializeData();
     }
-  }, [post.id, user.id]);
+  }, [
+    initialPost.id,
+    user.id,
+    fetchBookmarkedPostDetail,
+    getLikeStatus,
+    fetchLikeCount,
+    fetchComments,
+  ]);
 
   const handleProfileClick = useCallback(() => {
     if (post.user_id !== undefined) {
@@ -134,13 +149,13 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
             onClick={handleProfileClick}
             className="flex flex-row items-center gap-2"
           >
-           <img
+            <img
               src={post.profile_image || "/images/DefaultProfile.png"}
               alt={`${post.username || "Unknown User"}'s profile`}
               className="w-8 h-8 rounded-full object-cover"
             />
             <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-800">
+              <span className="text-sm font-medium text-gray-800">
                 {post.username || "Unknown User"}
               </span>
               <div className="text-xs text-gray-500">
