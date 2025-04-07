@@ -22,7 +22,7 @@ const ProfilePage = () => {
     updateProfile,
     updateProfileImage,
   } = useAuth();
-  const { fetchBookmarkedPosts } = useBookmarks();
+  const { fetchBookmarkedPostDetail } = useBookmarks();
   const { fetchNotifications, markAsRead, deleteNotification } =
     useNotifications();
 
@@ -83,7 +83,7 @@ const ProfilePage = () => {
 
   const handleShowBookmarks = async () => {
     if (user) {
-      const posts = await fetchBookmarkedPosts(user.id);
+      const posts = await fetchBookmarkedPostDetail(user.id);
       setBookmarkedPosts(posts);
       setShowBookmarkedPosts(true);
     }
