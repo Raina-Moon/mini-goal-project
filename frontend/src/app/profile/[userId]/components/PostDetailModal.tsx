@@ -43,8 +43,14 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch initial data when the component mounts or user changes
   useEffect(() => {
+    console.log("Post in PostDetailModal:", post); // Debugging line
+    if (!post.post_id) {
+      setError("Post ID is missing");
+      return;
+    }
+
+  // Fetch initial data when the component mounts or user changes
     const initializeData = async () => {
       try {
         const likeStatus = await getLikeStatus(post.post_id, user.id);
