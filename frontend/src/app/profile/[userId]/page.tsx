@@ -105,7 +105,7 @@ const ProfilePage = () => {
   if (!user) return <div>Loading...</div>;
 
   return (
-    <div className="w-full h-screen bg-primary-500 flex flex-col items-center justify-between p-8 relative">
+    <div className="w-full h-screen bg-primary-500 flex flex-col items-center justify-between p-8 relative overflow-hidden">
       <ProfileCard
         user={user}
         updateProfile={updateProfile}
