@@ -16,7 +16,7 @@ import CommentsModal from "@/components/PostsList/CommentsModal";
 interface PostDetailModalProps {
   post: Post;
   onClose: () => void;
-  user: { id: number; username: string; profile_image?: string };
+  user: { id: number; username: string; profile_image?: string | null };
   onBookmarkChange?: (postId: number, isBookmarked: boolean) => void;
 }
 
@@ -27,9 +27,14 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   onBookmarkChange,
 }) => {
   const { likePost, unlikePost, getLikeStatus, fetchLikeCount } = useLikes();
-  const { commentsByPost, fetchComments, addComment, editComment, deleteComment } =
-    useComments();
-  const { bookmarkPost, unbookmarkPost, getBookmarkStatus } = useBookmarks();
+  const {
+    commentsByPost,
+    fetchComments,
+    addComment,
+    editComment,
+    deleteComment,
+  } = useComments();
+  const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
   const router = useRouter();
 
   const [isLiked, setIsLiked] = useState(false);
@@ -38,12 +43,16 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch initial data when the component mounts or user changes
   useEffect(() => {
     const initializeData = async () => {
       try {
         const likeStatus = await getLikeStatus(post.post_id, user.id);
         const count = await fetchLikeCount(post.post_id);
-        const bookmarkStatus = await getBookmarkStatus(post.post_id, user.id);
+        const bookmarkedPosts = await fetchBookmarkedPosts(user.id);
+        const bookmarkStatus = bookmarkedPosts.some(
+          (bp) => bp.post_id === post.post_id
+        );
         await fetchComments(post.post_id);
 
         setIsLiked(likeStatus);
@@ -58,7 +67,14 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     if (user.id) {
       initializeData();
     }
-  }, [post.post_id, user.id, getLikeStatus, fetchLikeCount, getBookmarkStatus, fetchComments]);
+  }, [
+    post.post_id,
+    user.id,
+    getLikeStatus,
+    fetchLikeCount,
+    fetchBookmarkedPosts,
+    fetchComments,
+  ]);
 
   const handleProfileClick = useCallback(() => {
     router.push(`/dashboard/${post.user_id}`);
@@ -110,7 +126,10 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     <div className="fixed top-16 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
       <div className="bg-white p-4 rounded-lg max-w-md w-full">
         <div className="flex items-center gap-2 mb-2">
-          <button onClick={handleProfileClick} className="flex flex-row items-center gap-2">
+          <button
+            onClick={handleProfileClick}
+            className="flex flex-row items-center gap-2"
+          >
             <img
               src={post.profile_image || "/images/DefaultProfile.png"}
               alt={`${post.username || "Unknown User"}'s profile`}
@@ -123,13 +142,20 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         </div>
 
         <h2 className="text-lg font-semibold">{post.title}</h2>
-        <img src={post.image_url} alt="Post" className="w-full h-auto object-cover" />
+        <img
+          src={post.image_url}
+          alt="Post"
+          className="w-full h-auto object-cover"
+        />
         <p>{post.description}</p>
 
         {error && <div className="text-red-500 text-xs mt-2">{error}</div>}
 
         <div className="mt-2 flex items-center justify-end gap-2">
-          <button onClick={handleLike} className="text-gray-900 flex flex-row gap-1">
+          <button
+            onClick={handleLike}
+            className="text-gray-900 flex flex-row gap-1"
+          >
             {isLiked ? <HeartFull /> : <HeartEmpty />}
             {likeCount > 0 && <span>{likeCount}</span>}
           </button>
