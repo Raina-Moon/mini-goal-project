@@ -107,7 +107,11 @@ const ProfilePage = () => {
       );
     } catch (err) {
       console.error("Error marking notification as read:", err);
-      // setErrorMessage("Failed to mark notification as read");
+      if (err instanceof Error && err.message.includes("404")) {
+        console.log(`Notification ${notificationId} not found, possibly already deleted`);
+      } else {
+        setErrorMessage("Failed to mark notification as read");
+      }
     }
   };
 
@@ -132,6 +136,7 @@ const ProfilePage = () => {
       setNotifications(updatedNotifications);
     } catch (err) {
       console.error("Failed to delete notification:", err);
+      setErrorMessage("Failed to delete notification");
     }
   };
 
@@ -372,7 +377,10 @@ const ProfilePage = () => {
                     </span>
                     <button
                       className="text-red-500 hover:text-red-700 text-xs"
-                      onClick={() => handleDeleteNotification(notif.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteNotification(notif.id);
+                      }}
                     >
                       Delete
                     </button>
