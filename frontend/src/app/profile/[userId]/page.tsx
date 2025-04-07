@@ -1,12 +1,21 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import ProfileForm from "../ProfileForm";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useBookmarks } from "@/app/contexts/BookmarksContext";
 import { Notification, Post } from "@/utils/api";
 import { useNotifications } from "@/app/contexts/NotificationsContext";
+import PencilIcon from "../../../../public/icons/PencilIcon";
+import CameraIcon from "../../../../public/icons/CameraIcon";
+import LogoutIcon from "../../../../public/icons/LogoutIcon";
+import BellIcon from "../../../../public/icons/BellIcon";
+import LockIcon from "../../../../public/icons/LockIcon";
+import { Switch } from "@/components/ui/switch";
+import SavedIcon from "../../../../public/icons/SavedIcon";
+import ArrowRightIcon from "../../../../public/icons/ArrowRightIcon";
+import GoBackArrow from "../../../../public/icons/GoBackArrow";
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 
 const ProfilePage = () => {
   const {
@@ -19,13 +28,15 @@ const ProfilePage = () => {
     updateProfileImage,
   } = useAuth();
   const { fetchBookmarkedPosts } = useBookmarks();
-  const { fetchNotifications, markAsRead } = useNotifications();
+  const { fetchNotifications, markAsRead, deleteNotification } =
+    useNotifications();
 
   const { userId } = useParams();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [newUsername, setNewUsername] = useState("");
   const [showBookmarkedPosts, setShowBookmarkedPosts] = useState(false);
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -33,6 +44,7 @@ const ProfilePage = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationEnabled, setNotificationEnabled] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (!token || !userId) return;
@@ -44,17 +56,25 @@ const ProfilePage = () => {
   }, [token, router, isLoggedIn, userId, getProfile]);
 
   useEffect(() => {
+    if (user) setNewUsername(user.username);
     return () => {
       if (imagePreview) {
         URL.revokeObjectURL(imagePreview);
       }
     };
-  }, [imagePreview]);
+  }, [user, imagePreview]);
 
-  const handleUpdateUsername = async (newUsername: string) => {
+  const handleUpdateProfile = async () => {
     try {
-      await updateProfile(Number(userId), newUsername);
+      if (newUsername !== user?.username) {
+        await updateProfile(Number(userId), newUsername);
+      }
+      if (selectedFile) {
+        await updateProfileImage(Number(userId), selectedFile);
+      }
       setIsEditing(false);
+      setSelectedFile(null);
+      setImagePreview(null);
       setErrorMessage(null);
     } catch (err: any) {
       if (err.message === "Username is already taken") {
@@ -62,216 +82,317 @@ const ProfilePage = () => {
       } else {
         setErrorMessage("Failed to update profile!");
       }
-      throw err;
     }
-  };
-
-  const handleImageUpload = async () => {
-    if (!selectedFile) return;
-    await updateProfileImage(Number(userId), selectedFile);
-    setSelectedFile(null);
-    setImagePreview(null);
   };
 
   const loadNotifications = async () => {
     if (user) {
-      const notifs = await fetchNotifications(user.id);
-      setNotifications(notifs);
-      setShowNotifications(true);
+      try {
+        const notifs = await fetchNotifications(user.id);
+        setNotifications(notifs);
+        setShowNotifications(true);
+      } catch (err) {
+        console.error("Failed to load notifications:", err);
+      }
     }
   };
 
   const handleMarkAsRead = async (notificationId: number) => {
-    await markAsRead(notificationId);
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, is_read: true } : notif
-      )
-    );
+    try {
+      await markAsRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === notificationId ? { ...notif, is_read: true } : notif
+        )
+      );
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
+      if (err instanceof Error && err.message.includes("404")) {
+        console.log(`Notification ${notificationId} not found, possibly already deleted`);
+      } else {
+        setErrorMessage("Failed to mark notification as read");
+      }
+    }
   };
 
   const handleNotificationToggle = () => {
     setNotificationEnabled(!notificationEnabled);
   };
 
+  const handleLogoutConfirm = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
+
+  const handleDeleteNotification = async (notificationId: number) => {
+    try {
+      await deleteNotification(notificationId);
+      const updatedNotifications = notifications.filter((notif) => notif.id !== notificationId);
+      setNotifications(updatedNotifications);
+    } catch (err) {
+      console.error("Failed to delete notification:", err);
+      setErrorMessage("Failed to delete notification");
+    }
+  };
+
   if (!user) return <div>Loading...</div>;
 
   return (
-    <div className="w-80 h-[568px] relative bg-emerald-500 overflow-hidden">
+    <div className="w-full h-screen bg-primary-500 flex flex-col items-center justify-between p-8 relative">
+      {" "}
       {/* Profile Card */}
-      <div className="w-56 h-96 left-[51px] top-[104px] absolute bg-neutral-100 rounded-2xl" />
-      <div className="w-40 h-20 left-[84px] top-[257px] absolute bg-white rounded-2xl border border-emerald-100" />
-      <img
-        className="w-16 h-16 left-[126px] top-[131px] absolute rounded-full object-cover"
-        src={user.profile_image || "images/DefaultProfile.png"}
-        alt="Profile"
-      />
-
-      {/* Upload & Preview Profile Image */}
-      <input
-        type="file"
-        accept="image/*"
-        className="absolute top-[310px] left-[60px] w-48 text-xs"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-              setErrorMessage("Image must be less than 2MB.");
-              setSelectedFile(null);
-              setImagePreview(null);
-              return;
+      <div className="w-full max-w-md bg-white rounded-2xl pt-7 px-3 pb-11 relative shadow-lg">
+        {/* Profile Image */}
+        <div className="relative w-20 h-20 mx-auto mb-4">
+          <img
+            className="w-full h-full rounded-full object-cover"
+            src={
+              imagePreview || user.profile_image || "images/DefaultProfile.png"
             }
-            setSelectedFile(file);
-            setErrorMessage(null);
-            setImagePreview(URL.createObjectURL(file));
-          }
-        }}
-      />
-
-      {imagePreview && (
-        <img
-          src={imagePreview}
-          alt="Preview"
-          className="absolute top-[340px] left-[60px] w-16 h-16 object-cover rounded-full border"
-        />
-      )}
-
-      <button
-        className="absolute top-[340px] left-[140px] bg-white border border-emerald-200 rounded-lg px-2 text-emerald-500 text-xs"
-        onClick={handleImageUpload}
-      >
-        Upload
-      </button>
-
-      {errorMessage && (
-        <div className="absolute top-[410px] left-[60px] text-red-500 text-[10px] w-48">
-          {errorMessage}
-        </div>
-      )}
-
-      {/* User Info */}
-      <div className="left-[124px] top-[209px] absolute text-center text-black text-base font-normal">
-        {user.username}
-      </div>
-      <div className="left-[123px] top-[225px] absolute text-center text-zinc-500 text-[8px]">
-        {user.email}
-      </div>
-
-      {/* Edit Button */}
-      <button
-        className="w-32 h-8 left-[110px] top-[240px] absolute bg-white border border-emerald-200 rounded-lg text-emerald-500 text-sm"
-        onClick={() => setIsEditing(true)}
-      >
-        Edit Profile
-      </button>
-
-      {/* Profile Sections */}
-      <div className="left-[114px] top-[270px] absolute text-center text-zinc-600 text-[8px]">
-        my goal records
-      </div>
-      <button
-        className="left-[114px] top-[296px] absolute text-center text-zinc-600 text-[8px]"
-        onClick={async () => {
-          if (user) {
-            const posts = await fetchBookmarkedPosts(user.id);
-            setBookmarkedPosts(posts);
-            setShowBookmarkedPosts(true);
-          }
-        }}
-      >
-        saved
-      </button>
-      <button
-        className="left-[114px] top-[317px] absolute text-center text-zinc-600 text-[8px]"
-        onClick={loadNotifications}
-      >
-        notifications
-      </button>
-      <div className="left-[115px] top-[398px] absolute text-center text-zinc-600 text-[8px]">
-        change password
-      </div>
-
-      {/* Logout Section */}
-      <div className="w-40 h-20 left-[84px] top-[359px] absolute bg-white rounded-2xl border border-emerald-100">
-        <button
-          className="left-[31px] top-[59px] absolute text-center text-red-700 text-[8px]"
-          onClick={() => {
-            logout();
-            window.location.href = "/";
-          }}
-        >
-          logout
-        </button>
-      </div>
-
-      {/* Notification Toggle Button */}
-      <div className="left-[114px] top-[338px] absolute text-center text-zinc-600 text-[8px]">
-        <label>
-          <input
-            type="checkbox"
-            checked={notificationEnabled}
-            onChange={handleNotificationToggle}
+            alt="Profile"
           />
-          Notification
-        </label>
-      </div>
-
-      {/* Form Modal */}
-      {isEditing && (
-        <div className="absolute left-[60px] top-[280px] bg-white p-4 rounded-lg shadow-lg">
-          <ProfileForm
-            username={user.username}
-            onUpdate={handleUpdateUsername}
-            onCancel={() => {
-              setIsEditing(false);
-              setErrorMessage(null);
+          {isEditing && (
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer"
+              onClick={() => document.getElementById("imageUpload")?.click()}
+            >
+              <CameraIcon />
+            </div>
+          )}
+          <input
+            id="imageUpload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                  setErrorMessage("Image must be less than 2MB.");
+                  setSelectedFile(null);
+                  setImagePreview(null);
+                  return;
+                }
+                setSelectedFile(file);
+                setImagePreview(URL.createObjectURL(file));
+                setErrorMessage(null);
+              }
             }}
           />
         </div>
-      )}
 
-      {/* Bookmarked Posts View */}
-      {showBookmarkedPosts && (
-        <div className="absolute left-[0px] top-[0px] w-full h-full bg-white p-4">
-          <button onClick={() => setShowBookmarkedPosts(false)}>Close</button>
-          <div className="grid grid-cols-3 gap-2">
-            {bookmarkedPosts.map((post) => (
-              <img
-                key={post.post_id}
-                src={post.image_url}
-                alt="Bookmarked Post"
-                className="w-full h-auto aspect-square object-cover"
-                onClick={() => setSelectedPost(post)}
+        {/* User Info */}
+        <div className="text-center mb-4 flex flex-col">
+          <div className="text-gray-900 text-lg">
+            {isEditing ? (
+              <input
+                type="text"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                className="border-b border-gray-400 outline-none text-center bg-transparent"
               />
-            ))}
+            ) : (
+              user.username
+            )}
+            {/* Edit Button */}
+            {!isEditing && (
+              <button className="ml-2" onClick={() => setIsEditing(true)}>
+                <PencilIcon />
+              </button>
+            )}
+          </div>
+          <div className="text-zinc-500 text-xs mt-1">{user.email}</div>
+          {isEditing && (
+            <div className="flex justify-center mt-2">
+              <button
+                className="text-white bg-primary-500 text-xs px-3 py-2 rounded-full hover:bg-primary-600"
+                onClick={handleUpdateProfile}
+              >
+                Save
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="text-red-500 text-xs text-center mb-4">
+            {errorMessage}
+          </div>
+        )}
+
+        {/* Profile Sections */}
+        <div className="flex flex-col">
+          <div className="flex flex-col items-center justify-center gap-1 mb-4 border border-primary-200 rounded-2xl px-4 py-2">
+            <button
+              className="w-full flex justify-between border-b border-primary-100 items-center text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded"
+              onClick={loadNotifications}
+            >
+              <div className="flex items-center gap-2">
+                <BellIcon />
+                <span>The Buzz Box</span>
+              </div>
+              <ArrowRightIcon />
+            </button>
+            <button
+              className="w-full flex justify-between items-center border-b border-primary-100 text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded"
+              onClick={async () => {
+                if (user) {
+                  const posts = await fetchBookmarkedPosts(user.id);
+                  setBookmarkedPosts(posts);
+                  setShowBookmarkedPosts(true);
+                }
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <SavedIcon />
+                <span>Saved</span>
+              </div>
+              <ArrowRightIcon />
+            </button>
+
+            <div className="w-full flex justify-between items-center text-zinc-600 text-xs py-2">
+              <div className="flex items-center gap-2">
+                <BellIcon />
+                <span>Buzz Mode</span>
+              </div>
+              <Switch
+                checked={notificationEnabled}
+                onCheckedChange={handleNotificationToggle}
+              />
+            </div>
+          </div>
+
+          {/* Logout Button */}
+          <div className="flex flex-col items-center justify-center gap-1 mb-4 border border-primary-200 rounded-2xl px-4 py-2">
+            <div className="w-full flex justify-between items-center border-b border-primary-100 text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded">
+              <div className="flex items-center gap-2">
+                <LockIcon />
+                <span>Key Tweaker</span>
+              </div>
+              <ArrowRightIcon />
+            </div>
+            <button
+              className="w-full flex justify-start items-center text-red-700 text-xs py-2 hover:bg-gray-100 rounded"
+              onClick={handleLogoutConfirm}
+            >
+              <div className="flex items-center gap-2">
+                <LogoutIcon />
+                <span>Peace Out</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="w-full text-center text-white text-[6px] mb-4">
+        Made by @Raina
+      </div>
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg max-w-sm w-[90%] text-center">
+            <p className="text-gray-900 text-lg mb-4">
+              Logging out already? We'll miss you! 😢
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="text-white bg-red-500 px-4 py-2 rounded-full hover:bg-red-600"
+                onClick={() => {
+                  handleLogout();
+                  setShowLogoutConfirm(false);
+                }}
+              >
+                Bye for now 👋
+              </button>
+              <button
+                className="text-white bg-primary-400 px-3 py-2 rounded-full hover:bg-primary-600"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Stay a bit longer 🫶
+              </button>
+            </div>
           </div>
         </div>
       )}
-
-      {/* Notification Log Section */}
-      {showNotifications && (
-        <div className="absolute left-[0px] top-[0px] w-full h-full bg-white p-4">
-          <button onClick={() => setShowNotifications(false)}>close</button>
-          <ul className="space-y-2">
-            {notifications.map((notif) => (
-              <li
-                key={notif.id}
-                className={`p-2 ${
-                  notif.is_read ? "bg-gray-100" : "bg-blue-100"
-                } cursor-pointer`}
-                onClick={() => handleMarkAsRead(notif.id)}
-              >
-                <span>{notif.message}</span>
-                <span className="text-xs text-gray-500"> ({notif.type})</span>
-              </li>
-            ))}
-          </ul>
+      {/* Bookmarked Posts View */}
+      {showBookmarkedPosts && (
+        <div className="fixed top-16 left-0 right-0 bottom-0 bg-white flex flex-col z-10">
+          {" "}
+          <div className="flex items-center justify-start p-4 border-b border-gray-200">
+            <button
+              className="text-zinc-600"
+              onClick={() => setShowBookmarkedPosts(false)}
+            >
+              <GoBackArrow />
+            </button>
+            <h2 className="text-lg font-semibold ml-4">Saved Posts</h2>
+          </div>
+          <div className="flex-1 p-4 overflow-y-auto">
+            <div className="grid grid-cols-3 gap-2">
+              {bookmarkedPosts.map((post) => (
+                <img
+                  key={post.post_id}
+                  src={post.image_url}
+                  alt="Bookmarked Post"
+                  className="w-full h-auto aspect-square object-cover"
+                  onClick={() => setSelectedPost(post)}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       )}
-
+      {/* Notification Log Section */}
+      {showNotifications && (
+        <div className="fixed top-16 left-0 right-0 bottom-0 bg-white flex flex-col z-50">
+          {" "}
+          <div className="flex items-center justify-start p-4 border-b border-gray-200 bg-gray-50">
+            <button
+              className="text-zinc-600"
+              onClick={() => setShowNotifications(false)}
+            >
+              <GoBackArrow />
+            </button>
+            <h2 className="text-lg font-semibold ml-4">Notifications</h2>
+          </div>
+          <div className="flex-1 p-4 overflow-y-auto">
+            <ul className="space-y-2">
+              {notifications.map((notif) => (
+                <li
+                  key={notif.id}
+                  className={`p-2 flex justify-between items-center ${
+                    notif.is_read ? "bg-gray-100" : "bg-primary-100"
+                  } cursor-pointer`}
+                  onClick={() => handleMarkAsRead(notif.id)}
+                >
+                  <span>{notif.message}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">
+                      {formatTimeAgo(notif.created_at || "")}
+                    </span>
+                    <button
+                      className="text-red-500 hover:text-red-700 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteNotification(notif.id);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
       {/* Post Detail Modal */}
       {selectedPost && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed top-16 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
           <div className="bg-white p-4 rounded-lg max-w-md w-full">
             <h2 className="text-lg font-semibold">{selectedPost.title}</h2>
             <img
@@ -280,7 +401,12 @@ const ProfilePage = () => {
               className="w-full h-auto object-cover"
             />
             <p>{selectedPost.description}</p>
-            <button onClick={() => setSelectedPost(null)}>Close</button>
+            <button
+              className="mt-2 text-zinc-600 text-xs"
+              onClick={() => setSelectedPost(null)}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

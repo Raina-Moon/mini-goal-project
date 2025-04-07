@@ -45,6 +45,21 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
+router.delete("/:id", (async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query("DELETE FROM notifications WHERE id = $1", [
+      id,
+    ]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Notification not found." });
+    }
+    res.status(200).json({ message: "Notification deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
+
 const createNotification = async (
   userId: number,
   senderId: number,
@@ -108,8 +123,11 @@ export const createCommentNotification = async (
 };
 
 export const createFollowNotification = async (
-userId: number, senderId: number, client?: PoolClient) => {
-  await createNotification(userId, senderId, null, "follow",client);
+  userId: number,
+  senderId: number,
+  client?: PoolClient
+) => {
+  await createNotification(userId, senderId, null, "follow", client);
 };
 
 // ✅ Mark a notification as read
@@ -126,6 +144,7 @@ router.put("/:id/read", async (req, res) => {
       res.status(200).json({ message: "Notification marked as read." });
     }
   } catch (error) {
+    console.error("Error in mark as read:", error);
     res.status(500).json({ message: "Failed to mark notification as read." });
   }
 });
