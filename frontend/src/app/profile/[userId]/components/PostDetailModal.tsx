@@ -12,6 +12,7 @@ import { useBookmarks } from "@/app/contexts/BookmarksContext";
 import { useLikes } from "@/app/contexts/LikesContext";
 import { useComments } from "@/app/contexts/CommentsContext";
 import CommentsModal from "@/components/PostsList/CommentsModal";
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 
 interface PostDetailModalProps {
   post: Post;
@@ -118,8 +119,15 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed top-16 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-      <div className="bg-white p-4 rounded-lg max-w-md w-full">
+    <div
+      className="fixed top-16 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20"
+      onClick={onClose}
+    >
+      {" "}
+      <div
+        className="bg-white p-4 rounded-lg max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center gap-2 mb-2">
           <button
             onClick={handleProfileClick}
@@ -137,6 +145,11 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         </div>
 
         <h2 className="text-lg font-semibold">{post.title}</h2>
+        {post.created_at && (
+          <p className="text-xs text-gray-500">
+            {formatTimeAgo(String(post.created_at))}
+          </p>
+        )}
         <img
           src={post.image_url}
           alt="Post"
@@ -170,12 +183,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
             {isBookmarked ? <BookmarkFull /> : <BookmarkEmpty />}
           </button>
         </div>
-
-        <button className="mt-2 text-zinc-600 text-xs" onClick={onClose}>
-          Close
-        </button>
       </div>
-
       {showCommentsModal && (
         <CommentsModal
           postId={post.id}
