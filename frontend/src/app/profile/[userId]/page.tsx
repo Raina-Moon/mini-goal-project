@@ -126,7 +126,9 @@ const ProfilePage = () => {
 
   const handleDeleteNotification = async (notificationId: number) => {
     try {
+      console.log(`Deleting notification ${notificationId}`);
       await deleteNotification(notificationId);
+      console.log(`Notification ${notificationId} deleted successfully`);
       setNotifications((prev) =>
         prev.filter((notif) => notif.id !== notificationId)
       );
