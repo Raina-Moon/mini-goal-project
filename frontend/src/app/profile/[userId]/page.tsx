@@ -8,6 +8,12 @@ import { Notification, Post } from "@/utils/api";
 import { useNotifications } from "@/app/contexts/NotificationsContext";
 import PencilIcon from "../../../../public/icons/PencilIcon";
 import CameraIcon from "../../../../public/icons/CameraIcon";
+import LogoutIcon from "../../../../public/icons/LogoutIcon";
+import BellIcon from "../../../../public/icons/BellIcon";
+import LockIcon from "../../../../public/icons/LockIcon";
+import { Switch } from "@/components/ui/switch";
+import SavedIcon from "../../../../public/icons/SavedIcon";
+import ArrowRightIcon from "../../../../public/icons/ArrowRightIcon";
 
 const ProfilePage = () => {
   const {
@@ -101,7 +107,7 @@ const ProfilePage = () => {
   return (
     <div className="w-full h-screen bg-primary-500 flex items-center justify-center p-8">
       {/* Profile Card */}
-      <div className="w-full max-w-md bg-white rounded-2xl p-6 relative shadow-lg">
+      <div className="w-full max-w-md bg-white rounded-2xl pt-7 px-3 pb-11 relative shadow-lg">
         {/* Profile Image */}
         <div className="relative w-20 h-20 mx-auto mb-4">
           <img
@@ -182,8 +188,12 @@ const ProfilePage = () => {
         )}
 
         {/* Profile Sections */}
-        <div className="text-center space-y-2">
-          <div className="text-zinc-600 text-xs">my goal records</div>
+        <div className="flex flex-col space-y-2">
+          <button className="text-zinc-600 text-xs" onClick={loadNotifications}>
+            <BellIcon />
+            notifications
+            <ArrowRightIcon />
+          </button>
           <button
             className="text-zinc-600 text-xs"
             onClick={async () => {
@@ -194,24 +204,27 @@ const ProfilePage = () => {
               }
             }}
           >
-            saved
+            <SavedIcon />
+            saved <ArrowRightIcon />
           </button>
-          <button className="text-zinc-600 text-xs" onClick={loadNotifications}>
-            notifications
-          </button>
-          <div className="text-zinc-600 text-xs">change password</div>
           <label className="text-zinc-600 text-xs flex items-center justify-center gap-1">
             <input
               type="checkbox"
               checked={notificationEnabled}
               onChange={handleNotificationToggle}
             />
+            <BellIcon />
             Notification
+            <Switch />
           </label>
         </div>
 
         {/* Logout Button */}
         <div className="mt-6 text-center">
+          <div className="text-zinc-600 text-xs">
+            <LockIcon />
+            change password <ArrowRightIcon />
+          </div>
           <button
             className="text-red-700 text-xs"
             onClick={() => {
@@ -219,6 +232,7 @@ const ProfilePage = () => {
               window.location.href = "/";
             }}
           >
+            <LogoutIcon />
             logout
           </button>
         </div>
