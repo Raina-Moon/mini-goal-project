@@ -9,6 +9,7 @@ import LogoutIcon from "../../../../../public/icons/LogoutIcon";
 import ArrowRightIcon from "../../../../../public/icons/ArrowRightIcon";
 import PencilIcon from "../../../../../public/icons/PencilIcon";
 import { Switch } from "@/components/ui/switch";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 interface ProfileCardProps {
   user: { username: string; email: string | undefined; profile_image?: any };
@@ -38,6 +39,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [newUsername, setNewUsername] = useState(user.username);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   const handleUpdateProfile = async () => {
     try {
@@ -58,6 +60,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           : "Failed to update profile!"
       );
     }
+  };
+
+  const handleOpenChangePasswordModal = () => {
+    setShowChangePasswordModal(true);
   };
 
   return (
@@ -176,13 +182,16 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
 
         <div className="flex flex-col items-center justify-center gap-1 mb-4 border border-primary-200 rounded-2xl px-4 py-2">
-          <div className="w-full flex justify-between items-center border-b border-primary-100 text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded">
+          <button
+            className="w-full flex justify-between items-center border-b border-primary-100 text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded"
+            onClick={handleOpenChangePasswordModal}
+          >
             <div className="flex items-center gap-2">
               <LockIcon />
               <span>Key Tweaker</span>
             </div>
             <ArrowRightIcon />
-          </div>
+          </button>
           <button
             className="w-full flex justify-start items-center text-red-700 text-xs py-2 hover:bg-gray-100 rounded"
             onClick={onLogoutConfirm}
@@ -194,6 +203,12 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           </button>
         </div>
       </div>
+
+      {showChangePasswordModal && (
+        <ChangePasswordModal
+          onClose={() => setShowChangePasswordModal(false)}
+        />
+      )}
     </div>
   );
 };
