@@ -45,7 +45,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
   useEffect(() => {
     console.log("Post in PostDetailModal:", post); // Debugging line
-    if (!post.post_id) {
+    if (!post.id) {
       setError("Post ID is missing");
       return;
     }
@@ -53,13 +53,13 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   // Fetch initial data when the component mounts or user changes
     const initializeData = async () => {
       try {
-        const likeStatus = await getLikeStatus(post.post_id, user.id);
-        const count = await fetchLikeCount(post.post_id);
+        const likeStatus = await getLikeStatus(post.id, user.id);
+        const count = await fetchLikeCount(post.id);
         const bookmarkedPosts = await fetchBookmarkedPosts(user.id);
         const bookmarkStatus = bookmarkedPosts.some(
-          (bp) => bp.post_id === post.post_id
+          (bp) => bp.id === post.id
         );
-        await fetchComments(post.post_id);
+        await fetchComments(post.id);
 
         setIsLiked(likeStatus);
         setLikeCount(count);
@@ -74,12 +74,9 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
       initializeData();
     }
   }, [
-    post.post_id,
+    post.id,
     user.id,
-    getLikeStatus,
-    fetchLikeCount,
-    fetchBookmarkedPosts,
-    fetchComments,
+   
   ]);
 
   const handleProfileClick = useCallback(() => {
@@ -93,11 +90,11 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     }
     try {
       setError(null);
-      console.log("Liking post:", post.post_id); // Debugging line
+      console.log("Liking post:", post.id); // Debugging line
       const newCount = isLiked
-        ? await unlikePost(user.id, post.post_id)
-        : await likePost(user.id, post.post_id);
-      const newLikeStatus = await getLikeStatus(post.post_id, user.id);
+        ? await unlikePost(user.id, post.id)
+        : await likePost(user.id, post.id);
+      const newLikeStatus = await getLikeStatus(post.id, user.id);
       setIsLiked(newLikeStatus);
       setLikeCount(newCount);
     } catch (err) {
@@ -113,13 +110,13 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     }
     try {
       setError(null);
-      console.log("Bookmarking post:", post.post_id); // Debugging line
+      console.log("Bookmarking post:", post.id); // Debugging line
       const newState = !isBookmarked;
       newState
-        ? await bookmarkPost(user.id, post.post_id)
-        : await unbookmarkPost(user.id, post.post_id);
+        ? await bookmarkPost(user.id, post.id)
+        : await unbookmarkPost(user.id, post.id);
       setIsBookmarked(newState);
-      onBookmarkChange?.(post.post_id, newState); // Notify parent component if provided
+      onBookmarkChange?.(post.id, newState); // Notify parent component if provided
     } catch (err) {
       console.error("Bookmark action failed:", err);
       setError("Failed to update bookmark status");
@@ -127,7 +124,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   };
 
   const handleCommentClick = () => {
-    if (!post.post_id) {
+    if (!post.id) {
       setError("Cannot load comments: Post ID is missing");
       return;
     }
@@ -176,8 +173,8 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
             className="flex flex-row gap-1 items-center"
           >
             <MessageIcon />
-            {commentsByPost[post.post_id]?.length > 0 && (
-              <span>{commentsByPost[post.post_id].length}</span>
+            {commentsByPost[post.id]?.length > 0 && (
+              <span>{commentsByPost[post.id].length}</span>
             )}
           </button>
           <button
@@ -195,9 +192,9 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
       {showCommentsModal && (
         <CommentsModal
-          postId={post.post_id}
+          postId={post.id}
           userId={user.id}
-          comments={commentsByPost[post.post_id] || []}
+          comments={commentsByPost[post.id] || []}
           onClose={() => setShowCommentsModal(false)}
           addComment={addComment}
           editComment={editComment}
