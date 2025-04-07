@@ -84,48 +84,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Function to verify the current password
-  const verifyCurrentPassword = async (
-    email: string,
-    currentPassword: string
-  ): Promise<boolean> => {
-    try {
-      const res = await fetch("/api/auth/verify-current-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, currentPassword }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Current password is incorrect");
-      }
-      return true;
-    } catch (err: any) {
-      throw new Error(err.message || "Error verifying current password");
-    }
-  };
-
-  // Function to change the password
-  const changePassword = async (
-    email: string,
-    currentPassword: string,
-    newPassword: string
-  ): Promise<void> => {
-    try {
-      const res = await fetch("/api/auth/change-password", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, currentPassword, newPassword }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to change password");
-      }
-    } catch (err: any) {
-      throw new Error(err.message || "Error changing password");
-    }
-  };
-
   // Initialize state from localStorage on first render
   useEffect(() => {
     const initializeAuth = async () => {
@@ -149,6 +107,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initializeAuth();
   }, []);
+
+  // Function to verify the current password
+  const verifyCurrentPassword = async (
+    email: string,
+    currentPassword: string
+  ): Promise<boolean> => {
+    try {
+      const res = (await fetchApi<Response>("/auth/verify-current-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, currentPassword }),
+      })) as Response;
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Current password is incorrect");
+      }
+      return true;
+    } catch (err: any) {
+      throw new Error(err.message || "Error verifying current password");
+    }
+  };
+
+  // Function to change the password
+  const changePassword = async (
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> => {
+    try {
+      const res = await fetchApi<Response>("/auth/change-password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, currentPassword, newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to change password");
+      }
+    } catch (err: any) {
+      throw new Error(err.message || "Error changing password");
+    }
+  };
 
   const signup = async (username: string, email: string, password: string) => {
     try {
