@@ -99,146 +99,140 @@ const ProfilePage = () => {
   if (!user) return <div>Loading...</div>;
 
   return (
-    <div className="w-80 h-[568px] relative bg-emerald-500 overflow-hidden">
+    <div className="w-full h-screen bg-primary-500 flex items-center justify-center p-8">
       {/* Profile Card */}
-      <div className="w-56 h-96 left-[51px] top-[104px] absolute bg-neutral-100 rounded-2xl" />
-      <div className="w-40 h-20 left-[84px] top-[257px] absolute bg-white rounded-2xl border border-emerald-100" />
+      <div className="w-full max-w-md bg-white rounded-2xl p-6 relative shadow-lg">
+        {/* Profile Image */}
+        <div className="relative w-20 h-20 mx-auto mb-4">
+          <img
+            className="w-full h-full rounded-full object-cover"
+            src={
+              imagePreview || user.profile_image || "images/DefaultProfile.png"
+            }
+            alt="Profile"
+          />
+          {isEditing && (
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer"
+              onClick={() => document.getElementById("imageUpload")?.click()}
+            >
+              <CameraIcon />
+            </div>
+          )}
+          <input
+            id="imageUpload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                  setErrorMessage("Image must be less than 2MB.");
+                  setSelectedFile(null);
+                  setImagePreview(null);
+                  return;
+                }
+                setSelectedFile(file);
+                setImagePreview(URL.createObjectURL(file));
+                setErrorMessage(null);
+              }
+            }}
+          />
+        </div>
 
-      <div className="w-16 h-16 left-[126px] top-[131px] absolute rounded-full">
-        <img
-          className="w-16 h-16 left-[126px] top-[131px] absolute rounded-full object-cover"
-          src={user.profile_image || "images/DefaultProfile.png"}
-          alt="Profile"
-        />
-        {isEditing && (
-          <div
-            className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer"
-            onClick={() => document.getElementById("imageUpload")?.click()}
-          >
-            <CameraIcon />
+        {/* User Info */}
+        <div className="text-center mb-4 flex flex-col">
+          <div className="text-gray-900 text-lg">
+            {isEditing ? (
+              <input
+                type="text"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                className="border-b border-gray-400 outline-none text-center bg-transparent"
+              />
+            ) : (
+              user.username
+            )}
+            {/* Edit Button */}
+            {!isEditing && (
+              <button className="ml-2" onClick={() => setIsEditing(true)}>
+                <PencilIcon />
+              </button>
+            )}
+          </div>
+          <div className="text-zinc-500 text-xs mt-1">{user.email}</div>
+          {isEditing && (
+            <div className="flex justify-center mt-2">
+              <button
+                className="text-white bg-primary-500 text-xs px-3 py-2 rounded-full hover:bg-primary-600"
+                onClick={handleUpdateProfile}
+              >
+                Save
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="text-red-500 text-xs text-center mb-4">
+            {errorMessage}
           </div>
         )}
 
-        {/* Upload & Preview Profile Image */}
-        <input
-          id="imageUpload"
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              if (file.size > 2 * 1024 * 1024) {
-                setErrorMessage("Image must be less than 2MB.");
-                setSelectedFile(null);
-                setImagePreview(null);
-                return;
+        {/* Profile Sections */}
+        <div className="text-center space-y-2">
+          <div className="text-zinc-600 text-xs">my goal records</div>
+          <button
+            className="text-zinc-600 text-xs"
+            onClick={async () => {
+              if (user) {
+                const posts = await fetchBookmarkedPosts(user.id);
+                setBookmarkedPosts(posts);
+                setShowBookmarkedPosts(true);
               }
-              setSelectedFile(file);
-              setImagePreview(URL.createObjectURL(file));
-              setErrorMessage(null);
-            }
-          }}
-        />
-      </div>
-
-      <div className="left-[124px] top-[209px] absolute text-center text-black text-base font-normal">
-        {isEditing ? (
-          <input
-            type="text"
-            value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
-            className="border-b border-gray-400 outline-none text-center bg-transparent"
-          />
-        ) : (
-          user.username
-        )}
-      </div>
-      <div className="left-[123px] top-[225px] absolute text-center text-zinc-500 text-[8px]">
-        {user.email}
-      </div>
-
-      {/* Save Button (appears when editing) */}
-      {isEditing && (
-        <button
-          className="absolute left-[140px] top-[235px] text-emerald-500 text-xs underline"
-          onClick={handleUpdateProfile}
-        >
-          Save
-        </button>
-      )}
-
-      {/* Edit Button (hidden when editing) */}
-      {!isEditing && (
-        <button
-          className="w-32 h-8 left-[110px] top-[240px] absolute"
-          onClick={() => setIsEditing(true)}
-        >
-          <PencilIcon />
-        </button>
-      )}
-
-      {errorMessage && (
-        <div className="absolute top-[410px] left-[60px] text-red-500 text-[10px] w-48">
-          {errorMessage}
+            }}
+          >
+            saved
+          </button>
+          <button className="text-zinc-600 text-xs" onClick={loadNotifications}>
+            notifications
+          </button>
+          <div className="text-zinc-600 text-xs">change password</div>
+          <label className="text-zinc-600 text-xs flex items-center justify-center gap-1">
+            <input
+              type="checkbox"
+              checked={notificationEnabled}
+              onChange={handleNotificationToggle}
+            />
+            Notification
+          </label>
         </div>
-      )}
 
-      {/* Profile Sections */}
-      <div className="left-[114px] top-[270px] absolute text-center text-zinc-600 text-[8px]">
-        my goal records
-      </div>
-      <button
-        className="left-[114px] top-[296px] absolute text-center text-zinc-600 text-[8px]"
-        onClick={async () => {
-          if (user) {
-            const posts = await fetchBookmarkedPosts(user.id);
-            setBookmarkedPosts(posts);
-            setShowBookmarkedPosts(true);
-          }
-        }}
-      >
-        saved
-      </button>
-      <button
-        className="left-[114px] top-[317px] absolute text-center text-zinc-600 text-[8px]"
-        onClick={loadNotifications}
-      >
-        notifications
-      </button>
-      <div className="left-[115px] top-[398px] absolute text-center text-zinc-600 text-[8px]">
-        change password
-      </div>
-
-      {/* Logout Section */}
-      <div className="w-40 h-20 left-[84px] top-[359px] absolute bg-white rounded-2xl border border-emerald-100">
-        <button
-          className="left-[31px] top-[59px] absolute text-center text-red-700 text-[8px]"
-          onClick={() => {
-            logout();
-            window.location.href = "/";
-          }}
-        >
-          logout
-        </button>
-      </div>
-
-      {/* Notification Toggle Button */}
-      <div className="left-[114px] top-[338px] absolute text-center text-zinc-600 text-[8px]">
-        <label>
-          <input
-            type="checkbox"
-            checked={notificationEnabled}
-            onChange={handleNotificationToggle}
-          />
-          Notification
-        </label>
+        {/* Logout Button */}
+        <div className="mt-6 text-center">
+          <button
+            className="text-red-700 text-xs"
+            onClick={() => {
+              logout();
+              window.location.href = "/";
+            }}
+          >
+            logout
+          </button>
+        </div>
       </div>
 
       {/* Bookmarked Posts View */}
       {showBookmarkedPosts && (
-        <div className="absolute left-[0px] top-[0px] w-full h-full bg-white p-4">
-          <button onClick={() => setShowBookmarkedPosts(false)}>Close</button>
+        <div className="fixed inset-0 bg-white p-4">
+          <button
+            className="mb-4 text-zinc-600 text-xs"
+            onClick={() => setShowBookmarkedPosts(false)}
+          >
+            Close
+          </button>
           <div className="grid grid-cols-3 gap-2">
             {bookmarkedPosts.map((post) => (
               <img
@@ -255,8 +249,13 @@ const ProfilePage = () => {
 
       {/* Notification Log Section */}
       {showNotifications && (
-        <div className="absolute left-[0px] top-[0px] w-full h-full bg-white p-4">
-          <button onClick={() => setShowNotifications(false)}>close</button>
+        <div className="fixed inset-0 bg-white p-4">
+          <button
+            className="mb-4 text-zinc-600 text-xs"
+            onClick={() => setShowNotifications(false)}
+          >
+            Close
+          </button>
           <ul className="space-y-2">
             {notifications.map((notif) => (
               <li
@@ -285,7 +284,12 @@ const ProfilePage = () => {
               className="w-full h-auto object-cover"
             />
             <p>{selectedPost.description}</p>
-            <button onClick={() => setSelectedPost(null)}>Close</button>
+            <button
+              className="mt-2 text-zinc-600 text-xs"
+              onClick={() => setSelectedPost(null)}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
