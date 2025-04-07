@@ -103,9 +103,9 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     try {
       setError(null);
       const newCount = isLiked
-        ? await unlikePost(user.id, post.id)
-        : await likePost(user.id, post.id);
-      const newLikeStatus = await getLikeStatus(post.id, user.id);
+        ? await unlikePost(user.id, post.post_id)
+        : await likePost(user.id, post.post_id);
+      const newLikeStatus = await getLikeStatus(post.post_id, user.id);
       setIsLiked(newLikeStatus);
       setLikeCount(newCount);
     } catch (err) {
@@ -123,10 +123,10 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
       setError(null);
       const newState = !isBookmarked;
       newState
-        ? await bookmarkPost(user.id, post.id)
-        : await unbookmarkPost(user.id, post.id);
+        ? await bookmarkPost(user.id, post.post_id)
+        : await unbookmarkPost(user.id, post.post_id);
       setIsBookmarked(newState);
-      onBookmarkChange?.(post.id, newState); // Notify parent component if provided
+      onBookmarkChange?.(post.post_id, newState); // Notify parent component if provided
     } catch (err) {
       console.error("Bookmark action failed:", err);
       setError("Failed to update bookmark status");
@@ -134,7 +134,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   };
 
   const handleCommentClick = () => {
-    if (!post.id) {
+    if (!post.post_id) {
       setError("Cannot load comments: Post ID is missing");
       return;
     }
@@ -207,9 +207,9 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
       {showCommentsModal && (
         <CommentsModal
-          postId={post.id}
+          postId={post.post_id}
           userId={user.id}
-          comments={commentsByPost[post.id] || []}
+          comments={commentsByPost[post.post_id] || []}
           onClose={() => setShowCommentsModal(false)}
           addComment={addComment}
           editComment={editComment}
