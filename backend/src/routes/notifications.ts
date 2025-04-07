@@ -133,7 +133,6 @@ export const createFollowNotification = async (
 // ✅ Mark a notification as read
 router.put("/:id/read", async (req, res) => {
   const { id } = req.params;
-  console.log(`Attempting to mark notification ${id} as read`);
   try {
     const result = await pool.query(
       "UPDATE notifications SET is_read = TRUE WHERE id = $1",

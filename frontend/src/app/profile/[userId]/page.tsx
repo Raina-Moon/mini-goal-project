@@ -132,7 +132,6 @@ const ProfilePage = () => {
     try {
       await deleteNotification(notificationId);
       const updatedNotifications = notifications.filter((notif) => notif.id !== notificationId);
-      console.log("Updated notifications:", updatedNotifications);
       setNotifications(updatedNotifications);
     } catch (err) {
       console.error("Failed to delete notification:", err);
