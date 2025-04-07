@@ -9,6 +9,7 @@ interface BookmarksState {
   bookmarkPost: (userId: number, postId: number) => Promise<void>;
   unbookmarkPost: (userId: number, postId: number) => Promise<void>;
   fetchBookmarkedPosts: (userId: number) => Promise<Post[]>;
+  fetchBookmarkedPostDetail: (userId: number) => Promise<Post[]>;
 }
 
 const BookmarksContext = createContext<BookmarksState | undefined>(undefined);
@@ -44,10 +45,19 @@ export const BookmarksProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const fetchBookmarkedPostDetail = async (userId: number) => {
+    return await fetchApi<Post[]>(`/bookmarks/${userId}/detailed`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+
   const value: BookmarksState = {
     bookmarkPost,
     unbookmarkPost,
     fetchBookmarkedPosts,
+    fetchBookmarkedPostDetail,
   };
 
   return (
