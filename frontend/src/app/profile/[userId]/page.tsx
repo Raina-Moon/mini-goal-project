@@ -84,6 +84,14 @@ const ProfilePage = () => {
     window.location.href = "/";
   };
 
+  const handleBookmarkChange = (postId: number, isBookmarked: boolean) => {
+    setBookmarkedPosts((prev) =>
+      isBookmarked
+        ? [...prev, { ...selectedPost!, post_id: postId }]
+        : prev.filter((p) => p.post_id !== postId)
+    );
+  };
+
   if (!user) return <div>Loading...</div>;
 
   return (
@@ -129,7 +137,12 @@ const ProfilePage = () => {
       )}
 
       {selectedPost && (
-        <PostDetailModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+        <PostDetailModal
+          post={selectedPost}
+          onClose={() => setSelectedPost(null)}
+          user={user}
+          onBookmarkChange={handleBookmarkChange}
+        />
       )}
     </div>
   );
