@@ -27,7 +27,7 @@ const BookmarksModal: React.FC<BookmarksModalProps> = ({
         <div className="grid grid-cols-3 gap-2">
           {bookmarkedPosts.map((post) => (
             <img
-              key={post.post_id}
+              key={post.id}
               src={post.image_url}
               alt="Bookmarked Post"
               className="w-full h-auto aspect-square object-cover"
