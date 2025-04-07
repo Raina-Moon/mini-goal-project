@@ -13,6 +13,8 @@ import { useLikes } from "@/app/contexts/LikesContext";
 import { useComments } from "@/app/contexts/CommentsContext";
 import CommentsModal from "@/components/PostsList/CommentsModal";
 import { formatTimeAgo } from "@/utils/formatTimeAgo";
+import { useAuth } from "@/app/contexts/AuthContext";
+import { useGoals } from "@/app/contexts/GoalContext";
 
 interface PostDetailModalProps {
   post: Post;
@@ -38,9 +40,11 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
   const router = useRouter();
 
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.liked_by_me || false);
+  const [likeCount, setLikeCount] = useState(post.like_count || 0);
+  const [isBookmarked, setIsBookmarked] = useState(
+    post.bookmarked_by_me || false
+  );
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,6 +55,8 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         const likeStatus = await getLikeStatus(post.id, user.id);
         const count = await fetchLikeCount(post.id);
         const bookmarkedPosts = await fetchBookmarkedPosts(user.id);
+        console.log("Bookmarked Posts:", bookmarkedPosts); // Debugging line
+
         const bookmarkStatus = bookmarkedPosts.some((bp) => bp.id === post.id);
         await fetchComments(post.id);
 
@@ -63,13 +69,15 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
       }
     };
 
-    if (user.id) {
+    if (user.id && post.id) {
       initializeData();
     }
   }, [post.id, user.id]);
 
   const handleProfileClick = useCallback(() => {
-    router.push(`/dashboard/${post.user_id}`);
+    if (post.user_id !== undefined) {
+      router.push(`/dashboard/${post.user_id}`);
+    }
   }, [router, post.user_id]);
 
   const handleLike = async () => {
@@ -119,37 +127,30 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   };
 
   return (
-    <div
-      className="fixed top-16 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20"
-      onClick={onClose}
-    >
-      {" "}
-      <div
-        className="bg-white p-4 rounded-lg max-w-md w-full"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed top-16 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+      <div className="bg-white p-4 rounded-lg max-w-md w-full">
         <div className="flex items-center gap-2 mb-2">
           <button
             onClick={handleProfileClick}
             className="flex flex-row items-center gap-2"
           >
-            <img
+           <img
               src={post.profile_image || "/images/DefaultProfile.png"}
               alt={`${post.username || "Unknown User"}'s profile`}
               className="w-8 h-8 rounded-full object-cover"
             />
+            <div className="flex flex-col">
             <span className="text-sm font-medium text-gray-800">
-              {post.username || "Unknown User"}
-            </span>
+                {post.username || "Unknown User"}
+              </span>
+              <div className="text-xs text-gray-500">
+                <span>{post.title}</span> • <span>{post.duration} min</span>
+              </div>
+            </div>
           </button>
         </div>
 
         <h2 className="text-lg font-semibold">{post.title}</h2>
-        {post.created_at && (
-          <p className="text-xs text-gray-500">
-            {formatTimeAgo(String(post.created_at))}
-          </p>
-        )}
         <img
           src={post.image_url}
           alt="Post"
@@ -183,7 +184,12 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
             {isBookmarked ? <BookmarkFull /> : <BookmarkEmpty />}
           </button>
         </div>
+
+        <button className="mt-2 text-zinc-600 text-xs" onClick={onClose}>
+          Close
+        </button>
       </div>
+
       {showCommentsModal && (
         <CommentsModal
           postId={post.id}
