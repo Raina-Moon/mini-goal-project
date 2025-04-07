@@ -93,6 +93,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     }
     try {
       setError(null);
+      console.log("Liking post:", post.post_id); // Debugging line
       const newCount = isLiked
         ? await unlikePost(user.id, post.post_id)
         : await likePost(user.id, post.post_id);
@@ -112,6 +113,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     }
     try {
       setError(null);
+      console.log("Bookmarking post:", post.post_id); // Debugging line
       const newState = !isBookmarked;
       newState
         ? await bookmarkPost(user.id, post.post_id)
@@ -125,6 +127,10 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   };
 
   const handleCommentClick = () => {
+    if (!post.post_id) {
+      setError("Cannot load comments: Post ID is missing");
+      return;
+    }
     setShowCommentsModal(true);
   };
 
