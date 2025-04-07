@@ -87,19 +87,28 @@ const ProfilePage = () => {
 
   const loadNotifications = async () => {
     if (user) {
-      const notifs = await fetchNotifications(user.id);
-      setNotifications(notifs);
-      setShowNotifications(true);
+      try {
+        const notifs = await fetchNotifications(user.id);
+        setNotifications(notifs);
+        setShowNotifications(true);
+      } catch (err) {
+        console.error("Failed to load notifications:", err);
+      }
     }
   };
 
   const handleMarkAsRead = async (notificationId: number) => {
-    await markAsRead(notificationId);
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, is_read: true } : notif
-      )
-    );
+    try {
+      await markAsRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === notificationId ? { ...notif, is_read: true } : notif
+        )
+      );
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
+      // setErrorMessage("Failed to mark notification as read");
+    }
   };
 
   const handleNotificationToggle = () => {
