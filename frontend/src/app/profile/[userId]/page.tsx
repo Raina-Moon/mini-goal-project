@@ -41,6 +41,7 @@ const ProfilePage = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationEnabled, setNotificationEnabled] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (!token || !userId) return;
@@ -102,10 +103,20 @@ const ProfilePage = () => {
     setNotificationEnabled(!notificationEnabled);
   };
 
+  const handleLogoutConfirm = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
+
   if (!user) return <div>Loading...</div>;
 
   return (
-    <div className="w-full h-screen bg-primary-500 flex items-center justify-center p-8">
+    <div className="w-full h-screen bg-primary-500 flex flex-col items-center justify-between p-8 relative">
+      {" "}
       {/* Profile Card */}
       <div className="w-full max-w-md bg-white rounded-2xl pt-7 px-3 pb-11 relative shadow-lg">
         {/* Profile Image */}
@@ -191,17 +202,17 @@ const ProfilePage = () => {
         <div className="flex flex-col">
           <div className="flex flex-col items-center justify-center gap-1 mb-4 border border-primary-200 rounded-2xl px-4 py-2">
             <button
-              className="w-full flex justify-between items-center text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded"
+              className="w-full flex justify-between border-b border-primary-100 items-center text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded"
               onClick={loadNotifications}
             >
               <div className="flex items-center gap-2">
                 <BellIcon />
-                <span>notifications</span>
+                <span>The Buzz Box</span>
               </div>
               <ArrowRightIcon />
             </button>
             <button
-              className="w-full flex justify-between items-center text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded"
+              className="w-full flex justify-between items-center border-b border-primary-100 text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded"
               onClick={async () => {
                 if (user) {
                   const posts = await fetchBookmarkedPosts(user.id);
@@ -212,7 +223,7 @@ const ProfilePage = () => {
             >
               <div className="flex items-center gap-2">
                 <SavedIcon />
-                <span>saved</span>
+                <span>Saved</span>
               </div>
               <ArrowRightIcon />
             </button>
@@ -220,7 +231,7 @@ const ProfilePage = () => {
             <div className="w-full flex justify-between items-center text-zinc-600 text-xs py-2">
               <div className="flex items-center gap-2">
                 <BellIcon />
-                <span>Notification</span>
+                <span>Buzz Mode</span>
               </div>
               <Switch
                 checked={notificationEnabled}
@@ -231,29 +242,58 @@ const ProfilePage = () => {
 
           {/* Logout Button */}
           <div className="flex flex-col items-center justify-center gap-1 mb-4 border border-primary-200 rounded-2xl px-4 py-2">
-            <div className="w-full flex justify-between items-center text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded">
+            <div className="w-full flex justify-between items-center border-b border-primary-100 text-zinc-600 text-xs py-2 hover:bg-gray-100 rounded">
               <div className="flex items-center gap-2">
                 <LockIcon />
-                <span>change password</span>
+                <span>Key Tweaker</span>
               </div>
               <ArrowRightIcon />
             </div>
             <button
               className="w-full flex justify-start items-center text-red-700 text-xs py-2 hover:bg-gray-100 rounded"
-              onClick={() => {
-                logout();
-                window.location.href = "/";
-              }}
+              onClick={handleLogoutConfirm}
             >
               <div className="flex items-center gap-2">
                 <LogoutIcon />
-                <span>logout</span>
-              </div>{" "}
+                <span>Peace Out</span>
+              </div>
             </button>
           </div>
         </div>
       </div>
 
+      <div className="w-full text-center text-white text-[6px] mb-4">
+        Made by @Raina
+      </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
+            <p className="text-gray-900 text-lg mb-4">
+              Logging out already? We'll miss you! 😢
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="text-white bg-red-500 px-4 py-2 rounded-full hover:bg-red-600"
+                onClick={() => {
+                  handleLogout();
+                  setShowLogoutConfirm(false);
+                }}
+              >
+                Bye for now 👋
+              </button>
+              <button
+                className="text-white bg-primary-500 px-4 py-2 rounded-full hover:bg-primary-600"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Stay a bit longer 🫶
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Bookmarked Posts View */}
       {showBookmarkedPosts && (
         <div className="fixed inset-0 bg-white p-4">
