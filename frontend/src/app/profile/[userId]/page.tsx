@@ -13,10 +13,18 @@ import LogoutModal from "./components/LogoutModal";
 import PostDetailModal from "./components/PostDetailModal";
 
 const ProfilePage = () => {
-  const { token, user, isLoggedIn, logout, getProfile, updateProfile, updateProfileImage } =
-    useAuth();
+  const {
+    token,
+    user,
+    isLoggedIn,
+    logout,
+    getProfile,
+    updateProfile,
+    updateProfileImage,
+  } = useAuth();
   const { fetchBookmarkedPosts } = useBookmarks();
-  const { fetchNotifications, markAsRead, deleteNotification } = useNotifications();
+  const { fetchNotifications, markAsRead, deleteNotification } =
+    useNotifications();
 
   const { userId } = useParams();
   const router = useRouter();
@@ -65,7 +73,9 @@ const ProfilePage = () => {
   const handleDeleteNotification = async (notificationId: number) => {
     try {
       await deleteNotification(notificationId);
-      setNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
+      setNotifications((prev) =>
+        prev.filter((notif) => notif.id !== notificationId)
+      );
     } catch (err) {
       console.error("Failed to delete notification:", err);
     }
@@ -74,6 +84,7 @@ const ProfilePage = () => {
   const handleShowBookmarks = async () => {
     if (user) {
       const posts = await fetchBookmarkedPosts(user.id);
+      console.log("Fetched bookmarked posts:", posts); // Debugging line
       setBookmarkedPosts(posts);
       setShowBookmarkedPosts(true);
     }
@@ -85,11 +96,17 @@ const ProfilePage = () => {
   };
 
   const handleBookmarkChange = (postId: number, isBookmarked: boolean) => {
+    console.log("Bookmark changed:", { postId, isBookmarked }); // Debugging line
     setBookmarkedPosts((prev) =>
       isBookmarked
         ? [...prev, { ...selectedPost!, post_id: postId }]
         : prev.filter((p) => p.post_id !== postId)
     );
+  };
+
+  const handleSelectPost = (post: Post) => {
+    console.log("Selected post:", post); // Debugging line
+    setSelectedPost(post);
   };
 
   if (!user) return <div>Loading...</div>;
@@ -107,7 +124,9 @@ const ProfilePage = () => {
         notificationEnabled={notificationEnabled}
         toggleNotification={() => setNotificationEnabled(!notificationEnabled)}
       />
-      <div className="w-full text-center text-white text-[6px] mb-4">Made by @Raina</div>
+      <div className="w-full text-center text-white text-[6px] mb-4">
+        Made by @Raina
+      </div>
 
       {showNotifications && (
         <NotificationModal
