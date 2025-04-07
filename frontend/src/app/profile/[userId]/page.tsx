@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import ProfileForm from "../ProfileForm";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useBookmarks } from "@/app/contexts/BookmarksContext";
 import { Notification, Post } from "@/utils/api";
 import { useNotifications } from "@/app/contexts/NotificationsContext";
+import PencilIcon from "../../../../public/icons/PencilIcon";
+import CameraIcon from "../../../../public/icons/CameraIcon";
 
 const ProfilePage = () => {
   const {
@@ -26,6 +27,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [newUsername, setNewUsername] = useState("");
   const [showBookmarkedPosts, setShowBookmarkedPosts] = useState(false);
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -44,17 +46,25 @@ const ProfilePage = () => {
   }, [token, router, isLoggedIn, userId, getProfile]);
 
   useEffect(() => {
+    if (user) setNewUsername(user.username);
     return () => {
       if (imagePreview) {
         URL.revokeObjectURL(imagePreview);
       }
     };
-  }, [imagePreview]);
+  }, [user, imagePreview]);
 
-  const handleUpdateUsername = async (newUsername: string) => {
+  const handleUpdateProfile = async () => {
     try {
-      await updateProfile(Number(userId), newUsername);
+      if (newUsername !== user?.username) {
+        await updateProfile(Number(userId), newUsername);
+      }
+      if (selectedFile) {
+        await updateProfileImage(Number(userId), selectedFile);
+      }
       setIsEditing(false);
+      setSelectedFile(null);
+      setImagePreview(null);
       setErrorMessage(null);
     } catch (err: any) {
       if (err.message === "Username is already taken") {
@@ -62,15 +72,7 @@ const ProfilePage = () => {
       } else {
         setErrorMessage("Failed to update profile!");
       }
-      throw err;
     }
-  };
-
-  const handleImageUpload = async () => {
-    if (!selectedFile) return;
-    await updateProfileImage(Number(userId), selectedFile);
-    setSelectedFile(null);
-    setImagePreview(null);
   };
 
   const loadNotifications = async () => {
@@ -101,69 +103,86 @@ const ProfilePage = () => {
       {/* Profile Card */}
       <div className="w-56 h-96 left-[51px] top-[104px] absolute bg-neutral-100 rounded-2xl" />
       <div className="w-40 h-20 left-[84px] top-[257px] absolute bg-white rounded-2xl border border-emerald-100" />
-      <img
-        className="w-16 h-16 left-[126px] top-[131px] absolute rounded-full object-cover"
-        src={user.profile_image || "images/DefaultProfile.png"}
-        alt="Profile"
-      />
 
-      {/* Upload & Preview Profile Image */}
-      <input
-        type="file"
-        accept="image/*"
-        className="absolute top-[310px] left-[60px] w-48 text-xs"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-              setErrorMessage("Image must be less than 2MB.");
-              setSelectedFile(null);
-              setImagePreview(null);
-              return;
-            }
-            setSelectedFile(file);
-            setErrorMessage(null);
-            setImagePreview(URL.createObjectURL(file));
-          }
-        }}
-      />
-
-      {imagePreview && (
+      <div className="w-16 h-16 left-[126px] top-[131px] absolute rounded-full">
         <img
-          src={imagePreview}
-          alt="Preview"
-          className="absolute top-[340px] left-[60px] w-16 h-16 object-cover rounded-full border"
+          className="w-16 h-16 left-[126px] top-[131px] absolute rounded-full object-cover"
+          src={user.profile_image || "images/DefaultProfile.png"}
+          alt="Profile"
         />
+        {isEditing && (
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer"
+            onClick={() => document.getElementById("imageUpload")?.click()}
+          >
+            <CameraIcon />
+          </div>
+        )}
+
+        {/* Upload & Preview Profile Image */}
+        <input
+          id="imageUpload"
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              if (file.size > 2 * 1024 * 1024) {
+                setErrorMessage("Image must be less than 2MB.");
+                setSelectedFile(null);
+                setImagePreview(null);
+                return;
+              }
+              setSelectedFile(file);
+              setImagePreview(URL.createObjectURL(file));
+              setErrorMessage(null);
+            }
+          }}
+        />
+      </div>
+
+      <div className="left-[124px] top-[209px] absolute text-center text-black text-base font-normal">
+        {isEditing ? (
+          <input
+            type="text"
+            value={newUsername}
+            onChange={(e) => setNewUsername(e.target.value)}
+            className="border-b border-gray-400 outline-none text-center bg-transparent"
+          />
+        ) : (
+          user.username
+        )}
+      </div>
+      <div className="left-[123px] top-[225px] absolute text-center text-zinc-500 text-[8px]">
+        {user.email}
+      </div>
+
+      {/* Save Button (appears when editing) */}
+      {isEditing && (
+        <button
+          className="absolute left-[140px] top-[235px] text-emerald-500 text-xs underline"
+          onClick={handleUpdateProfile}
+        >
+          Save
+        </button>
       )}
 
-      <button
-        className="absolute top-[340px] left-[140px] bg-white border border-emerald-200 rounded-lg px-2 text-emerald-500 text-xs"
-        onClick={handleImageUpload}
-      >
-        Upload
-      </button>
+      {/* Edit Button (hidden when editing) */}
+      {!isEditing && (
+        <button
+          className="w-32 h-8 left-[110px] top-[240px] absolute"
+          onClick={() => setIsEditing(true)}
+        >
+          <PencilIcon />
+        </button>
+      )}
 
       {errorMessage && (
         <div className="absolute top-[410px] left-[60px] text-red-500 text-[10px] w-48">
           {errorMessage}
         </div>
       )}
-
-      {/* User Info */}
-      <div className="left-[124px] top-[209px] absolute text-center text-black text-base font-normal">
-        {user.username}
-      </div>
-      <div className="left-[123px] top-[225px] absolute text-center text-zinc-500 text-[8px]">
-        {user.email}
-      </div>
-
-      {/* Edit Button */}
-      <button
-        className="w-32 h-8 left-[110px] top-[240px] absolute bg-white border border-emerald-200 rounded-lg text-emerald-500 text-sm"
-        onClick={() => setIsEditing(true)}
-      >
-        Edit Profile
-      </button>
 
       {/* Profile Sections */}
       <div className="left-[114px] top-[270px] absolute text-center text-zinc-600 text-[8px]">
@@ -215,20 +234,6 @@ const ProfilePage = () => {
           Notification
         </label>
       </div>
-
-      {/* Form Modal */}
-      {isEditing && (
-        <div className="absolute left-[60px] top-[280px] bg-white p-4 rounded-lg shadow-lg">
-          <ProfileForm
-            username={user.username}
-            onUpdate={handleUpdateUsername}
-            onCancel={() => {
-              setIsEditing(false);
-              setErrorMessage(null);
-            }}
-          />
-        </div>
-      )}
 
       {/* Bookmarked Posts View */}
       {showBookmarkedPosts && (
