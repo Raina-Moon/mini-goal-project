@@ -36,7 +36,13 @@ const ChartComponent = ({
   const chartData: ChartData[] = useMemo(() => {
     if (!nailedPosts || nailedPosts.length === 0) return [];
 
-    const processData = (posts: Goal[]): ChartData[] => {
+    console.log("Nailed Posts:", nailedPosts);
+    console.log("Failed Posts:", failedPosts);
+
+    const processData = (
+      posts: Goal[],
+      key: "nailedDuration" | "failedDuration"
+    ): ChartData[] => {
       if (chartPeriod === "day") {
         const today = new Date();
         const durationByHour = Array(6).fill(0);
@@ -45,21 +51,50 @@ const ChartComponent = ({
           if (postDate.toDateString() === today.toDateString()) {
             const hour = postDate.getHours();
             const slot = Math.floor(hour / 4);
-            durationByHour[slot] = (durationByHour[slot] || 0) + post.duration;
+            durationByHour[slot] += post.duration;
           }
         });
-
         return [
-          { time: "0-4", nailedDuration: durationByHour[0] },
-          { time: "4-8", nailedDuration: durationByHour[1] },
-          { time: "8-12", nailedDuration: durationByHour[2] },
-          { time: "12-16", nailedDuration: durationByHour[3] },
-          { time: "16-20", nailedDuration: durationByHour[4] },
-          { time: "20-24", nailedDuration: durationByHour[5] },
+          {
+            time: "0-4",
+            nailedDuration: 0,
+            failedDuration: 0,
+            [key]: durationByHour[0],
+          },
+          {
+            time: "4-8",
+            nailedDuration: 0,
+            failedDuration: 0,
+            [key]: durationByHour[1],
+          },
+          {
+            time: "8-12",
+            nailedDuration: 0,
+            failedDuration: 0,
+            [key]: durationByHour[2],
+          },
+          {
+            time: "12-16",
+            nailedDuration: 0,
+            failedDuration: 0,
+            [key]: durationByHour[3],
+          },
+          {
+            time: "16-20",
+            nailedDuration: 0,
+            failedDuration: 0,
+            [key]: durationByHour[4],
+          },
+          {
+            time: "20-24",
+            nailedDuration: 0,
+            failedDuration: 0,
+            [key]: durationByHour[5],
+          },
         ];
       } else if (chartPeriod === "week") {
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const durationByDate = nailedPosts.reduce((acc, post) => {
+        const durationByDate = posts.reduce((acc, post) => {
           const date = new Date(post.created_at).toLocaleDateString("en-US", {
             day: "2-digit",
             month: "short",
@@ -71,11 +106,13 @@ const ChartComponent = ({
         }, {} as { [key: string]: number });
         return Object.entries(durationByDate).map(([date, duration]) => ({
           date,
-          nailedDuration: duration,
+          nailedDuration: 0,
+          failedDuration: 0,
+          [key]: duration,
         }));
       } else if (chartPeriod === "month") {
         const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const durationByDate = nailedPosts.reduce((acc, post) => {
+        const durationByDate = posts.reduce((acc, post) => {
           const date = new Date(post.created_at).toLocaleDateString("en-US", {
             day: "2-digit",
             month: "short",
@@ -87,11 +124,13 @@ const ChartComponent = ({
         }, {} as { [key: string]: number });
         return Object.entries(durationByDate).map(([date, duration]) => ({
           date,
-          nailedDuration: duration,
+          nailedDuration: 0,
+          failedDuration: 0,
+          [key]: duration,
         }));
       } else if (chartPeriod === "year") {
         const yearStart = new Date(new Date().getFullYear(), 0, 1);
-        const durationByMonth = nailedPosts.reduce((acc, post) => {
+        const durationByMonth = posts.reduce((acc, post) => {
           const date = new Date(post.created_at).toLocaleDateString("en-US", {
             month: "short",
           });
@@ -102,20 +141,45 @@ const ChartComponent = ({
         }, {} as { [key: string]: number });
         return Object.entries(durationByMonth).map(([date, duration]) => ({
           date,
-          nailedDuration: duration,
+          nailedDuration: 0,
+          failedDuration: 0,
+          [key]: duration,
         }));
       }
       return [];
     };
 
-    const nailedData = processData(nailedPosts);
-    if (!isOwnProfile) return nailedData;
+    const nailedData = processData(nailedPosts, "nailedDuration");
+    if (!isOwnProfile)
+      return nailedData.map((d) => ({ ...d, failedDuration: 0 }));
 
-    const failedData = processData(failedPosts);
-    return nailedData.map((nailed, index) => ({
-      ...nailed,
-      failedDuration: failedData[index]?.nailedDuration || 0,
-    }));
+    const failedData = processData(failedPosts, "failedDuration");
+
+    const mergedDataMap = new Map<string, ChartData>();
+
+    nailedData.forEach((nailed) => {
+      const key = nailed.date || nailed.time || "";
+      mergedDataMap.set(key, { ...nailed, failedDuration: 0 });
+    });
+
+    failedData.forEach((failed) => {
+      const key = failed.date || failed.time || "";
+      if (mergedDataMap.has(key)) {
+        mergedDataMap.get(key)!.failedDuration = failed.failedDuration || 0;
+      } else {
+        mergedDataMap.set(key, {
+          time: failed.time,
+          date: failed.date,
+          nailedDuration: 0,
+          failedDuration: failed.failedDuration || 0,
+        });
+      }
+    });
+
+    const mergedData = Array.from(mergedDataMap.values());
+    console.log("Merged Chart Data:", mergedData);
+
+    return mergedData;
   }, [nailedPosts, failedPosts, chartPeriod, isOwnProfile]);
 
   const maxDuration = useMemo(() => {
