@@ -142,6 +142,52 @@ router.patch("/reset-password", (async (req: Request, res: Response) => {
   }
 }) as RequestHandler);
 
+// ✅ Verify Current Password
+router.post("/verify-current-password", (async (req: Request, res: Response) => {
+  const { email, currentPassword } = req.body;
+  try {
+    const result = await pool.query("SELECT password FROM users WHERE email = $1", [email]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const user = result.rows[0];
+    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!passwordMatch) {
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+    res.json({ message: "Password verified" });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+})as RequestHandler);
+
+// ✅ Change Password
+router.patch("/change-password", (async (req: Request, res: Response) => {
+  const { email, currentPassword, newPassword } = req.body;
+  try {
+    const result = await pool.query(
+      "SELECT password FROM users WHERE email = $1",
+      [email]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const user = result.rows[0];
+    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!passwordMatch) {
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query("UPDATE users SET password = $1 WHERE email = $2", [
+      hashedPassword,
+      email,
+    ]);
+    res.json({ message: "Password updated successfully." });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
+
 // ✅ Update Profile Image
 router.patch("/profile/:userId/image", (async (req: Request, res: Response) => {
   const { userId } = req.params;

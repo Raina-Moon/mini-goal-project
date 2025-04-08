@@ -34,6 +34,15 @@ interface AuthState {
     enteredCode: number,
     newPassword: string
   ) => Promise<{ message: string }>;
+  verifyCurrentPassword: (
+    email: string,
+    currentPassword: string
+  ) => Promise<boolean>;
+  changePassword: (
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -98,6 +107,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initializeAuth();
   }, []);
+
+  // Function to verify the current password
+  const verifyCurrentPassword = async (
+    email: string,
+    currentPassword: string
+  ): Promise<boolean> => {
+    try {
+      const data = await fetchApi<{ message?: string; error?: string }>(
+        "/auth/verify-current-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, currentPassword }),
+        }
+      );
+      if (data.error) {
+        throw new Error(data.error || "Current password is incorrect");
+      }
+      return true;
+    } catch (err: any) {
+      throw new Error(err.message || "Error verifying current password");
+    }
+  };
+
+  // Function to change the password
+  const changePassword = async (
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> => {
+    try {
+      const data = await fetchApi<{ message?: string; error?: string }>(
+        "/auth/change-password",
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, currentPassword, newPassword }),
+        }
+      );
+      if (data.error) {
+        throw new Error(data.error || "Current password is incorrect");
+      }
+    } catch (err: any) {
+      throw new Error(err.message || "Error verifying current password");
+    }
+  };
 
   const signup = async (username: string, email: string, password: string) => {
     try {
@@ -236,6 +291,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     requestPasswordReset,
     verifyResetCode,
     resetPassword,
+    verifyCurrentPassword,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

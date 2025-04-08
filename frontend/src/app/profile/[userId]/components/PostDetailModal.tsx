@@ -142,8 +142,14 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed top-16 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-      <div className="bg-white p-4 rounded-lg max-w-md w-full">
+    <div
+      className="fixed top-16 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white p-4 rounded-lg max-w-md w-[85%]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center gap-2 mb-2">
           <button
             onClick={handleProfileClick}
@@ -165,11 +171,17 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
           </button>
         </div>
 
+        {post.created_at && (
+          <p className="text-xs text-gray-500">
+            {formatTimeAgo(String(post.created_at))}
+          </p>
+        )}
+
         <h2 className="text-lg font-semibold">{post.title}</h2>
         <img
           src={post.image_url}
           alt="Post"
-          className="w-full h-auto object-cover"
+          className="w-full max-w-[600px] max-h-[750px] object-cover rounded-lg mb-2 mx-auto block"
         />
         <p>{post.description}</p>
 
@@ -199,10 +211,6 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
             {isBookmarked ? <BookmarkFull /> : <BookmarkEmpty />}
           </button>
         </div>
-
-        <button className="mt-2 text-zinc-600 text-xs" onClick={onClose}>
-          Close
-        </button>
       </div>
 
       {showCommentsModal && (
