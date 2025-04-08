@@ -235,6 +235,7 @@ router.delete("/delete-user/:userId", (async (req: Request, res: Response) => {
 
     await pool.query("BEGIN");
 
+    await pool.query("DELETE FROM posts WHERE user_id = $1", [userId]);
     await pool.query("DELETE FROM goals WHERE user_id = $1", [userId]);
     await pool.query("DELETE FROM comments WHERE user_id = $1", [userId]);
     await pool.query("DELETE FROM likes WHERE user_id = $1", [userId]);
@@ -247,7 +248,6 @@ router.delete("/delete-user/:userId", (async (req: Request, res: Response) => {
       "DELETE FROM follows WHERE follower_id = $1 OR following_id = $1",
       [userId]
     );
-    await pool.query("DELETE FROM posts WHERE user_id = $1", [userId]);
     await pool.query("DELETE FROM users WHERE id = $1", [userId]);
 
     await pool.query("COMMIT");
