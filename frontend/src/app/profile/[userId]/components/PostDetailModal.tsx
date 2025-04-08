@@ -150,34 +150,37 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         className="bg-white p-4 rounded-lg max-w-md w-[85%]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-end gap-2 mb-2">
           <button
             onClick={handleProfileClick}
-            className="flex flex-row items-center gap-2"
+            className="flex flex-row items-end gap-2"
           >
             <img
               src={post.profile_image || "/images/DefaultProfile.png"}
               alt={`${post.username || "Unknown User"}'s profile`}
               className="w-8 h-8 rounded-full object-cover"
             />
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-gray-800">
-                {post.username || "Unknown User"}
-              </span>
-              <div className="text-xs text-gray-500">
-                <span>{post.title}</span> • <span>{post.duration} min</span>
-              </div>
-            </div>
+            <span className="text-sm font-medium text-gray-900 items-end">
+              {post.username || "Unknown User"}
+            </span>
           </button>
         </div>
+        <div className="flex flex-col items-start mb-2">
+          <span className="font-semibold text-gray-900">
+            title : {post.title}
+          </span>
+          <div className="flex flex-row justify-between items-center w-full">
+            <span className="text-sm text-gray-600 mb-2">
+              duration : {post.duration} min
+            </span>
+            {post.created_at && (
+              <p className="text-xs text-gray-500">
+                {formatTimeAgo(String(post.created_at))}
+              </p>
+            )}{" "}
+          </div>{" "}
+        </div>
 
-        {post.created_at && (
-          <p className="text-xs text-gray-500">
-            {formatTimeAgo(String(post.created_at))}
-          </p>
-        )}
-
-        <h2 className="text-lg font-semibold">{post.title}</h2>
         <img
           src={post.image_url}
           alt="Post"
@@ -200,8 +203,8 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
             className="flex flex-row gap-1 items-center"
           >
             <MessageIcon />
-            {commentsByPost[post.id]?.length > 0 && (
-              <span>{commentsByPost[post.id].length}</span>
+            {commentsByPost[post.post_id]?.length > 0 && (
+              <span>{commentsByPost[post.post_id].length}</span>
             )}
           </button>
           <button
