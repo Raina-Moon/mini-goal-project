@@ -81,7 +81,7 @@ const Dashboard = () => {
   }, [goals]);
 
   const failedPosts = useMemo(() => {
-    return goals.filter((goal) => goal.status === "failed it");
+    return goals.filter((goal) => goal.status === "failed out");
   }, [goals]);
 
   if (loading) {
