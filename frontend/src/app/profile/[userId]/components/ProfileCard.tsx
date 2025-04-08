@@ -10,6 +10,7 @@ import ArrowRightIcon from "../../../../../public/icons/ArrowRightIcon";
 import PencilIcon from "../../../../../public/icons/PencilIcon";
 import { Switch } from "@/components/ui/switch";
 import ChangePasswordModal from "./ChangePasswordModal";
+import DeleteIcon from "../../../../../public/icons/DeleteIcon";
 
 interface ProfileCardProps {
   user: { username: string; email: string | undefined; profile_image?: any };
@@ -19,6 +20,7 @@ interface ProfileCardProps {
   onLoadNotifications: () => void;
   onShowBookmarks: () => void;
   onLogoutConfirm: () => void;
+  onDeleteConfirm: () => void;
   notificationEnabled: boolean;
   toggleNotification: () => void;
 }
@@ -31,6 +33,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   onLoadNotifications,
   onShowBookmarks,
   onLogoutConfirm,
+  onDeleteConfirm,
   notificationEnabled,
   toggleNotification,
 }) => {
@@ -199,6 +202,16 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             <div className="flex items-center gap-2">
               <LogoutIcon />
               <span>Peace Out</span>
+            </div>
+          </button>
+
+          <button
+            className="w-full flex justify-start items-center text-red-700 text-xs py-2 hover:bg-gray-100 rounded"
+            onClick={onDeleteConfirm}
+          >
+            <div className="flex items-center gap-2">
+              <DeleteIcon />
+              <span>Delete Account</span>
             </div>
           </button>
         </div>
