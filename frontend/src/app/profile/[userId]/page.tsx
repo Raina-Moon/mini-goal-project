@@ -31,7 +31,7 @@ const ProfilePage = () => {
 
   const { userId } = useParams();
   const router = useRouter();
-  
+
   const [showBookmarkedPosts, setShowBookmarkedPosts] = useState(false);
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -117,7 +117,7 @@ const ProfilePage = () => {
       setTimeout(() => {
         setShowFarewellModal(false);
         router.push("/");
-      }, 3000); // Show farewell for 3 seconds
+      }, 5000); // Show farewell for 3 seconds
     } catch (err) {
       console.error("Failed to delete account:", err);
       setIsDeleting(false);
