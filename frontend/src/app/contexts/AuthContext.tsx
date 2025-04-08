@@ -43,6 +43,7 @@ interface AuthState {
     currentPassword: string,
     newPassword: string
   ) => Promise<void>;
+  deleteUser: (userId: number) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -276,6 +277,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const deleteUser = async (userId: number) => {
+    if (!token) {
+      throw new Error("No token available");
+    }
+    try {
+      await fetchApi(`/auth/delete-user/${userId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      logout();
+    } catch (err) {
+      console.error("Failed to delete user:", err);
+      throw err;
+    }
+  };
+
   const value = {
     token,
     user,
@@ -293,6 +310,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     resetPassword,
     verifyCurrentPassword,
     changePassword,
+    deleteUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

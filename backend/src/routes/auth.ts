@@ -143,10 +143,16 @@ router.patch("/reset-password", (async (req: Request, res: Response) => {
 }) as RequestHandler);
 
 // ✅ Verify Current Password
-router.post("/verify-current-password", (async (req: Request, res: Response) => {
+router.post("/verify-current-password", (async (
+  req: Request,
+  res: Response
+) => {
   const { email, currentPassword } = req.body;
   try {
-    const result = await pool.query("SELECT password FROM users WHERE email = $1", [email]);
+    const result = await pool.query(
+      "SELECT password FROM users WHERE email = $1",
+      [email]
+    );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -159,7 +165,7 @@ router.post("/verify-current-password", (async (req: Request, res: Response) => 
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
-})as RequestHandler);
+}) as RequestHandler);
 
 // ✅ Change Password
 router.patch("/change-password", (async (req: Request, res: Response) => {
@@ -205,6 +211,51 @@ router.patch("/profile/:userId/image", (async (req: Request, res: Response) => {
 
     res.json(result.rows[0]);
   } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}) as RequestHandler);
+
+// ✅ Delete User and All Related Data
+router.delete("/delete-user/:userId", (async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "default-secret"
+    ) as { userId: number };
+    if (decoded.userId !== Number(userId)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    await pool.query("BEGIN");
+
+    await pool.query("DELETE FROM posts WHERE user_id = $1", [userId]);
+    await pool.query("DELETE FROM goals WHERE user_id = $1", [userId]);
+    await pool.query("DELETE FROM comments WHERE user_id = $1", [userId]);
+    await pool.query("DELETE FROM likes WHERE user_id = $1", [userId]);
+    await pool.query("DELETE FROM bookmarks WHERE user_id = $1", [userId]);
+    await pool.query(
+      "DELETE FROM notifications WHERE user_id = $1 OR sender_id = $1",
+      [userId]
+    );
+    await pool.query(
+      "DELETE FROM follows WHERE follower_id = $1 OR following_id = $1",
+      [userId]
+    );
+    await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+
+    await pool.query("COMMIT");
+
+    res.json({ message: "User and all related data deleted successfully" });
+  } catch (err) {
+    await pool.query("ROLLBACK");
+    console.error("Delete user error:", err);
     res.status(500).json({ error: (err as Error).message });
   }
 }) as RequestHandler);

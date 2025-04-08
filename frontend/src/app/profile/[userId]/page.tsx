@@ -11,6 +11,8 @@ import NotificationModal from "./components/NotificationModal";
 import BookmarksModal from "./components/BookmarksModal";
 import LogoutModal from "./components/LogoutModal";
 import PostDetailModal from "./components/PostDetailModal";
+import DeleteConfirmModal from "./components/DeleteConfirmModal";
+import FarewellModal from "./components/FarewellModal";
 
 const ProfilePage = () => {
   const {
@@ -21,6 +23,7 @@ const ProfilePage = () => {
     getProfile,
     updateProfile,
     updateProfileImage,
+    deleteUser,
   } = useAuth();
   const { fetchBookmarkedPostDetail } = useBookmarks();
   const { fetchNotifications, markAsRead, deleteNotification } =
@@ -28,6 +31,7 @@ const ProfilePage = () => {
 
   const { userId } = useParams();
   const router = useRouter();
+
   const [showBookmarkedPosts, setShowBookmarkedPosts] = useState(false);
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -35,6 +39,10 @@ const ProfilePage = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationEnabled, setNotificationEnabled] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletionMessage, setDeletionMessage] = useState<string | null>(null);
+  const [showFarewellModal, setShowFarewellModal] = useState(false);
 
   useEffect(() => {
     if (!token || !userId) return;
@@ -44,6 +52,24 @@ const ProfilePage = () => {
       getProfile(Number(userId));
     }
   }, [token, router, isLoggedIn, userId, getProfile]);
+
+  useEffect(() => {
+    if (isDeleting) {
+      const messages = [
+        "We're crying because you're leaving...",
+        "Wiping away our tears...",
+        "Deleting your data...",
+        "Almost done...",
+      ];
+      let index = 0;
+      setDeletionMessage(messages[index]);
+      const interval = setInterval(() => {
+        index = (index + 1) % messages.length;
+        setDeletionMessage(messages[index]);
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [isDeleting]);
 
   const loadNotifications = async () => {
     if (user) {
@@ -81,6 +107,23 @@ const ProfilePage = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setIsDeleting(true);
+    try {
+      await deleteUser(user.id);
+      setIsDeleting(false);
+      setShowFarewellModal(true);
+      setTimeout(() => {
+        setShowFarewellModal(false);
+        router.push("/");
+      }, 5000); // Show farewell for 3 seconds
+    } catch (err) {
+      console.error("Failed to delete account:", err);
+      setIsDeleting(false);
+    }
+  };
+
   const handleShowBookmarks = async () => {
     if (user) {
       const posts = await fetchBookmarkedPostDetail(user.id);
@@ -114,6 +157,7 @@ const ProfilePage = () => {
         onLoadNotifications={loadNotifications}
         onShowBookmarks={handleShowBookmarks}
         onLogoutConfirm={() => setShowLogoutConfirm(true)}
+        onDeleteConfirm={() => setShowDeleteConfirm(true)}
         notificationEnabled={notificationEnabled}
         toggleNotification={() => setNotificationEnabled(!notificationEnabled)}
       />
@@ -147,6 +191,24 @@ const ProfilePage = () => {
           onCancel={() => setShowLogoutConfirm(false)}
         />
       )}
+
+      {showDeleteConfirm && (
+        <DeleteConfirmModal
+          onConfirm={() => {
+            handleDeleteAccount();
+            setShowDeleteConfirm(false);
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
+
+      {isDeleting && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="text-white text-lg">{deletionMessage}</div>
+        </div>
+      )}
+
+      {showFarewellModal && <FarewellModal />}
 
       {selectedPost && (
         <PostDetailModal
