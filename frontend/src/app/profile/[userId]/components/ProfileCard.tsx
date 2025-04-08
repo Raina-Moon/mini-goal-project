@@ -76,7 +76,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         <img
           className="w-full h-full rounded-full object-cover"
           src={
-            imagePreview || user.profile_image || "images/DefaultProfile.png"
+            imagePreview || user.profile_image || "/images/DefaultProfile.png"
           }
           alt="Profile"
         />
