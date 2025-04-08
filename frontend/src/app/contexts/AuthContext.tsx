@@ -114,13 +114,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     currentPassword: string
   ): Promise<boolean> => {
     try {
-      const res = (await fetchApi<Response>("/auth/verify-current-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, currentPassword }),
-      })) as Response;
-      if (!res.ok) {
-        const data = await res.json();
+      const data = await fetchApi<{ message?: string; error?: string }>(
+        "/auth/verify-current-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, currentPassword }),
+        }
+      );
+      if (data.error) {
         throw new Error(data.error || "Current password is incorrect");
       }
       return true;
@@ -136,17 +138,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     newPassword: string
   ): Promise<void> => {
     try {
-      const res = await fetchApi<Response>("/auth/change-password", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, currentPassword, newPassword }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to change password");
+      const data = await fetchApi<{ message?: string; error?: string }>(
+        "/auth/change-password",
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, currentPassword, newPassword }),
+        }
+      );
+      if (data.error) {
+        throw new Error(data.error || "Current password is incorrect");
       }
     } catch (err: any) {
-      throw new Error(err.message || "Error changing password");
+      throw new Error(err.message || "Error verifying current password");
     }
   };
 
