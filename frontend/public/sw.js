@@ -11,9 +11,10 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(
     self.registration.showNotification(title, options).then(() => {
+      console.log("Sending sound message to clients"); // Debugging line
       self.clients.matchAll().then((clients) => {
         clients.forEach((client) =>
-          client.postMessage({ type: "PLAY_SOUND", url: "./sounds/notify.wav" })
+          client.postMessage({ type: "PLAY_SOUND", url: "/sounds/notify.wav" })
         );
       });
     })

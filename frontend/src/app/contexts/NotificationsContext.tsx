@@ -56,12 +56,20 @@ export const NotificationsProvider = ({
       registerServiceWorker().catch((error) =>
         console.error("Service Worker registration failed:", error)
       );
-      navigator.serviceWorker.addEventListener("message", (event) => {
+
+      const handleMessage = (event: MessageEvent) => {
+        console.log("Received message from SW:", event.data);
         if (event.data && event.data.type === "PLAY_SOUND") {
           const audio = new Audio(event.data.url);
-          audio.play();
+          audio.volume = 0.5
+          audio.play().catch((err) => console.error("Audio play error:", err));
         }
-      });
+      };
+
+      navigator.serviceWorker.addEventListener("message", handleMessage);
+      return () => {
+        navigator.serviceWorker.removeEventListener("message", handleMessage);
+      };
     }
   }, [user]);
 
