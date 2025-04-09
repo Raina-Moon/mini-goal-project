@@ -33,6 +33,7 @@ const PostItem = ({
         duration={post.duration}
         imageUrl={post.image_url}
         description={post.description}
+        createdAt={post.created_at}
       />
       <PostActions
         postId={post.post_id}

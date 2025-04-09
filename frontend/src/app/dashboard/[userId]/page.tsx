@@ -8,7 +8,7 @@ import FollowersList from "./components/FollowersList";
 import GoalsTab from "./components/GoalsTab";
 import NailedPostsTab from "./components/NailedPostsTab";
 import FailedGoalsTab from "./components/FailedGoalsTab";
-import ChartComponent from "./components/ChartComponent"; // 새로 추가
+import ChartComponent from "./components/ChartComponent";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useGoals } from "@/app/contexts/GoalContext";
@@ -22,6 +22,7 @@ const Dashboard = () => {
   const { goals, fetchGoals } = useGoals();
   const { nailedPosts, fetchNailedPosts } = usePosts();
   const { followers, fetchFollowers } = useFollowers();
+  const { loading, setLoading } = useGlobalLoading();
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowersModalOpen, setIsFollowersModalOpen] = useState(false);
@@ -29,47 +30,66 @@ const Dashboard = () => {
   const [chartPeriod, setChartPeriod] = useState<
     "day" | "week" | "month" | "year"
   >("week");
-  const { setLoading } = useGlobalLoading();
 
   const fetchData = async () => {
     if (!userId || !user?.id || !token) return;
+
     const profileId = Number(userId);
     const viewerId = user.id;
 
     setLoading(true);
     try {
-      await Promise.all([
-        fetchViewUser(profileId),
-        fetchGoals(profileId),
-        fetchNailedPosts(profileId),
-        fetchFollowers(profileId),
-      ]);
-      const updatedFollowStatus = await fetchFollowers(profileId);
-      const isFollowingNow = (updatedFollowStatus ?? []).some(
-        (f) => f.id === viewerId
-      );
-      setIsFollowing(isFollowingNow);
+      const [viewUserData, goalsData, postsData, followersData] =
+        await Promise.all([
+          fetchViewUser(profileId).catch((err) => {
+            console.error("fetchViewUser failed:", err);
+            return null;
+          }),
+          fetchGoals(profileId).catch((err) => {
+            console.error("fetchGoals failed:", err);
+            return [];
+          }),
+          fetchNailedPosts(profileId).catch((err) => {
+            console.error("fetchNailedPosts failed:", err);
+            return [];
+          }),
+          fetchFollowers(profileId).catch((err) => {
+            console.error("fetchFollowers failed:", err);
+            return [];
+          }),
+        ]);
+
+      if (followersData) {
+        const isFollowingNow = followersData.some((f) => f.id === viewerId);
+        setIsFollowing(isFollowingNow);
+      }
     } catch (err) {
-      console.error("Failed to fetch dashboard data:", err);
+      console.error("Unexpected error in fetchData:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user && token && userId) {
+      fetchData();
+    }
+  }, [userId]);
 
   const nailedGoals = useMemo(() => {
     return goals.filter((goal) => goal.status === "nailed it");
   }, [goals]);
 
   const failedPosts = useMemo(() => {
-    return goals.filter((goal) => goal.status === "failed it");
+    return goals.filter((goal) => goal.status === "failed out");
   }, [goals]);
 
-  useEffect(() => {
-    if (user && token) fetchData();
-  }, [userId, user, token]);
-
-  if (!user || !token || !viewUser)
+  if (loading) {
+    return <div>Loading dashboard...</div>;
+  }
+  if (!user || !token || !viewUser) {
     return <div>Please log in to view the dashboard.</div>;
+  }
 
   const displayedFollowers = followers.slice(0, 3);
   const extraFollowersCount = followers.length > 3 ? followers.length - 3 : 0;
@@ -84,7 +104,9 @@ const Dashboard = () => {
             userId={viewUser.id}
             storedId={user.id}
             username={viewUser.username}
-            profileImage={viewUser.profile_image || "images/DefaultProfile.png"}
+            profileImage={
+              viewUser.profile_image || "/images/DefaultProfile.png"
+            }
           />
           <div
             className="flex items-end cursor-pointer gap-6"
@@ -114,7 +136,9 @@ const Dashboard = () => {
                 )}
               </div>
             ) : (
-              <span className="text-gray-500 text-xs">Be the first to vibe</span>
+              <span className="text-gray-500 text-xs">
+                Be the first to vibe
+              </span>
             )}
           </div>
         </div>
@@ -175,7 +199,9 @@ const Dashboard = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Followers {followers.length}</h3>
+              <h3 className="text-lg font-semibold">
+                Followers {followers.length}
+              </h3>
             </div>
             <FollowersList
               followers={followers.map((follower) => ({

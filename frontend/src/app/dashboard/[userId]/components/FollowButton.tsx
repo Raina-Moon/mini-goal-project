@@ -1,4 +1,5 @@
 import { useFollowers } from "@/app/contexts/FollowerContext";
+import { toast } from "sonner";
 
 interface FollowButtonProps {
   storedId: number | null;
@@ -41,7 +42,7 @@ const FollowButton = ({
       } else {
         setIsFollowing(!newState); 
       }
-      alert(`Failed to update follow status: ${err.message || "Unknown error"}`);
+      toast.error(`Failed to update follow status: ${err.message || "Unknown error"}`);
     }
   };
 

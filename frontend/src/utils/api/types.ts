@@ -69,6 +69,6 @@ export interface Notification {
 export interface ChartData {
   time?: string; // day
   date?: string; // week, month, year
-  nailedDuration: number;
+  nailedDuration?: number;
   failedDuration?: number;
 }

@@ -7,6 +7,7 @@ import ErrorIcon from "../../../public/icons/ErrorIcon";
 import { useAuth } from "../contexts/AuthContext";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
+import { toast } from "sonner";
 
 const SignupForm = () => {
   const { signup } = useAuth();
@@ -64,13 +65,13 @@ const SignupForm = () => {
     }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      toast.error("Passwords do not match!");
       return;
     }
 
     try {
       await signup(username, email, password);
-      alert("Signup successful! Please log in.");
+      toast.success("Signup successful! Please log in.");
       router.push("/login");
     } catch (error: any) {
       if (error.message === "Username is already taken") {

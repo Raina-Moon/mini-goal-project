@@ -1,12 +1,14 @@
 import { useState } from "react";
 import ExternalLink from "../../../public/icons/ExternalLink";
 import { toast } from "sonner";
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 
 interface PostContentProps {
   title: string;
   duration: number;
   imageUrl?: string;
   description: string;
+  createdAt?: string | number | Date;
 }
 
 const PostContent = ({
@@ -14,6 +16,7 @@ const PostContent = ({
   duration,
   imageUrl,
   description,
+  createdAt,
 }: PostContentProps) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
@@ -55,7 +58,7 @@ const PostContent = ({
     }
     window.open(url, "_blank");
   };
-
+  
   return (
     <>
       <div className="flex items-center justify-between mb-2">
@@ -64,7 +67,16 @@ const PostContent = ({
           <ExternalLink />
         </button>
       </div>
-      <p className="text-sm text-gray-600 mb-2">duration: {duration} min</p>
+      <div className="items-center justify-between mb-2">
+        <p className="text-sm text-gray-600 mb-2">duration: {duration} min</p>
+        {createdAt !== undefined && createdAt !== null ? (
+          <p className="text-xs text-gray-500">
+            {formatTimeAgo(String(createdAt))}
+          </p>
+        ) : (
+          <p className="text-xs text-red-500">Created_at missing</p>
+        )}
+      </div>
       {imageUrl && (
         <img
           src={imageUrl}

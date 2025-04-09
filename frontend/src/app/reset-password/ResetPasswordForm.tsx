@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import GlobalButton from "@/components/ui/GlobalButton";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GoBackArrow from "../../../public/icons/GoBackArrow";
+import { toast } from "sonner";
 
 const ResetPasswordForm = () => {
   const router = useRouter();
@@ -42,9 +43,9 @@ const ResetPasswordForm = () => {
     try {
       await verifyResetCode(email!, enteredCode);
       setIsCodeValid(true);
-      alert("Code verified successfully!");
+      toast.success("Code verified successfully!");
     } catch (error) {
-      alert("Invalid code.");
+      toast.error("Invalid code.");
     }
   };
 
@@ -100,13 +101,13 @@ const ResetPasswordForm = () => {
     try {
       if (email) {
         await resetPassword(email, enteredCode, password);
-        alert("Password successfully reset!");
+        toast.success("Password successfully reset!");
         router.push("/login");
       } else {
-        alert("Email is missing. Please try again.");
+        toast.error("Email is missing. Please try again.");
       }
     } catch (error) {
-      alert("Failed to reset password.");
+      toast.error("Failed to reset password.");
     }
   };
 

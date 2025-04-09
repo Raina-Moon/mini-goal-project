@@ -1,3 +1,4 @@
+import { formatTimeAgo } from "@/utils/formatTimeAgo";
 import VerticalDots from "../../../public/icons/VerticalDots";
 
 interface CommentItemProps {
@@ -54,6 +55,11 @@ const CommentItem = ({
             className="w-6 h-6 rounded-full object-cover"
           />
           <span className="font-medium">{comment.username}</span>
+          {comment.created_at && (
+            <span className="text-xs text-gray-500">
+              {formatTimeAgo(comment.created_at)}
+            </span>
+          )}
         </div>
         {userId === comment.user_id && (
           <button onClick={onToggleDropdown} className="ml-2">
