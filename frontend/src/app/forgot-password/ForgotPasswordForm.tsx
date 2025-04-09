@@ -7,6 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import GoBackArrow from "../../../public/icons/GoBackArrow";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
+import { toast } from "sonner";
 
 const ForgotPasswordForm = () => {
   const { requestPasswordReset } = useAuth();
@@ -17,10 +18,10 @@ const ForgotPasswordForm = () => {
     e.preventDefault();
     try {
       await requestPasswordReset(email);
-      alert("Check your email for the reset code!");
+      toast.error("Check your email for the reset code!");
       router.push(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch (error) {
-      alert("Email sending failed!");
+      toast.error("Email sending failed!");
     }
   };
 
