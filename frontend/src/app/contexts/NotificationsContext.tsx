@@ -58,7 +58,6 @@ export const NotificationsProvider = ({
       );
 
       const handleMessage = (event: MessageEvent) => {
-        console.log("Received message from SW:", event.data);
         if (event.data && event.data.type === "PLAY_SOUND") {
           const audio = new Audio(event.data.url);
           audio.volume = 0.5
