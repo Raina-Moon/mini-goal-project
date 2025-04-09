@@ -19,5 +19,4 @@ Thumbs.db
 init.sql
 **/init.sql
 
-docker-compose.yml
-**/docker-compose.yml
+docker-key.pem
