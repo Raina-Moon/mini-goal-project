@@ -15,3 +15,9 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+
+init.sql
+**/init.sql
+
+docker-compose.yml
+**/docker-compose.yml
