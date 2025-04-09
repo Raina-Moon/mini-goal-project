@@ -60,7 +60,7 @@ export const NotificationsProvider = ({
       const handleMessage = (event: MessageEvent) => {
         if (event.data && event.data.type === "PLAY_SOUND") {
           const audio = new Audio(event.data.url);
-          audio.volume = 0.5
+          audio.volume = 0.3
           audio.play().catch((err) => console.error("Audio play error:", err));
         }
       };
