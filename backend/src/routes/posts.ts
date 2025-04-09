@@ -60,6 +60,7 @@ router.get("/", async (req: Request, res: Response) => {
         goals.duration,
         posts.image_url,
         posts.description,
+        posts.created_at,
         users.username,
         users.profile_image,
         CAST(COUNT(likes.id) AS INTEGER) AS like_count,
