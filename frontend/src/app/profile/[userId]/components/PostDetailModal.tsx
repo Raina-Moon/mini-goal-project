@@ -47,38 +47,34 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   );
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  console.log("Post in PostDetailModal:", post);
+  // Fetch initial data when the component mounts or user changes
+  const initializeData = useCallback(async () => {
+    if (!user.id || !initialPost.id || isInitialized) return;
 
-  useEffect(() => {
-    // Fetch initial data when the component mounts or user changes
-    const initializeData = async () => {
-      try {
-        const bookmarkedPosts = await fetchBookmarkedPostDetail(user.id);
-        const detailedPost = bookmarkedPosts.find(
-          (bp) => bp.post_id === initialPost.id
-        );
-        if (detailedPost) {
-          setPost(detailedPost);
-          setIsLiked(detailedPost.liked_by_me || false);
-          setLikeCount(detailedPost.like_count || 0);
-          setIsBookmarked(detailedPost.bookmarked_by_me || false);
-        }
-
-        const likeStatus = await getLikeStatus(initialPost.id, user.id);
-        const count = await fetchLikeCount(initialPost.id);
-        await fetchComments(initialPost.id);
-
-        setIsLiked(likeStatus);
-        setLikeCount(count);
-      } catch (err) {
-        console.error("Failed to initialize post data:", err);
-        setError("Failed to load post data");
+    try {
+      const bookmarkedPosts = await fetchBookmarkedPostDetail(user.id);
+      const detailedPost = bookmarkedPosts.find(
+        (bp) => bp.post_id === initialPost.id
+      );
+      if (detailedPost) {
+        setPost(detailedPost);
+        setIsLiked(detailedPost.liked_by_me || false);
+        setLikeCount(detailedPost.like_count || 0);
+        setIsBookmarked(detailedPost.bookmarked_by_me || false);
       }
-    };
 
-    if (user.id && initialPost.id) {
-      initializeData();
+      const likeStatus = await getLikeStatus(initialPost.id, user.id);
+      const count = await fetchLikeCount(initialPost.id);
+      await fetchComments(initialPost.id);
+
+      setIsLiked(likeStatus);
+      setLikeCount(count);
+      setIsInitialized(true);
+    } catch (err) {
+      console.error("Failed to initialize post data:", err);
+      setError("Failed to load post data");
     }
   }, [
     initialPost.id,
@@ -87,7 +83,12 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     getLikeStatus,
     fetchLikeCount,
     fetchComments,
+    isInitialized,
   ]);
+
+  useEffect(() => {
+    initializeData();
+  }, [initializeData]);
 
   const handleProfileClick = useCallback(() => {
     if (post.user_id !== undefined) {
