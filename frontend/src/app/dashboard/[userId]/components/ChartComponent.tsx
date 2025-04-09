@@ -36,9 +36,6 @@ const ChartComponent = ({
   const chartData: ChartData[] = useMemo(() => {
     if (!nailedPosts || nailedPosts.length === 0) return [];
 
-    console.log("Nailed Posts:", nailedPosts);
-    console.log("Failed Posts:", failedPosts);
-
     const processData = (
       posts: Goal[],
       key: "nailedDuration" | "failedDuration"
@@ -177,7 +174,6 @@ const ChartComponent = ({
     });
 
     const mergedData = Array.from(mergedDataMap.values());
-    console.log("Merged Chart Data:", mergedData);
 
     return mergedData;
   }, [nailedPosts, failedPosts, chartPeriod, isOwnProfile]);

@@ -58,8 +58,6 @@ const PostContent = ({
     }
     window.open(url, "_blank");
   };
-
-  console.log("PostContent createdAt:", createdAt);
   
   return (
     <>

@@ -16,7 +16,6 @@ const Page = () => {
   const fetchAndShufflePosts = useCallback(async () => {
     try {
       const allPosts = await fetchAllPosts();
-      console.log("Fetched Posts:", allPosts); // Debugging line
       const shuffledPosts = [...allPosts].sort(() => Math.random() - 0.5);
       setPosts(shuffledPosts);
     } catch (err) {
