@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "../contexts/AuthContext";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
 import GoBackArrow from "../../../public/icons/GoBackArrow";
 import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import { login } from "@/stores/slices/authSlice";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -15,7 +16,9 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const { login, user } = useAuth();
+
+  const dispatch = useAppDispatch();
+  const { user, status, error } = useAppSelector((state) => state.auth);
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,7 +42,9 @@ const LoginForm = () => {
     }
 
     try {
-      await login(email, password);
+      await dispatch(login({ email, password })).unwrap();
+      toast.success(`Welcome back, ${email}!`);
+      router.push("/");
     } catch (error: any) {
       if (error.message === "Invalid password") {
         setPasswordError("Oops! That password doesn’t seem right.");
@@ -51,12 +56,11 @@ const LoginForm = () => {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      toast.success(`Welcome back, ${user.username}!`);
-      router.push("/");
-    }
-  }, [user, router]);
+  // useEffect(() => {
+  //   if (user) {
+  //     router.push("/");
+  //   }
+  // }, [user, router]);
 
   return (
     <div className="flex flex-col items-center justify-center gap-[35px] w-[80%]">
