@@ -295,37 +295,36 @@ const initialState: AuthState = {
 }
 
 const authSlice = createSlice({
-  name: 'auth',
-  initialState,
-  reducers: {
-    logout(state) {
-      state.token = null
-      state.user = null
-      state.viewUser = null
-      state.isLoggedIn = false
-      localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem(USER_KEY)
+    name: 'auth',
+    initialState,
+    reducers: {
+      logout(state) {
+        state.token = null
+        state.user = null
+        state.viewUser = null
+        state.isLoggedIn = false
+        localStorage.removeItem(TOKEN_KEY)
+        localStorage.removeItem(USER_KEY)
+      },
     },
-  },
-  extraReducers: (builder) => {
-    // initializeAuth
-    builder.addCase(initializeAuth.fulfilled, (state, { payload }) => {
-      state.token = payload.token
-      state.user = payload.user
-      state.isLoggedIn = !!payload.token
-    })
-
-    // verifyToken
-    builder.addCase(verifyToken.rejected, (state) => {
-      state.token = null
-      state.user = null
-      state.isLoggedIn = false
-      localStorage.clear()
-    })
-
-    // login/signup
-    builder
-      .addCase(login.fulfilled, (state, { payload }) => {
+    extraReducers: (builder) => {
+      // 1) initializeAuth
+      builder.addCase(initializeAuth.fulfilled, (state, { payload }) => {
+        state.token = payload.token
+        state.user = payload.user
+        state.isLoggedIn = !!payload.token
+      })
+  
+      // 2) verifyToken rejection
+      builder.addCase(verifyToken.rejected, (state) => {
+        state.token = null
+        state.user = null
+        state.isLoggedIn = false
+        localStorage.clear()
+      })
+  
+      // 3) login & signup success
+      builder.addCase(login.fulfilled, (state, { payload }) => {
         state.token = payload.token
         state.user = payload.user
         state.isLoggedIn = true
@@ -333,7 +332,7 @@ const authSlice = createSlice({
         localStorage.setItem(TOKEN_KEY, payload.token)
         localStorage.setItem(USER_KEY, JSON.stringify(payload.user))
       })
-      .addCase(signup.fulfilled, (state, { payload }) => {
+      builder.addCase(signup.fulfilled, (state, { payload }) => {
         state.token = payload.token
         state.user = payload.user
         state.isLoggedIn = true
@@ -341,51 +340,49 @@ const authSlice = createSlice({
         localStorage.setItem(TOKEN_KEY, payload.token)
         localStorage.setItem(USER_KEY, JSON.stringify(payload.user))
       })
-      .addMatcher(
-        (action) => action.type.endsWith('/pending'),
-        (state) => {
-          state.status = 'loading'
-          state.error = null
-        }
-      )
-      .addMatcher(
-        (action) => action.type.endsWith('/rejected'),
-        (state, action: PayloadAction<string>) => {
-          state.status = 'failed'
-          state.error = action.payload
-        }
-      )
-
-    // fetchViewUser
-    builder.addCase(fetchViewUser.fulfilled, (state, { payload }) => {
-      state.viewUser = payload
-    })
-    // getProfile / updateProfile / updateProfileImage
-    builder.addCase(getProfile.fulfilled, (state, { payload }) => {
-      state.user = payload
-      localStorage.setItem(USER_KEY, JSON.stringify(payload))
-    })
-    builder.addCase(updateProfile.fulfilled, (state, { payload }) => {
-      state.user = payload
-      localStorage.setItem(USER_KEY, JSON.stringify(payload))
-    })
-    builder.addCase(updateProfileImage.fulfilled, (state, { payload }) => {
-      state.user = payload
-      localStorage.setItem(USER_KEY, JSON.stringify(payload))
-    })
-
-    // password reset flow
-    builder.addCase(requestPasswordReset.fulfilled, () => {})
-    builder.addCase(verifyResetCode.fulfilled, () => {})
-    builder.addCase(resetPassword.fulfilled, () => {})
-
-    // verify / change password
-    builder.addCase(verifyCurrentPassword.fulfilled, () => {})
-    builder.addCase(changePassword.fulfilled, () => {})
-
-    // deleteUser: already handled in thunk via dispatch(logout)
-  },
-})
+  
+      // 4) fetchViewUser / getProfile / updateProfile / updateProfileImage
+      builder.addCase(fetchViewUser.fulfilled, (state, { payload }) => {
+        state.viewUser = payload
+      })
+      builder.addCase(getProfile.fulfilled, (state, { payload }) => {
+        state.user = payload
+        localStorage.setItem(USER_KEY, JSON.stringify(payload))
+      })
+      builder.addCase(updateProfile.fulfilled, (state, { payload }) => {
+        state.user = payload
+        localStorage.setItem(USER_KEY, JSON.stringify(payload))
+      })
+      builder.addCase(updateProfileImage.fulfilled, (state, { payload }) => {
+        state.user = payload
+        localStorage.setItem(USER_KEY, JSON.stringify(payload))
+      })
+  
+      // 5) password reset flow (no-op on success)
+      builder.addCase(requestPasswordReset.fulfilled, () => {})
+      builder.addCase(verifyResetCode.fulfilled,       () => {})
+      builder.addCase(resetPassword.fulfilled,         () => {})
+      builder.addCase(verifyCurrentPassword.fulfilled, () => {})
+      builder.addCase(changePassword.fulfilled,        () => {})
+  
+      builder
+        .addMatcher(
+          action => action.type.endsWith('/pending'),
+          state => {
+            state.status = 'loading'
+            state.error  = null
+          }
+        )
+        .addMatcher(
+          action => action.type.endsWith('/rejected'),
+          (state, action: PayloadAction<string>) => {
+            state.status = 'failed'
+            state.error  = action.payload
+          }
+        )
+    },
+  })
+  
 
 export const { logout } = authSlice.actions
 export default authSlice.reducer
