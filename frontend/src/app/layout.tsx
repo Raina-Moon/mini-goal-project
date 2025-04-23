@@ -7,7 +7,6 @@ import { FollowerProvider } from "./contexts/FollowerContext";
 import dynamic from "next/dynamic";
 import { LikesProvider } from "./contexts/LikesContext";
 import { CommentsProvider } from "./contexts/CommentsContext";
-import { BookmarksProvider } from "./contexts/BookmarksContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { usePathname } from "next/navigation";
 import { Toaster } from "sonner";
@@ -40,7 +39,6 @@ export default function RootLayout({
       <body>
         <Provider store={store}>
           <GoalProvider>
-              <BookmarksProvider>
                 <NotificationsProvider>
                   <FollowerProvider>
                     <CommentsProvider>
@@ -60,7 +58,6 @@ export default function RootLayout({
                     </CommentsProvider>
                   </FollowerProvider>
                 </NotificationsProvider>
-              </BookmarksProvider>
           </GoalProvider>
         </Provider>
       </body>
