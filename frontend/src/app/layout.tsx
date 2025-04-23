@@ -3,7 +3,6 @@
 import GlobalModal from "@/components/ui/GlobalModal";
 import "./globals.css";
 import { GoalProvider } from "./contexts/GoalContext";
-import { PostProvider } from "./contexts/PostContext";
 import { FollowerProvider } from "./contexts/FollowerContext";
 import dynamic from "next/dynamic";
 import { LikesProvider } from "./contexts/LikesContext";
@@ -41,7 +40,6 @@ export default function RootLayout({
       <body>
         <Provider store={store}>
           <GoalProvider>
-            <PostProvider>
               <BookmarksProvider>
                 <NotificationsProvider>
                   <FollowerProvider>
@@ -63,7 +61,6 @@ export default function RootLayout({
                   </FollowerProvider>
                 </NotificationsProvider>
               </BookmarksProvider>
-            </PostProvider>
           </GoalProvider>
         </Provider>
       </body>
