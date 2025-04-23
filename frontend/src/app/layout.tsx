@@ -15,6 +15,8 @@ import { usePathname } from "next/navigation";
 import { Toaster } from "sonner";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import GlobalLoadingOverlay from "@/components/ui/GlobalLoadingBar";
+import { Provider } from "react-redux";
+import { store } from "@/stores";
 
 const Header = dynamic(() => import("@/components/Header"), { ssr: false });
 
@@ -38,7 +40,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body>
-        <AuthProvider>
+        <Provider store={store}>
           <GoalProvider>
             <PostProvider>
               <BookmarksProvider>
@@ -64,7 +66,7 @@ export default function RootLayout({
               </BookmarksProvider>
             </PostProvider>
           </GoalProvider>
-        </AuthProvider>
+        </Provider>
       </body>
     </html>
   );
