@@ -6,7 +6,6 @@ import { GoalProvider } from "./contexts/GoalContext";
 import { FollowerProvider } from "./contexts/FollowerContext";
 import dynamic from "next/dynamic";
 import { LikesProvider } from "./contexts/LikesContext";
-import { CommentsProvider } from "./contexts/CommentsContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { usePathname } from "next/navigation";
 import { Toaster } from "sonner";
@@ -41,7 +40,6 @@ export default function RootLayout({
           <GoalProvider>
                 <NotificationsProvider>
                   <FollowerProvider>
-                    <CommentsProvider>
                       <LikesProvider>
                         <FollowerProvider>
                           <LoadingProvider>
@@ -55,7 +53,6 @@ export default function RootLayout({
                           </LoadingProvider>
                         </FollowerProvider>
                       </LikesProvider>
-                    </CommentsProvider>
                   </FollowerProvider>
                 </NotificationsProvider>
           </GoalProvider>
