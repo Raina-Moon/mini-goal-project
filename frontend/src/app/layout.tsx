@@ -2,7 +2,6 @@
 
 import GlobalModal from "@/components/ui/GlobalModal";
 import "./globals.css";
-import { AuthProvider } from "./contexts/AuthContext";
 import { GoalProvider } from "./contexts/GoalContext";
 import { PostProvider } from "./contexts/PostContext";
 import { FollowerProvider } from "./contexts/FollowerContext";
