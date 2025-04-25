@@ -5,6 +5,7 @@ import bookmarksReducer from "./slices/bookmarksSlice";
 import commentReducer from "./slices/commentsSlice";
 import followReducer from "./slices/followSlice";
 import goalReducer from "./slices/goalSlice";
+import likesReducer from "./slices/likesSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     comments: commentReducer,
     follow: followReducer,
     goal: goalReducer,
+    likes: likesReducer,
   },
 });
 
