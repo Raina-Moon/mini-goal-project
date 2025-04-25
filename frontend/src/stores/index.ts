@@ -4,6 +4,7 @@ import postReducer from "./slices/postSlice";
 import bookmarksReducer from "./slices/bookmarksSlice";
 import commentReducer from "./slices/commentsSlice";
 import followReducer from "./slices/followSlice";
+import goalReducer from "./slices/goalSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     bookmarks: bookmarksReducer,
     comments: commentReducer,
     follow: followReducer,
+    goal: goalReducer,
   },
 });
 
