@@ -3,7 +3,6 @@
 import GlobalModal from "@/components/ui/GlobalModal";
 import "./globals.css";
 import dynamic from "next/dynamic";
-import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { usePathname } from "next/navigation";
 import { Toaster } from "sonner";
 import { LoadingProvider } from "./contexts/LoadingContext";
@@ -34,7 +33,6 @@ export default function RootLayout({
       </head>
       <body>
         <Provider store={store}>
-          <NotificationsProvider>
             <LoadingProvider>
               <GlobalLoadingOverlay />
               <Toaster position="top-center" />
@@ -42,7 +40,6 @@ export default function RootLayout({
               <main className={showHeader ? "pt-16" : "pt-0"}>{children}</main>
               <GlobalModal />
             </LoadingProvider>
-          </NotificationsProvider>
         </Provider>
       </body>
     </html>
