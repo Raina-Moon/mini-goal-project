@@ -6,6 +6,7 @@ import commentReducer from "./slices/commentsSlice";
 import followReducer from "./slices/followSlice";
 import goalReducer from "./slices/goalSlice";
 import likesReducer from "./slices/likesSlice";
+import notificationReducer from "./slices/notificationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     follow: followReducer,
     goal: goalReducer,
     likes: likesReducer,
+    Notification: notificationReducer,
   },
 });
 
