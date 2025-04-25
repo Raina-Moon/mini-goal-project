@@ -2,7 +2,6 @@
 
 import GlobalModal from "@/components/ui/GlobalModal";
 import "./globals.css";
-import { GoalProvider } from "./contexts/GoalContext";
 import dynamic from "next/dynamic";
 import { LikesProvider } from "./contexts/LikesContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
@@ -36,7 +35,6 @@ export default function RootLayout({
       </head>
       <body>
         <Provider store={store}>
-          <GoalProvider>
                 <NotificationsProvider>
                       <LikesProvider>
                           <LoadingProvider>
@@ -50,7 +48,6 @@ export default function RootLayout({
                           </LoadingProvider>
                       </LikesProvider>
                 </NotificationsProvider>
-          </GoalProvider>
         </Provider>
       </body>
     </html>
