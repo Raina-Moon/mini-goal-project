@@ -3,7 +3,6 @@
 import GlobalModal from "@/components/ui/GlobalModal";
 import "./globals.css";
 import { GoalProvider } from "./contexts/GoalContext";
-import { FollowerProvider } from "./contexts/FollowerContext";
 import dynamic from "next/dynamic";
 import { LikesProvider } from "./contexts/LikesContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
@@ -39,9 +38,7 @@ export default function RootLayout({
         <Provider store={store}>
           <GoalProvider>
                 <NotificationsProvider>
-                  <FollowerProvider>
                       <LikesProvider>
-                        <FollowerProvider>
                           <LoadingProvider>
                             <GlobalLoadingOverlay />
                             <Toaster position="top-center" />
@@ -51,9 +48,7 @@ export default function RootLayout({
                             </main>
                             <GlobalModal />
                           </LoadingProvider>
-                        </FollowerProvider>
                       </LikesProvider>
-                  </FollowerProvider>
                 </NotificationsProvider>
           </GoalProvider>
         </Provider>
