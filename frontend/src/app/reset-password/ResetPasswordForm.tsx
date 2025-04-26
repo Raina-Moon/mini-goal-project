@@ -1,154 +1,161 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useAuth } from "../contexts/AuthContext";
+import GoBackArrow from "../../../public/icons/GoBackArrow";
 import GlobalButton from "@/components/ui/GlobalButton";
 import GlobalInput from "@/components/ui/GlobalInput";
-import GoBackArrow from "../../../public/icons/GoBackArrow";
 import { toast } from "sonner";
+
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import {
+  verifyResetCode,
+  resetPassword,
+} from "@/stores/slices/authSlice";
 
 const ResetPasswordForm = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email"); // ✅ Get email from URL
-  const { verifyResetCode, resetPassword } = useAuth();
+  const params = useSearchParams();
+  const email = params?.get("email") ?? "";
+
+  const dispatch = useAppDispatch();
+  const { status, error: reduxError } = useAppSelector((s) => s.auth);
 
   const [code, setCode] = useState(["", "", "", ""]);
+  const [isCodeValid, setIsCodeValid] = useState(false);
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isCodeValid, setIsCodeValid] = useState(false);
-  const [passwordError, setPasswordError] = useState<string[]>([]);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-  if (!email) {
-    router.push("/forgot-password"); // Redirect if email is missing
-  }
+  useEffect(() => {
+    if (!email) {
+      router.push("/forgot-password");
+    }
+  }, [email, router]);
 
-  const handleCodeChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return;
+  useEffect(() => {
+    if (reduxError) {
+      toast.error(reduxError);
+    }
+  }, [reduxError]);
 
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
-
-    if (value && index < 3) {
-      const nextInput = document.getElementById(`code-${index + 1}`);
-      nextInput?.focus();
+  const handleCodeChange = (idx: number, val: string) => {
+    if (!/^\d?$/.test(val)) return;
+    const next = [...code];
+    next[idx] = val;
+    setCode(next);
+    if (val && idx < 3) {
+      document.getElementById(`code-${idx + 1}`)?.focus();
     }
   };
 
   const handleVerifyCode = async () => {
-    const enteredCode = parseInt(code.join(""));
+    const entered = parseInt(code.join(""), 10);
     try {
-      await verifyResetCode(email!, enteredCode);
+      await dispatch(verifyResetCode({ email, reset_token: entered })).unwrap();
       setIsCodeValid(true);
       toast.success("Code verified successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Invalid code.");
     }
   };
 
-  const validatePassword = (password: string) => {
-    const errors = [];
-    if (!/[A-Z]/.test(password)) errors.push("uppercase");
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push("special char");
-    if (!/\d/.test(password)) errors.push("number");
-    if (password.length < 7) errors.push("7+ chars");
-
-    if (errors.length === 0) return [];
-
-    if (errors.length === 4)
+  const validatePassword = (pw: string) => {
+    const errs: string[] = [];
+    if (!/[A-Z]/.test(pw)) errs.push("uppercase");
+    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(pw)) errs.push("special char");
+    if (!/\d/.test(pw)) errs.push("number");
+    if (pw.length < 7) errs.push("7+ chars");
+    if (errs.length === 0) return [];
+    if (errs.length === 4)
       return ["Password needs uppercase, special char, number, and 7+ chars!"];
-    if (errors.length === 1) return [`Add a ${errors[0]} and you’re good!`];
-    return [`Missing ${errors.length}: ${errors.join(", ")}.`];
+    if (errs.length === 1) return [`Add a ${errs[0]} and you’re good!`];
+    return [`Missing ${errs.length}: ${errs.join(", ")}.`];
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    const errors = validatePassword(newPassword);
-    setPasswordError(errors);
+    const pw = e.target.value;
+    setPassword(pw);
+    setPasswordErrors(validatePassword(pw));
   };
 
-  const handleConfirmPasswordChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const newConfirmPassword = e.target.value;
-    setConfirmPassword(newConfirmPassword);
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cpw = e.target.value;
+    setConfirmPassword(cpw);
     setConfirmPasswordError(
-      newConfirmPassword && newConfirmPassword !== password
-        ? "Oops, these don’t match yet."
-        : ""
+      cpw && cpw !== password ? "Oops… passwords don’t match." : ""
     );
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const errors = validatePassword(password);
-    if (errors.length > 0) {
-      setPasswordError(errors);
+    const pwErrs = validatePassword(password);
+    if (pwErrs.length) {
+      setPasswordErrors(pwErrs);
       return;
     }
-
     if (password !== confirmPassword) {
-      setConfirmPasswordError("Hmm… looks like the passwords aren’t the same.");
+      setConfirmPasswordError("Passwords must match!");
       return;
     }
 
-    const enteredCode = parseInt(code.join(""));
+    const entered = parseInt(code.join(""), 10);
     try {
-      if (email) {
-        await resetPassword(email, enteredCode, password);
-        toast.success("Password successfully reset!");
-        router.push("/login");
-      } else {
-        toast.error("Email is missing. Please try again.");
-      }
-    } catch (error) {
+      await dispatch(
+        resetPassword({ email, newPassword: password, reset_token: entered })
+      ).unwrap();
+      toast.success("Password successfully reset!");
+      router.push("/login");
+    } catch {
       toast.error("Failed to reset password.");
     }
   };
 
   return (
-    <div className=" relative flex flex-col items-center justify-center mx-10">
+    <div className="relative flex flex-col items-center justify-center mx-10">
       <h2 className="text-neutral-100 text-center mb-4 text-lg font-medium pt-[105px]">
-        Enter your code <br /> Reset your password
+        Enter your code <br />
+        Reset your password
       </h2>
 
       <div className="bg-white rounded-2xl p-4 flex flex-col">
         <button onClick={() => router.back()} className="mb-4">
           <GoBackArrow />
         </button>
+
         <form
-          onSubmit={handleResetPassword}
+          onSubmit={handleResetSubmit}
           className="flex flex-col justify-center items-center gap-3"
         >
-          <div className="flex gap-2 my-4 justify-center items-center">
-            {code.map((digit, index) => (
+          <div className="flex gap-2 my-4 justify-center">
+            {code.map((digit, idx) => (
               <input
-                key={index}
-                id={`code-${index}`}
+                key={idx}
+                id={`code-${idx}`}
                 type="text"
                 maxLength={1}
                 value={digit}
-                onChange={(e) => handleCodeChange(index, e.target.value)}
+                onChange={(e) => handleCodeChange(idx, e.target.value)}
                 className="w-[15%] h-16 bg-primary-100 rounded-lg border border-primary-400 text-center text-xl focus:outline-none focus:border-primary-600"
                 required
               />
             ))}
           </div>
 
-          <GlobalButton type="button" onClick={handleVerifyCode}>
-            {" "}
-            verify code
+          <GlobalButton
+            type="button"
+            onClick={handleVerifyCode}
+            disabled={status === "loading"}
+          >
+            {status === "loading" ? "Verifying…" : "verify code"}
           </GlobalButton>
 
           <p className="text-sm text-gray-600 mt-2">
             {isCodeValid
-              ? "now, set your new password!"
-              : "enter the code and hit confirm to change your password!"}
+              ? "Now set your new password!"
+              : "Enter code and hit verify to continue."}
           </p>
 
           <GlobalInput
@@ -157,15 +164,9 @@ const ResetPasswordForm = () => {
             value={password}
             disabled={!isCodeValid}
             onChange={handlePasswordChange}
-            placeholder={
-              isCodeValid
-                ? "create a new password"
-                : "Please verify the code first"
-            }
-            error={passwordError.join(", ")}
-            className={` ${
-              isCodeValid ? "border-emerald-500" : "border-gray-300"
-            }`}
+            placeholder={isCodeValid ? "create new password" : "verify code first"}
+            error={passwordErrors.join(", ")}
+            className={isCodeValid ? "border-emerald-500" : "border-gray-300"}
           />
 
           <GlobalInput
@@ -174,19 +175,17 @@ const ResetPasswordForm = () => {
             value={confirmPassword}
             disabled={!isCodeValid}
             onChange={handleConfirmPasswordChange}
-            placeholder={
-              isCodeValid
-                ? "type that password again"
-                : "Please verify the code first"
-            }
+            placeholder={isCodeValid ? "confirm password" : "verify code first"}
             error={confirmPasswordError}
-            className={`${
-              isCodeValid ? "border-emerald-500" : "border-gray-300"
-            }`}
+            className={isCodeValid ? "border-emerald-500" : "border-gray-300"}
           />
 
-          <GlobalButton type="submit" className="mt-2" disabled={!isCodeValid}>
-            reset password
+          <GlobalButton
+            type="submit"
+            className="mt-2"
+            disabled={!isCodeValid || status === "loading"}
+          >
+            {status === "loading" ? "Resetting…" : "reset password"}
           </GlobalButton>
         </form>
       </div>
