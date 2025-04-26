@@ -2,18 +2,23 @@
 
 import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import { getProfile } from "@/stores/slices/authSlice";
 
 const Header = () => {
   const router = useRouter();
-  const { user, getProfile, isLoggedIn } = useAuth();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const isLoggedIn = useAppSelector((state) => state.auth.isLoggedIn);
 
   const fetchProfile = useCallback(async () => {
-    if (!isLoggedIn || !user?.id || user.profile_image) {
-      return;
+    if (!isLoggedIn || !user?.id || user.profile_image) return;
+    try {
+      await dispatch(getProfile(user.id)).unwrap();
+    } catch (err) {
+      console.error("Failed to fetch profile:", err);
     }
-    await getProfile(user.id);
-  }, [isLoggedIn, user?.id, user?.profile_image, getProfile]);
+  }, [dispatch, isLoggedIn, user?.id, user?.profile_image]);
 
   useEffect(() => {
     fetchProfile();
@@ -31,7 +36,11 @@ const Header = () => {
       {/* Right side */}
       <button
         onClick={() =>
-          router.push(isLoggedIn && user ? `/dashboard/${user.id}` : "/login")
+          router.push(
+            isLoggedIn && user
+              ? `/dashboard/${user.id}`
+              : "/login"
+          )
         }
         className={
           isLoggedIn && user
