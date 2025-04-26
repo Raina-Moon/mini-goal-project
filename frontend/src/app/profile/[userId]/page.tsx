@@ -2,10 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/app/contexts/AuthContext";
-import { useBookmarks } from "@/app/contexts/BookmarksContext";
-import { Notification, Post } from "@/utils/api";
-import { useNotifications } from "@/app/contexts/NotificationsContext";
 import ProfileCard from "./components/ProfileCard";
 import NotificationModal from "./components/NotificationModal";
 import BookmarksModal from "./components/BookmarksModal";
@@ -14,153 +10,144 @@ import PostDetailModal from "./components/PostDetailModal";
 import DeleteConfirmModal from "./components/DeleteConfirmModal";
 import FarewellModal from "./components/FarewellModal";
 
-const ProfilePage = () => {
-  const {
-    token,
-    user,
-    isLoggedIn,
-    logout,
-    getProfile,
-    updateProfile,
-    updateProfileImage,
-    deleteUser,
-  } = useAuth();
-  const { fetchBookmarkedPostDetail } = useBookmarks();
-  const { fetchNotifications, markAsRead, deleteNotification } =
-    useNotifications();
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import {
+  fetchViewUser,
+  logout,
+  updateProfile,
+  updateProfileImage,
+  deleteUser,
+} from "@/stores/slices/authSlice";
+import { fetchBookmarkedPostDetail } from "@/stores/slices/bookmarksSlice";
+import {
+  fetchNotifications,
+  markAsRead,
+  deleteNotification,
+} from "@/stores/slices/notificationSlice";
 
+import type { Post, Notification } from "@/utils/api";
+
+const ProfilePage = () => {
   const { userId } = useParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
-  const [showBookmarkedPosts, setShowBookmarkedPosts] = useState(false);
+  // Redux state
+  const loggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+  const profile = useAppSelector((s) => s.auth.viewUser);
+  const [showBookmarks, setShowBookmarks] = useState(false);
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const notifications = useAppSelector((s) => s.notification.notifications);
+
   const [notificationEnabled, setNotificationEnabled] = useState(true);
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deletionMessage, setDeletionMessage] = useState<string | null>(null);
-  const [showFarewellModal, setShowFarewellModal] = useState(false);
+  const [deletionMessage, setDeletionMessage] = useState<string>("");
+
+  const [showFarewell, setShowFarewell] = useState(false);
 
   useEffect(() => {
-    if (!token || !userId) return;
-    if (!isLoggedIn) {
+    if (!userId) return;
+    if (!loggedIn) {
       router.push("/login");
-    } else if (!user) {
-      getProfile(Number(userId));
+      return;
     }
-  }, [token, router, isLoggedIn, userId, getProfile]);
+    dispatch(fetchViewUser(Number(userId)));
+  }, [loggedIn, userId, dispatch, router]);
 
   useEffect(() => {
-    if (isDeleting) {
-      const messages = [
-        "We're crying because you're leaving...",
-        "Wiping away our tears...",
-        "Deleting your data...",
-        "Almost done...",
-      ];
-      let index = 0;
-      setDeletionMessage(messages[index]);
-      const interval = setInterval(() => {
-        index = (index + 1) % messages.length;
-        setDeletionMessage(messages[index]);
-      }, 2000);
-      return () => clearInterval(interval);
-    }
+    if (!isDeleting) return;
+    const msgs = [
+      "We're crying because you're leaving...",
+      "Wiping away our tears...",
+      "Deleting your data...",
+      "Almost done...",
+    ];
+    let idx = 0;
+    setDeletionMessage(msgs[idx]);
+    const iv = setInterval(() => {
+      idx = (idx + 1) % msgs.length;
+      setDeletionMessage(msgs[idx]);
+    }, 2000);
+    return () => clearInterval(iv);
   }, [isDeleting]);
 
-  const loadNotifications = async () => {
-    if (user) {
-      try {
-        const notifs = await fetchNotifications(user.id);
-        setNotifications(notifs);
-        setShowNotifications(true);
-      } catch (err) {
-        console.error("Failed to load notifications:", err);
-      }
-    }
+  const loadNotifications = () => {
+    if (!profile?.id) return;
+    dispatch(fetchNotifications(profile.id));
+    setShowNotifications(true);
   };
 
-  const handleMarkAsRead = async (notificationId: number) => {
-    try {
-      await markAsRead(notificationId);
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === notificationId ? { ...notif, is_read: true } : notif
-        )
-      );
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
-    }
+  const handleMarkRead = (notifId: number) => {
+    dispatch(markAsRead(notifId));
   };
 
-  const handleDeleteNotification = async (notificationId: number) => {
-    try {
-      await deleteNotification(notificationId);
-      setNotifications((prev) =>
-        prev.filter((notif) => notif.id !== notificationId)
-      );
-    } catch (err) {
-      console.error("Failed to delete notification:", err);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!user) return;
-    setIsDeleting(true);
-    try {
-      await deleteUser(user.id);
-      setIsDeleting(false);
-      setShowFarewellModal(true);
-      setTimeout(() => {
-        setShowFarewellModal(false);
-        router.push("/");
-      }, 5000); // Show farewell for 3 seconds
-    } catch (err) {
-      console.error("Failed to delete account:", err);
-      setIsDeleting(false);
-    }
+  const handleDeleteNotif = (notifId: number) => {
+    dispatch(deleteNotification(notifId));
   };
 
   const handleShowBookmarks = async () => {
-    if (user) {
-      const posts = await fetchBookmarkedPostDetail(user.id);
-      setBookmarkedPosts(posts);
-      setShowBookmarkedPosts(true);
-    }
+    if (!profile?.id) return;
+    const action = await dispatch(
+      fetchBookmarkedPostDetail(profile.id)
+    ).unwrap();
+    setBookmarkedPosts(action);
+    setShowBookmarks(true);
   };
 
   const handleLogout = () => {
-    logout();
-    window.location.href = "/";
+    dispatch(logout());
+    router.push("/");
   };
 
-  const handleBookmarkChange = (postId: number, isBookmarked: boolean) => {
-    setBookmarkedPosts((prev) =>
-      isBookmarked
-        ? [...prev, { ...selectedPost!, post_id: postId }]
-        : prev.filter((p) => p.post_id !== postId)
-    );
+  const handleDeleteAccount = async () => {
+    if (!profile?.id) return;
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteUser(profile.id)).unwrap();
+      setIsDeleting(false);
+      setShowFarewell(true);
+      setTimeout(() => {
+        setShowFarewell(false);
+        router.push("/");
+      }, 5000);
+    } catch {
+      setIsDeleting(false);
+    }
   };
 
-  if (!user) return <div>Loading...</div>;
+  if (!profile) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="w-full h-screen bg-primary-500 flex flex-col items-center justify-between p-8 relative overflow-hidden">
       <ProfileCard
-        user={user}
-        updateProfile={updateProfile}
-        updateProfileImage={updateProfileImage}
-        userId={userId as string}
+        user={profile}
+        updateProfile={async (userIdArg: number, usernameArg: string) => {
+          await dispatch(
+            updateProfile({ userId: userIdArg, username: usernameArg })
+          ).unwrap();
+        }}
+        updateProfileImage={async (userIdArg: number, fileArg: File) => {
+          await dispatch(
+            updateProfileImage({ userId: userIdArg, file: fileArg })
+          ).unwrap();
+        }}
+        userId={String(userId)}
         onLoadNotifications={loadNotifications}
         onShowBookmarks={handleShowBookmarks}
         onLogoutConfirm={() => setShowLogoutConfirm(true)}
         onDeleteConfirm={() => setShowDeleteConfirm(true)}
         notificationEnabled={notificationEnabled}
-        toggleNotification={() => setNotificationEnabled(!notificationEnabled)}
+        toggleNotification={() => setNotificationEnabled((f) => !f)}
       />
+
       <div className="w-full text-center text-white text-[6px] mb-4">
         Made by @Raina
       </div>
@@ -169,15 +156,15 @@ const ProfilePage = () => {
         <NotificationModal
           notifications={notifications}
           onClose={() => setShowNotifications(false)}
-          onMarkAsRead={handleMarkAsRead}
-          onDelete={handleDeleteNotification}
+          onMarkAsRead={handleMarkRead}
+          onDelete={handleDeleteNotif}
         />
       )}
 
-      {showBookmarkedPosts && (
+      {showBookmarks && (
         <BookmarksModal
           bookmarkedPosts={bookmarkedPosts}
-          onClose={() => setShowBookmarkedPosts(false)}
+          onClose={() => setShowBookmarks(false)}
           onSelectPost={setSelectedPost}
         />
       )}
@@ -208,14 +195,20 @@ const ProfilePage = () => {
         </div>
       )}
 
-      {showFarewellModal && <FarewellModal />}
+      {showFarewell && <FarewellModal />}
 
       {selectedPost && (
         <PostDetailModal
           post={selectedPost}
           onClose={() => setSelectedPost(null)}
-          user={user}
-          onBookmarkChange={handleBookmarkChange}
+          user={profile}
+          onBookmarkChange={(postId, isBookmarked) => {
+            setBookmarkedPosts((prev) =>
+              isBookmarked
+                ? [...prev, { post_id: postId } as Post]
+                : prev.filter((p) => p.post_id !== postId)
+            );
+          }}
         />
       )}
     </div>
