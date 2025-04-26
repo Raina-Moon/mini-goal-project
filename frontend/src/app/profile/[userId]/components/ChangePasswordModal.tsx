@@ -1,9 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { useAuth } from "@/app/contexts/AuthContext";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import {
+  changePassword,
+  verifyCurrentPassword,
+} from "@/stores/slices/authSlice";
 
 interface ChangePasswordModalProps {
   onClose: () => void;
@@ -12,7 +16,9 @@ interface ChangePasswordModalProps {
 const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   onClose,
 }) => {
-  const { user, verifyCurrentPassword, changePassword } = useAuth();
+  const dispatch = useAppDispatch();
+  const userEmail = useAppSelector((state) => state.auth.user?.email);
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [verified, setVerified] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -37,10 +43,9 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   };
 
   const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setNewPassword(newValue);
-    const errors = validatePassword(newValue);
-    setPasswordErrors(errors);
+    const pw = e.target.value;
+    setNewPassword(pw);
+    setPasswordErrors(validatePassword(pw));
   };
 
   const handleConfirmPasswordChange = (
@@ -55,34 +60,46 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
   const handleVerify = async () => {
     setError(null);
-    try {
-      await verifyCurrentPassword(user?.email as string, currentPassword);
-      setVerified(true);
-    } catch (err: any) {
-      setError(err.message || "Current password is incorrect");
+    if (!userEmail) {
+      try {
+        await dispatch(
+          verifyCurrentPassword({ email: userEmail ?? "", currentPassword })
+        ).unwrap();
+        setVerified(true);
+      } catch (err: any) {
+        setError(err.message || "Failed to verify password");
+      }
     }
   };
 
   const handleChangePassword = async () => {
     setError(null);
 
-    const passwordValidationErrors = validatePassword(newPassword);
-    if (passwordValidationErrors.length > 0) {
-      setPasswordErrors(passwordValidationErrors);
+    if (!userEmail) {
+      setError("No user logged in");
       return;
     }
 
+    const pwErr = validatePassword(newPassword);
+    if (pwErr.length > 0) {
+      setPasswordErrors(pwErr);
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setConfirmPasswordError("Oops, these don’t match yet.");
       return;
     }
 
     try {
-      await changePassword(user?.email as string, currentPassword, newPassword);
-      setSuccessMessage("Password updated successfully");
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      await dispatch(
+        changePassword({
+          email: userEmail,
+          currentPassword,
+          newPassword,
+        })
+      ).unwrap();
+      setSuccessMessage("Password changed successfully");
+      setTimeout(onClose, 2000);
     } catch (err: any) {
       setError(err.message || "Failed to change password");
     }
