@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from '@/stores/hooks'
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
-import PostModal from "./PostModal";
+import { PostModal } from "./PostModal";
 import { celebrate } from "@/utils/confetti";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -152,7 +152,8 @@ const GoalForm = () => {
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [secondsLeft, goalId, dispatch]);
 
   const formatTime = (sec: number) =>
@@ -171,7 +172,7 @@ const GoalForm = () => {
           <img src="/images/TimerLogo.png" className="w-7 h-7" />
         </div>
         {secondsLeft === null ? (
-          <>  
+          <>
             <GlobalInput
               label="title"
               value={title}
@@ -206,13 +207,15 @@ const GoalForm = () => {
           </div>
         )}
       </form>
-      <PostModal
-        isOpen={showPostModal}
-        onClose={() => setShowPostModal(false)}
-        title={completedGoal?.title}
-        duration={completedGoal?.duration}
-        onSubmit={handlePostSubmit}
-      />
+      {showPostModal && completedGoal && (
+        <PostModal
+          isOpen={showPostModal}
+          onClose={() => setShowPostModal(false)}
+          title={completedGoal?.title}
+          duration={completedGoal?.duration}
+          onSubmit={handlePostSubmit}
+        />
+      )}
     </>
   );
 };
