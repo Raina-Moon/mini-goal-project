@@ -26,14 +26,12 @@ const Dashboard = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  // 1) Pull everything out of Redux
   const currentUser = useAppSelector((s) => s.auth.user);
   const viewUser = useAppSelector((s) => s.auth.viewUser);
   const goals = useAppSelector((s) => s.goal.goals);
   const nailedPosts = useAppSelector((s) => s.posts.nailedPosts);
   const followers = useAppSelector((s) => s.follow.followers);
 
-  // 2) Local UI state
   const [isLoading, setIsLoading] = useState(true);
   const [followersModalOpen, setFollowersModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<
@@ -43,7 +41,6 @@ const Dashboard = () => {
     "day" | "week" | "month" | "year"
   >("week");
 
-  // 3) Derived data
   const isOwnProfile = currentUser?.id === viewUser?.id;
   const isFollowing = useMemo(
     () => !!followers.find((f) => f.id === currentUser?.id),
@@ -60,7 +57,6 @@ const Dashboard = () => {
     [goals]
   );
 
-  // 4) Fetch everything once
   useEffect(() => {
     const profileId = Number(userId);
     if (!currentUser?.id || !profileId) {
@@ -85,7 +81,6 @@ const Dashboard = () => {
     ]).finally(() => setIsLoading(false));
   }, [userId, currentUser?.id, dispatch, router]);
 
-  // 5) Follow/unfollow handler
   const handleToggleFollow = async (isFollowing: boolean) => {
     if (!currentUser?.id || !viewUser?.id) return;
     if (isFollowing) {
