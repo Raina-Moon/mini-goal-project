@@ -1,23 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from '@/stores/hooks'
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
 import PostModal from "./PostModal";
 import { celebrate } from "@/utils/confetti";
-import { useGoals } from "@/app/contexts/GoalContext";
-import { usePosts } from "@/app/contexts/PostContext";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/contexts/AuthContext";
 import { toast } from "sonner";
 import Lottie from "lottie-react";
 import timerAnimation from "@/assets/timerAnimation.json";
 
+import { createGoal, updateGoal } from "@/stores/slices/goalSlice";
+import { createPost } from "@/stores/slices/postSlice";
+import type { RootState } from "@/stores";
+
 const GoalForm = () => {
-  const { createGoal, updateGoal } = useGoals();
-  const { createPost } = usePosts();
-  const { user } = useAuth();
+  const dispatch = useAppDispatch();
   const router = useRouter();
+  const user = useAppSelector((state: RootState) => state.auth.user);
+
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState(5);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
@@ -29,37 +31,40 @@ const GoalForm = () => {
     duration: number;
   } | null>(null);
 
-  const startTimer = (goalId: number, duration: number) => {
-    setGoalId(goalId);
-    setSecondsLeft(duration * 60);
+  const startTimer = (newGoalId: number, dur: number) => {
+    setGoalId(newGoalId);
+    setSecondsLeft(dur * 60);
   };
 
   const handleFailOut = async () => {
-    if (goalId) {
-      await updateGoal(goalId, "failed out");
+    if (!goalId) return;
+    try {
+      await dispatch(updateGoal({ goalId, status: "failed out" })).unwrap();
       toast.error("😢 Failed out");
       setSecondsLeft(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error updating goal");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !user.id) {
+    if (!user?.id) {
       toast("Oops! looks like you're not logged in.", {
-        action: {
-          label: "Login",
-          onClick: () => {
-            router.push("/login");
-          },
-        },
+        action: { label: "Login", onClick: () => router.push("/login") },
       });
       return;
     }
+
     try {
-      const newGoal = await createGoal(user.id, title, duration);
+      const newGoal = await dispatch(
+        createGoal({ userId: user.id, title, duration })
+      ).unwrap();
       startTimer(newGoal.id, duration);
     } catch (err) {
-      toast.error("error creating goal");
+      console.error(err);
+      toast.error("Error creating goal");
     }
   };
 
@@ -70,18 +75,26 @@ const GoalForm = () => {
     imageUrl: string;
     description: string;
   }) => {
-    if (!user || !user.id || !goalId) return;
-
-    await createPost(user.id, goalId, imageUrl, description);
-    setShowPostModal(false);
-    router.push(`/dashboard/${user.id}`);
+    if (!user?.id || !goalId) return;
+    try {
+      await dispatch(
+        createPost({ userId: user.id, goalId, imageUrl, description })
+      ).unwrap();
+      setShowPostModal(false);
+      router.push(`/dashboard/${user.id}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error creating post");
+    }
   };
 
+  // Timer & status effects
   useEffect(() => {
     if (secondsLeft === null) return;
 
     if (secondsLeft <= 0 && goalId) {
-      updateGoal(goalId, "nailed it")
+      dispatch(updateGoal({ goalId, status: "nailed it" }))
+        .unwrap()
         .then(() => {
           celebrate();
           toast.success("💪 Nailed it!");
@@ -90,7 +103,7 @@ const GoalForm = () => {
           setSecondsLeft(null);
         })
         .catch((err) => {
-          console.error("Error updating goal:", err);
+          console.error(err);
           toast.error("Error updating goal status. Please try again.");
         });
       return;
@@ -100,49 +113,50 @@ const GoalForm = () => {
       setSecondsLeft((prev) => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => clearInterval(interval);
-  }, [secondsLeft, goalId, updateGoal]);
+  }, [secondsLeft, goalId, dispatch, title, duration]);
 
-  const formatTime = (sec: number) =>
-    `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
-
-  // ✅ Fail on tab close or refresh
+  // Fail on unload
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (secondsLeft !== null && goalId) {
         e.preventDefault();
         e.returnValue = "";
-        updateGoal(goalId, "failed out").catch((err) => {
-          console.error("Error updating goal:", err);
-          toast.error("Error updating goal status. Please try again.");
-        });
+        dispatch(updateGoal({ goalId, status: "failed out" }))
+          .unwrap()
+          .catch((err) => {
+            console.error(err);
+            toast.error("Error updating goal status. Please try again.");
+          });
       }
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [secondsLeft, goalId, updateGoal]);
+  }, [secondsLeft, goalId, dispatch]);
 
-  // ✅ Fail if user switches tab or minimizes window
+  // Fail on visibility change
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && secondsLeft !== null && goalId !== null) {
-        updateGoal(goalId, "failed out")
+        dispatch(updateGoal({ goalId, status: "failed out" }))
+          .unwrap()
           .then(() => {
             toast.error("😢 You left the page. Failed out.");
             setSecondsLeft(null);
           })
           .catch((err) => {
-            console.error("Error updating goal:", err);
+            console.error(err);
             toast.error("Error updating goal status. Please try again.");
           });
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [secondsLeft, goalId, updateGoal]);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [secondsLeft, goalId, dispatch]);
+
+  const formatTime = (sec: number) =>
+    `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 
   return (
     <>
@@ -157,7 +171,7 @@ const GoalForm = () => {
           <img src="/images/TimerLogo.png" className="w-7 h-7" />
         </div>
         {secondsLeft === null ? (
-          <>
+          <>  
             <GlobalInput
               label="title"
               value={title}
