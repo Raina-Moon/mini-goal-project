@@ -23,11 +23,11 @@ const Page = () => {
     } catch (err) {
       console.error("Failed to fetch posts:", err);
     }
-  }, [dispatch, allPosts, user]);
+  }, [allPosts, user]);
 
   useEffect(() => {
     fetchAndShufflePosts();
-  }, [fetchAndShufflePosts, user]);
+  }, [fetchAndShufflePosts]);
 
   return (
     <>
