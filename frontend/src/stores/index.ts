@@ -17,7 +17,7 @@ export const store = configureStore({
     follow: followReducer,
     goal: goalReducer,
     likes: likesReducer,
-    Notification: notificationReducer,
+    notification: notificationReducer,
   },
 });
 

@@ -1,27 +1,39 @@
+"use client";
+
 import { useRef, useState } from "react";
 import GlobalButton from "@/components/ui/GlobalButton";
-import { usePosts } from "@/app/contexts/PostContext";
 import { toast } from "sonner";
 import ImageUpload from "/public/images/ImageUpload.png";
+import { useAppDispatch } from "@/stores/hooks";
+import { uploadPostImage } from "@/stores/slices/postSlice";
 
-const PostModal = ({ isOpen, onClose, title, duration, onSubmit }: any) => {
+interface PostModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  duration: number;
+  onSubmit: (data: { imageUrl: string; description: string }) => void;
+}
+
+export const PostModal = ({
+  isOpen,
+  onClose,
+  title,
+  duration,
+  onSubmit,
+}: PostModalProps) => {
+  const dispatch = useAppDispatch();
   const [image, setImage] = useState<File | null>(null);
   const [description, setDescription] = useState("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const { uploadPostImage } = usePosts();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
+  const handleImageClick = () => fileInputRef.current?.click();
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
-      setPreviewImage(URL.createObjectURL(e.target.files[0]));
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImage(file);
+    setPreviewImage(URL.createObjectURL(file));
   };
 
   const handleSubmit = async () => {
@@ -29,8 +41,9 @@ const PostModal = ({ isOpen, onClose, title, duration, onSubmit }: any) => {
       toast.message("don’t ghost us—drop an image and some words");
       return;
     }
+
     try {
-      const imageUrl = await uploadPostImage(image);
+      const imageUrl = await dispatch(uploadPostImage(image)).unwrap();
       onSubmit({ imageUrl, description });
       onClose();
     } catch (err) {
@@ -49,9 +62,9 @@ const PostModal = ({ isOpen, onClose, title, duration, onSubmit }: any) => {
           <strong className="text-gray-900">Title:</strong> {title}
         </p>
         <p className="text-sm mb-4 text-gray-700">
-          <strong className="text-gray-900">Duration:</strong> {duration}{" "}
-          minutes
+          <strong className="text-gray-900">Duration:</strong> {duration} minutes
         </p>
+
         <input
           type="file"
           accept="image/*"
@@ -61,18 +74,18 @@ const PostModal = ({ isOpen, onClose, title, duration, onSubmit }: any) => {
         />
 
         <div className="mb-3">
-          {!previewImage ? (
+          {previewImage ? (
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="w-full h-auto rounded-md border"
+            />
+          ) : (
             <img
               src={ImageUpload.src}
               alt="Upload an image"
               onClick={handleImageClick}
               className="w-full max-w-[200px] h-auto rounded-md cursor-pointer mx-auto block"
-            />
-          ) : (
-            <img
-              src={previewImage}
-              alt="Preview"
-              className="w-full h-auto rounded-md border"
             />
           )}
         </div>
@@ -80,7 +93,7 @@ const PostModal = ({ isOpen, onClose, title, duration, onSubmit }: any) => {
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="So,what's the vibe after nailing it?"
+          placeholder="So, what's the vibe after nailing it?"
           className="w-full border-t p-2 mb-4 border-primary-200 focus:outline-none resize-none"
         />
         <div className="flex justify-center">
@@ -90,5 +103,3 @@ const PostModal = ({ isOpen, onClose, title, duration, onSubmit }: any) => {
     </div>
   );
 };
-
-export default PostModal;

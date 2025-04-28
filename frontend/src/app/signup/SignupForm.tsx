@@ -1,17 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ErrorIcon from "../../../public/icons/ErrorIcon";
-import { useAuth } from "../contexts/AuthContext";
 import GlobalInput from "@/components/ui/GlobalInput";
 import GlobalButton from "@/components/ui/GlobalButton";
 import { toast } from "sonner";
 
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import { signup } from "@/stores/slices/authSlice";
+
 const SignupForm = () => {
-  const { signup } = useAuth();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const { status, error: reduxError } = useAppSelector((state) => state.auth);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,66 +23,70 @@ const SignupForm = () => {
   const [username, setUsername] = useState("");
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const validatePassword = (password: string) => {
-    const errors = [];
-    if (!/[A-Z]/.test(password)) errors.push("uppercase");
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push("special char");
-    if (!/\d/.test(password)) errors.push("number");
-    if (password.length < 7) errors.push("7+ chars");
-
-    if (errors.length === 0) return [];
-    if (errors.length === 4)
+  const validatePassword = (pw: string) => {
+    const errs: string[] = [];
+    if (!/[A-Z]/.test(pw)) errs.push("uppercase");
+    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(pw)) errs.push("special char");
+    if (!/\d/.test(pw)) errs.push("number");
+    if (pw.length < 7) errs.push("7+ chars");
+    if (errs.length === 0) return [];
+    if (errs.length === 4)
       return ["Password needs uppercase, special char, number, and 7+ chars!"];
-    if (errors.length === 1) return [`Add a ${errors[0]} and you’re good!`];
-    return [`Missing ${errors.length}: ${errors.join(", ")}.`];
+    if (errs.length === 1) return [`Add a ${errs[0]} and you’re good!`];
+    return [`Missing ${errs.length}: ${errs.join(", ")}.`];
   };
 
+  // Live password validation
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    const errors = validatePassword(newPassword);
-    setPasswordErrors(errors);
+    const pw = e.target.value;
+    setPassword(pw);
+    setPasswordErrors(validatePassword(pw));
   };
 
   const handleConfirmPasswordChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const newConfirmPassword = e.target.value;
-    setConfirmPassword(newConfirmPassword);
+    const cpw = e.target.value;
+    setConfirmPassword(cpw);
     setConfirmPasswordError(
-      newConfirmPassword && newConfirmPassword !== password
-        ? "Oops, these don’t match yet."
-        : ""
+      cpw && cpw !== password ? "Oops, these don’t match yet." : ""
     );
   };
 
+  // When reduxError changes (e.g. username taken), show it locally
+  useEffect(() => {
+    if (reduxError) {
+      if (reduxError.includes("Username is already taken")) {
+        setLocalError("username is already taken!");
+      } else {
+        setLocalError("Signup failed! Please try again.");
+      }
+    }
+  }, [reduxError]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setLocalError(null);
 
-    const passwordValidationErrors = validatePassword(password);
-    if (passwordValidationErrors.length > 0) {
-      setPasswordErrors(passwordValidationErrors);
+    const pwErrs = validatePassword(password);
+    if (pwErrs.length) {
+      setPasswordErrors(pwErrs);
       return;
     }
-
     if (password !== confirmPassword) {
       toast.error("Passwords do not match!");
       return;
     }
 
     try {
-      await signup(username, email, password);
+      // dispatch signup thunk
+      await dispatch(signup({ username, email, password })).unwrap();
       toast.success("Signup successful! Please log in.");
       router.push("/login");
-    } catch (error: any) {
-      if (error.message === "Username is already taken") {
-        setError("username is already taken!");
-      } else {
-        setError("Signup failed!");
-      }
+    } catch {
+      toast.error("Signup failed! Please try again.");
     }
   };
 
@@ -91,6 +99,12 @@ const SignupForm = () => {
       </div>
 
       <div className="bg-white rounded-2xl px-4 py-4 flex flex-col mt-4 w-[80%]">
+        {localError && (
+          <div className="flex items-center text-red-600 mb-2">
+            <ErrorIcon /> {localError}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-y-2">
           <GlobalInput
             label="email"
@@ -106,13 +120,13 @@ const SignupForm = () => {
             placeholder="password"
             value={password}
             onChange={handlePasswordChange}
-            error={passwordErrors.length > 0 ? passwordErrors.join(" ") : ""}
+            error={passwordErrors.join(" ")}
           />
 
           <GlobalInput
             label="confirm password"
             type="password"
-            placeholder="confirm Password"
+            placeholder="confirm password"
             value={confirmPassword}
             onChange={handleConfirmPasswordChange}
             error={confirmPasswordError}
@@ -124,18 +138,22 @@ const SignupForm = () => {
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            error={error || ""}
           />
 
-          <GlobalButton type="submit" className="mt-2">
-            sign up
+          <GlobalButton
+            type="submit"
+            className="mt-2"
+            disabled={status === "loading"}
+          >
+            {status === "loading" ? "Signing up…" : "sign up"}
           </GlobalButton>
         </form>
 
-        <Link href="/login">
-          <p className="mt-3 text-center text-primary-500 text-xs cursor-pointer hover:text-primary-600">
-            Have an account? Hit login!
-          </p>
+        <Link
+          href="/login"
+          className="mt-3 text-center text-primary-500 text-xs hover:text-primary-600"
+        >
+          Have an account? Hit login!
         </Link>
       </div>
 

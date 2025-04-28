@@ -1,48 +1,39 @@
-import { useFollowers } from "@/app/contexts/FollowerContext";
+import { useAppDispatch } from "@/stores/hooks";
+import { followUser, unfollowUser } from "@/stores/slices/followSlice";
 import { toast } from "sonner";
 
 interface FollowButtonProps {
   storedId: number | null;
   userId: number;
   isFollowing: boolean;
-  setIsFollowing: (value: boolean) => void;
 }
 
-const FollowButton = ({
-  storedId,
-  userId,
-  isFollowing,
-  setIsFollowing,
-}: FollowButtonProps) => {
-  const { followUser, unfollowUser, fetchFollowers } = useFollowers();
+const FollowButton = ({ storedId, userId, isFollowing }: FollowButtonProps) => {
+  const dispatch = useAppDispatch();
 
   const handleFollowToggle = async () => {
-    if (!storedId) return;
-
-    const newState = !isFollowing;
-    setIsFollowing(newState);
+    if (!storedId) {
+      toast.error("Yo must be logged in to follow someone.");
+      return;
+    }
 
     try {
-      if (newState) {
-        await followUser(storedId, userId);
+      if (isFollowing) {
+        await dispatch(
+          unfollowUser({ followerId: storedId, followingId: userId })
+        ).unwrap();
       } else {
-        await unfollowUser(storedId, userId);
+        await dispatch(
+          followUser({ followerId: storedId, followingId: userId })
+        ).unwrap();
       }
-      const updatedFollowers = await fetchFollowers(userId);
-      const isNowFollowing = (updatedFollowers ?? []).some(
-        (f) => f.id === storedId
-      );
-      setIsFollowing(isNowFollowing);
     } catch (err: any) {
-      console.error("Toggle error:", err);
-      if (err.message.includes("duplicate key value")) {
-        setIsFollowing(true);
-      } else if (err.message.includes("Not following")) {
-        setIsFollowing(false); 
-      } else {
-        setIsFollowing(!newState); 
-      }
-      toast.error(`Failed to update follow status: ${err.message || "Unknown error"}`);
+      console.error("Follow toggle error:", err);
+      toast.error(
+        `Couldn’t ${isFollowing ? "unfollow" : "follow"}: ${
+          err.message || "Unknown error"
+        }`
+      );
     }
   };
 

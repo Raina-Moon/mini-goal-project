@@ -4,9 +4,23 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Post } from "@/utils/api";
-import { useLikes } from "@/app/contexts/LikesContext";
-import { useComments } from "@/app/contexts/CommentsContext";
-import { useBookmarks } from "@/app/contexts/BookmarksContext";
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import {
+  fetchLikedPosts,
+  likePost,
+  unlikePost,
+} from "@/stores/slices/likesSlice";
+import {
+  fetchComments,
+  addComment,
+  editComment,
+  deleteComment,
+} from "@/stores/slices/commentsSlice";
+import {
+  fetchBookmarkedPosts,
+  bookmarkPost,
+  unbookmarkPost,
+} from "@/stores/slices/bookmarksSlice";
 import PostItem from "./PostsList/PostItem";
 import CommentsModal from "./PostsList/CommentsModal";
 
@@ -18,16 +32,13 @@ interface PostsListProps {
 const POSTS_PER_PAGE = 10;
 
 const PostsList = ({ posts, userId }: PostsListProps) => {
-  const { likePost, unlikePost, getLikeStatus, fetchLikeCount } = useLikes();
-  const {
-    commentsByPost,
-    fetchComments,
-    addComment,
-    editComment,
-    deleteComment,
-  } = useComments();
-  const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
+  const dispatch = useAppDispatch();
   const router = useRouter();
+
+  const likedPosts = useAppSelector((state) => state.likes.likedPosts);
+  const commentsByPost = useAppSelector((state) => state.comments.commentsByPost);
+  const bookmarkedPosts = useAppSelector((state) => state.bookmarks.bookmarked);
+
 
   const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
   const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({});
@@ -53,31 +64,42 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     const bookmarkStatusTemp: { [key: number]: boolean } = {};
 
     try {
+      if (userId) {
+        // Fetch liked posts
+        await dispatch(fetchLikedPosts(userId)).unwrap();
+
+        // Fetch bookmarked posts
+        await dispatch(fetchBookmarkedPosts(userId)).unwrap();
+      }
+
       await Promise.all(
         filteredPosts.map(async (post) => {
-          await fetchComments(post.post_id);
-          counts[post.post_id] = await fetchLikeCount(post.post_id);
-          if (userId) {
-            status[post.post_id] = await getLikeStatus(post.post_id, userId);
-            const bookmarkedPosts = await fetchBookmarkedPosts(userId);
-            bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some(
-              (bp) => bp.id === post.post_id
-            );
-          } else {
-            status[post.post_id] = false;
-            bookmarkStatusTemp[post.post_id] = false;
-          }
+          // Fetch comments
+          await dispatch(fetchComments(post.post_id)).unwrap();
+
+          // Like count
+          counts[post.post_id] = post.like_count;
+
+          // Like status
+          status[post.post_id] = userId
+            ? likedPosts.some((lp) => lp.post_id === post.post_id)
+            : false;
+
+          // Bookmark status
+          bookmarkStatusTemp[post.post_id] = userId
+            ? bookmarkedPosts.some((bp) => bp.post_id === post.post_id)
+            : false;
         })
       );
+
       setLikeStatus(status);
       setLikeCounts(counts);
       setBookmarkStatus(bookmarkStatusTemp);
     } catch (err) {
       console.error("Failed to initialize data:", err);
     }
-  }, [userId, filteredPosts]);
+  }, [userId, filteredPosts, dispatch, likedPosts, bookmarkedPosts]);
 
-  // Load more posts when the user scrolls to the bottom of the page
   const loadPosts = useCallback(() => {
     const start = (page - 1) * POSTS_PER_PAGE;
     const end = start + POSTS_PER_PAGE;
@@ -96,7 +118,11 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const target = entries[0];
-      if (target.isIntersecting && !isLoading && displayedPosts.length < filteredPosts.length) {
+      if (
+        target.isIntersecting &&
+        !isLoading &&
+        displayedPosts.length < filteredPosts.length
+      ) {
         setIsLoading(true);
         setPage((prev) => prev + 1);
       }
@@ -107,7 +133,7 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
   useEffect(() => {
     if (loadMoreRef.current) {
       observerRef.current = new IntersectionObserver(handleObserver, {
-        threshold: 0.1, // Trigger when 10% of the target is visible
+        threshold: 0.1,
       });
       observerRef.current.observe(loadMoreRef.current);
     }
@@ -131,12 +157,12 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     }
     const alreadyLiked = likeStatus[postId] || false;
     try {
-      const newCount = alreadyLiked
-        ? await unlikePost(userId, postId)
-        : await likePost(userId, postId);
-      const newLikeStatus = await getLikeStatus(postId, userId);
-      setLikeStatus((prev) => ({ ...prev, [postId]: newLikeStatus }));
-      setLikeCounts((prev) => ({ ...prev, [postId]: newCount }));
+      const action = alreadyLiked
+        ? dispatch(unlikePost({ userId, postId }))
+        : dispatch(likePost({ userId, postId }));
+      const result = await action.unwrap();
+      setLikeStatus((prev) => ({ ...prev, [postId]: !alreadyLiked }));
+      setLikeCounts((prev) => ({ ...prev, [postId]: result }));
     } catch (err) {
       console.error("Like failed:", err);
     }
@@ -153,9 +179,9 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
     setBookmarkStatus((prev) => ({ ...prev, [postId]: newState }));
     try {
       if (isBookmarked) {
-        await unbookmarkPost(userId, postId);
+        await dispatch(unbookmarkPost({ userId, postId })).unwrap();
       } else {
-        await bookmarkPost(userId, postId);
+        await dispatch(bookmarkPost({ userId, postId })).unwrap();
       }
     } catch (err) {
       console.error("Bookmark action failed:", err);
@@ -193,7 +219,6 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
             {isLoading ? "Loading more posts..." : "Scroll to load more"}
           </div>
         )}
-        
       </div>
       {modalPostId && (
         <CommentsModal
@@ -201,9 +226,17 @@ const PostsList = ({ posts, userId }: PostsListProps) => {
           userId={userId}
           comments={commentsByPost[modalPostId] || []}
           onClose={closeCommentsModal}
-          addComment={addComment}
-          editComment={editComment}
-          deleteComment={deleteComment}
+          addComment={async (userId, postId, content, username, profileImage) =>
+            await dispatch(
+              addComment({ userId, postId, content, username, profileImage })
+            ).unwrap()
+          }
+          editComment={async (postId, commentId, content) =>
+            await dispatch(editComment({ postId, commentId, content })).unwrap()
+          }
+          deleteComment={async (postId, commentId) =>
+            await dispatch(deleteComment({ postId, commentId })).unwrap()
+          }
         />
       )}
     </>

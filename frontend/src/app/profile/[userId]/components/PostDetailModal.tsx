@@ -8,11 +8,26 @@ import HeartEmpty from "../../../../../public/icons/HeartEmpty";
 import MessageIcon from "../../../../../public/icons/MessageIcon";
 import BookmarkFull from "../../../../../public/icons/BookmarkFull";
 import BookmarkEmpty from "../../../../../public/icons/BookmarkEmpty";
-import { useBookmarks } from "@/app/contexts/BookmarksContext";
-import { useLikes } from "@/app/contexts/LikesContext";
-import { useComments } from "@/app/contexts/CommentsContext";
-import CommentsModal from "@/components/PostsList/CommentsModal";
 import { formatTimeAgo } from "@/utils/formatTimeAgo";
+
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import {
+  fetchLikedPosts,
+  likePost,
+  unlikePost,
+} from "@/stores/slices/likesSlice";
+import {
+  fetchComments,
+  addComment,
+  editComment,
+  deleteComment,
+} from "@/stores/slices/commentsSlice";
+import {
+  fetchBookmarkedPostDetail,
+  bookmarkPost,
+  unbookmarkPost,
+} from "@/stores/slices/bookmarksSlice";
+import CommentsModal from "@/components/PostsList/CommentsModal";
 
 interface PostDetailModalProps {
   post: Post;
@@ -27,90 +42,64 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
   user,
   onBookmarkChange,
 }) => {
-  const { likePost, unlikePost, getLikeStatus, fetchLikeCount } = useLikes();
-  const {
-    commentsByPost,
-    fetchComments,
-    addComment,
-    editComment,
-    deleteComment,
-  } = useComments();
-  const { bookmarkPost, unbookmarkPost, fetchBookmarkedPostDetail } =
-    useBookmarks();
+  const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const [post, setPost] = useState<Post>(initialPost);
-  const [isLiked, setIsLiked] = useState(initialPost.liked_by_me || false);
-  const [likeCount, setLikeCount] = useState(initialPost.like_count || 0);
-  const [isBookmarked, setIsBookmarked] = useState(
-    initialPost.bookmarked_by_me || false
+  const likedPosts = useAppSelector((state) => state.likes.likedPosts);
+  const commentsByPost = useAppSelector(
+    (state) => state.comments.commentsByPost[initialPost.post_id] || []
   );
+  const bookmarkedPosts = useAppSelector((state) => state.bookmarks.bookmarked);
+  const detailedBookmarked = useAppSelector((state) =>
+    state.bookmarks.detailed.find((p) => p.post_id === initialPost.post_id)
+  );
+
+  const isLiked = likedPosts.some((lp) => lp.post_id === initialPost.post_id);
+  const isBookmarked = bookmarkedPosts.some(
+    (bp) => bp.post_id === initialPost.post_id
+  );
+
+  const [likeCount, setLikeCount] = useState(initialPost.like_count);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  // Fetch initial data when the component mounts or user changes
   const initializeData = useCallback(async () => {
-    if (!user.id || !initialPost.id || isInitialized) return;
+    if (!user.id || initialized) return;
 
     try {
-      const bookmarkedPosts = await fetchBookmarkedPostDetail(user.id);
-      const detailedPost = bookmarkedPosts.find(
-        (bp) => bp.post_id === initialPost.id
-      );
-      if (detailedPost) {
-        setPost(detailedPost);
-        setIsLiked(detailedPost.liked_by_me || false);
-        setLikeCount(detailedPost.like_count || 0);
-        setIsBookmarked(detailedPost.bookmarked_by_me || false);
-      }
-
-      const likeStatus = await getLikeStatus(initialPost.id, user.id);
-      const count = await fetchLikeCount(initialPost.id);
-      await fetchComments(initialPost.id);
-
-      setIsLiked(likeStatus);
-      setLikeCount(count);
-      setIsInitialized(true);
+      await dispatch(fetchLikedPosts(user.id)).unwrap();
+      await dispatch(fetchBookmarkedPostDetail(user.id)).unwrap();
+      await dispatch(fetchComments(initialPost.post_id)).unwrap();
+      setInitialized(true);
     } catch (err) {
-      console.error("Failed to initialize post data:", err);
+      console.error("Init failed:", err);
       setError("Failed to load post data");
     }
-  }, [
-    initialPost.id,
-    user.id,
-    fetchBookmarkedPostDetail,
-    getLikeStatus,
-    fetchLikeCount,
-    fetchComments,
-    isInitialized,
-  ]);
+  }, [user.id, initialPost.post_id, initialized, dispatch]);
 
   useEffect(() => {
     initializeData();
   }, [initializeData]);
 
-  const handleProfileClick = useCallback(() => {
-    if (post.user_id !== undefined) {
-      router.push(`/dashboard/${post.user_id}`);
-    }
-  }, [router, post.user_id]);
+  const handleProfileClick = () => {
+    router.push(`/dashboard/${initialPost.user_id}`);
+  };
 
   const handleLike = async () => {
     if (!user.id) {
       router.push("/login");
       return;
     }
+    setError(null);
     try {
-      setError(null);
-      const newCount = isLiked
-        ? await unlikePost(user.id, post.post_id)
-        : await likePost(user.id, post.post_id);
-      const newLikeStatus = await getLikeStatus(post.post_id, user.id);
-      setIsLiked(newLikeStatus);
+      const action = isLiked
+        ? dispatch(unlikePost({ userId: user.id, postId: initialPost.post_id }))
+        : dispatch(likePost({ userId: user.id, postId: initialPost.post_id }));
+      const newCount = await action.unwrap();
       setLikeCount(newCount);
     } catch (err) {
-      console.error("Like action failed:", err);
+      console.error("Like failed:", err);
       setError("Failed to update like status");
     }
   };
@@ -120,27 +109,23 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
       router.push("/login");
       return;
     }
+    setError(null);
     try {
-      setError(null);
-      const newState = !isBookmarked;
-      newState
-        ? await bookmarkPost(user.id, post.post_id)
-        : await unbookmarkPost(user.id, post.post_id);
-      setIsBookmarked(newState);
-      onBookmarkChange?.(post.post_id, newState); // Notify parent component if provided
+      if (isBookmarked) {
+        await dispatch(unbookmarkPost({ userId: user.id, postId: initialPost.post_id })).unwrap();
+      } else {
+        await dispatch(bookmarkPost({ userId: user.id, postId: initialPost.post_id })).unwrap();
+      }
+      onBookmarkChange?.(initialPost.post_id, !isBookmarked);
     } catch (err) {
-      console.error("Bookmark action failed:", err);
+      console.error("Bookmark failed:", err);
       setError("Failed to update bookmark status");
     }
   };
 
-  const handleCommentClick = () => {
-    if (!post.post_id) {
-      setError("Cannot load comments: Post ID is missing");
-      return;
-    }
-    setShowCommentsModal(true);
-  };
+  const handleCommentClick = () => setShowCommentsModal(true);
+
+  const postData = detailedBookmarked ?? initialPost;
 
   return (
     <div
@@ -152,66 +137,52 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-end gap-2 mb-2">
-          <button
-            onClick={handleProfileClick}
-            className="flex flex-row items-end gap-2"
-          >
+          <button onClick={handleProfileClick} className="flex items-center gap-2">
             <img
-              src={post.profile_image || "/images/DefaultProfile.png"}
-              alt={`${post.username || "Unknown User"}'s profile`}
+              src={postData.profile_image || "/images/DefaultProfile.png"}
+              alt={`${postData.username || "User"}'s profile`}
               className="w-8 h-8 rounded-full object-cover"
             />
-            <span className="text-sm font-medium text-gray-900 items-end">
-              {post.username || "Unknown User"}
+            <span className="text-sm font-medium text-gray-900">
+              {postData.username || "User"}
             </span>
           </button>
         </div>
-        <div className="flex flex-col items-start mb-2">
+
+        <div className="mb-2">
           <span className="font-semibold text-gray-900">
-            title : {post.title}
+            title: {postData.title}
           </span>
-          <div className="flex flex-row justify-between items-center w-full">
-            <span className="text-sm text-gray-600 mb-2">
-              duration : {post.duration} min
-            </span>
-            {post.created_at && (
-              <p className="text-xs text-gray-500">
-                {formatTimeAgo(String(post.created_at))}
-              </p>
-            )}{" "}
-          </div>{" "}
+          <div className="flex justify-between items-center w-full text-sm text-gray-600">
+            <span>duration: {postData.duration} min</span>
+            {postData.created_at && (
+              <span className="text-xs text-gray-500">
+                {formatTimeAgo(String(postData.created_at))}
+              </span>
+            )}
+          </div>
         </div>
 
         <img
-          src={post.image_url}
+          src={postData.image_url}
           alt="Post"
-          className="w-full max-w-[600px] max-h-[750px] object-cover rounded-lg mb-2 mx-auto block"
+          className="w-full object-cover rounded-lg mb-2"
         />
-        <p>{post.description}</p>
-
+        <p>{postData.description}</p>
         {error && <div className="text-red-500 text-xs mt-2">{error}</div>}
 
-        <div className="mt-2 flex items-center justify-end gap-2">
-          <button
-            onClick={handleLike}
-            className="text-gray-900 flex flex-row gap-1"
-          >
+        <div className="mt-2 flex justify-end gap-4">
+          <button onClick={handleLike} className="flex items-center gap-1">
             {isLiked ? <HeartFull /> : <HeartEmpty />}
             {likeCount > 0 && <span>{likeCount}</span>}
           </button>
-          <button
-            onClick={handleCommentClick}
-            className="flex flex-row gap-1 items-center"
-          >
+
+          <button onClick={handleCommentClick} className="flex items-center gap-1">
             <MessageIcon />
-            {commentsByPost[post.post_id]?.length > 0 && (
-              <span>{commentsByPost[post.post_id].length}</span>
-            )}
+            {commentsByPost.length > 0 && <span>{commentsByPost.length}</span>}
           </button>
-          <button
-            onClick={handleBookmark}
-            className="text-primary-400 hover:underline"
-          >
+
+          <button onClick={handleBookmark} className="flex items-center">
             {isBookmarked ? <BookmarkFull /> : <BookmarkEmpty />}
           </button>
         </div>
@@ -219,13 +190,21 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
       {showCommentsModal && (
         <CommentsModal
-          postId={post.post_id}
+          postId={initialPost.post_id}
           userId={user.id}
-          comments={commentsByPost[post.post_id] || []}
+          comments={commentsByPost}
           onClose={() => setShowCommentsModal(false)}
-          addComment={addComment}
-          editComment={editComment}
-          deleteComment={deleteComment}
+          addComment={async (userId, postId, content, username, profileImage) =>
+            await dispatch(
+              addComment({ userId, postId, content, username, profileImage })
+            ).unwrap()
+          }
+          editComment={async (postId, commentId, content) =>
+            await dispatch(editComment({ postId, commentId, content })).unwrap()
+          }
+          deleteComment={async (postId, commentId) =>
+            await dispatch(deleteComment({ postId, commentId })).unwrap()
+          }
         />
       )}
     </div>

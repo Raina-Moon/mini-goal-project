@@ -1,31 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useAuth } from "./contexts/AuthContext";
-import { usePosts } from "./contexts/PostContext";
 import { Post } from "@/utils/api";
 import GoalForm from "../components/GoalForm";
 import PostsList from "@/components/PostsList";
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import { fetchAllPosts } from "@/stores/slices/postSlice";
 
 const Page = () => {
-  const { user } = useAuth();
-  const { fetchAllPosts } = usePosts();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const allPosts = useAppSelector((state) => state.posts.allPosts);
 
   const [posts, setPosts] = useState<Post[]>([]);
 
   const fetchAndShufflePosts = useCallback(async () => {
     try {
-      const allPosts = await fetchAllPosts();
+      const viewerId = user ? Number(user.id) : undefined;
+      await dispatch(fetchAllPosts(viewerId)).unwrap();
       const shuffledPosts = [...allPosts].sort(() => Math.random() - 0.5);
       setPosts(shuffledPosts);
     } catch (err) {
       console.error("Failed to fetch posts:", err);
     }
-  }, [fetchAllPosts]);
+  }, [allPosts, user]);
 
   useEffect(() => {
     fetchAndShufflePosts();
-  }, [fetchAndShufflePosts, user]);
+  }, [fetchAndShufflePosts]);
 
   return (
     <>
