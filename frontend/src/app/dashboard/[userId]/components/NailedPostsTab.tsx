@@ -2,9 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Post } from "@/utils/api";
-import { useLikes } from "@/app/contexts/LikesContext";
-import { useComments } from "@/app/contexts/CommentsContext";
-import { useBookmarks } from "@/app/contexts/BookmarksContext";
 import {
   Select,
   SelectContent,
@@ -13,6 +10,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import {
+  fetchLikedPosts,
+  likePost,
+  unlikePost,
+} from "@/stores/slices/likesSlice";
+import {
+  fetchComments,
+  addComment,
+  editComment,
+  deleteComment,
+} from "@/stores/slices/commentsSlice";
+import {
+  fetchBookmarkedPosts,
+  bookmarkPost,
+  unbookmarkPost,
+} from "@/stores/slices/bookmarksSlice";
 
 interface NailedPostsTabProps {
   posts: Post[];
@@ -20,27 +34,27 @@ interface NailedPostsTabProps {
 }
 
 const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
-  const { likePost, unlikePost, getLikeStatus, fetchLikeCount } = useLikes();
-  const {
-    commentsByPost,
-    fetchComments,
-    addComment,
-    editComment,
-    deleteComment,
-  } = useComments();
-  const { bookmarkPost, unbookmarkPost, fetchBookmarkedPosts } = useBookmarks();
+  const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const [selectedPostIndex, setSelectedPostIndex] = useState<number | null>(
-    null
-  );
+  // Redux state
+  const likedPosts = useAppSelector((state) => state.likes.likedPosts);
+  const commentsByPost = useAppSelector((state) => state.comments.commentsByPost);
+  const bookmarkedPosts = useAppSelector((state) => state.bookmarks.bookmarked);
+  const likesStatus = useAppSelector((state) => state.likes.status);
+  const commentsStatus = useAppSelector((state) => state.comments.status);
+  const bookmarksStatus = useAppSelector((state) => state.bookmarks.status);
+  const likesError = useAppSelector((state) => state.likes.error);
+  const commentsError = useAppSelector((state) => state.comments.error);
+  const bookmarksError = useAppSelector((state) => state.bookmarks.error);
+
+  // Local state
+  const [selectedPostIndex, setSelectedPostIndex] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState("latest");
   const [likeStatus, setLikeStatus] = useState<{ [key: number]: boolean }>({});
   const [likeCounts, setLikeCounts] = useState<{ [key: number]: number }>({});
   const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
-  const [bookmarkStatus, setBookmarkStatus] = useState<{
-    [key: number]: boolean;
-  }>({});
+  const [bookmarkStatus, setBookmarkStatus] = useState<{ [key: number]: boolean }>({});
   const [commentEdit, setCommentEdit] = useState<{ [key: number]: string }>({});
 
   const initializeData = useCallback(async () => {
@@ -50,22 +64,35 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     const bookmarkStatusTemp: { [key: number]: boolean } = {};
 
     try {
-      const bookmarkedPosts = await fetchBookmarkedPosts(userId);
+      // Fetch liked posts
+      await dispatch(fetchLikedPosts(userId)).unwrap();
+
+      // Fetch bookmarked posts
+      await dispatch(fetchBookmarkedPosts(userId)).unwrap();
+
       for (const post of posts) {
-        status[post.post_id] = await getLikeStatus(post.post_id, userId);
-        counts[post.post_id] = await fetchLikeCount(post.post_id);
+        // Like status from likedPosts
+        status[post.post_id] = likedPosts.some((lp) => lp.post_id === post.post_id);
+
+        // Like count (use initial post.like_count, updated by like/unlike)
+        counts[post.post_id] = post.like_count;
+
+        // Bookmark status
         bookmarkStatusTemp[post.post_id] = bookmarkedPosts.some(
-          (bp) => bp.id === post.post_id
+          (bp) => bp.post_id === post.post_id
         );
-        await fetchComments(post.post_id);
+
+        // Fetch comments
+        await dispatch(fetchComments(post.post_id)).unwrap();
       }
+
       setLikeStatus(status);
       setLikeCounts(counts);
       setBookmarkStatus(bookmarkStatusTemp);
     } catch (err) {
       console.error("Failed to initialize data:", err);
     }
-  }, [userId, posts]);
+  }, [userId, posts, dispatch, likedPosts, bookmarkedPosts]);
 
   useEffect(() => {
     initializeData();
@@ -83,12 +110,12 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     if (!userId) return;
     const alreadyLiked = likeStatus[postId] || false;
     try {
-      const newCount = alreadyLiked
-        ? await unlikePost(userId, postId)
-        : await likePost(userId, postId);
-      const newLikeStatus = await getLikeStatus(postId, userId);
-      setLikeStatus((prev) => ({ ...prev, [postId]: newLikeStatus }));
-      setLikeCounts((prev) => ({ ...prev, [postId]: newCount }));
+      const action = alreadyLiked
+        ? dispatch(unlikePost({ userId, postId }))
+        : dispatch(likePost({ userId, postId }));
+      const result = await action.unwrap();
+      setLikeStatus((prev) => ({ ...prev, [postId]: !alreadyLiked }));
+      setLikeCounts((prev) => ({ ...prev, [postId]: result }));
     } catch (err) {
       console.error("Like failed:", err);
     }
@@ -100,8 +127,11 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
     const newState = !isBookmarked;
     setBookmarkStatus((prev) => ({ ...prev, [postId]: newState }));
     try {
-      if (isBookmarked) await unbookmarkPost(userId, postId);
-      else await bookmarkPost(userId, postId);
+      if (isBookmarked) {
+        await dispatch(unbookmarkPost({ userId, postId })).unwrap();
+      } else {
+        await dispatch(bookmarkPost({ userId, postId })).unwrap();
+      }
     } catch (err) {
       console.error("Bookmark action failed:", err);
       setBookmarkStatus((prev) => ({ ...prev, [postId]: isBookmarked }));
@@ -110,18 +140,22 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
 
   const submitComment = async (postId: number) => {
     if (!userId || !newComments[postId]) return;
-    await addComment(userId, postId, newComments[postId]);
-    setNewComments((prev) => ({ ...prev, [postId]: "" }));
+    try {
+      // Assuming username and profileImage are available (e.g., from auth state)
+      const username = "user"; // Replace with actual username from auth state
+      const profileImage = ""; // Replace with actual profileImage
+      await dispatch(
+        addComment({ userId, postId, content: newComments[postId], username, profileImage })
+      ).unwrap();
+      setNewComments((prev) => ({ ...prev, [postId]: "" }));
+    } catch (err) {
+      console.error("Failed to add comment:", err);
+    }
   };
 
-  const handleEditComment = async (
-    postId: number,
-    commentId: number,
-    content: string
-  ) => {
+  const handleEditComment = async (postId: number, commentId: number, content: string) => {
     try {
-      await editComment(postId, commentId, content);
-      fetchComments(postId);
+      await dispatch(editComment({ postId, commentId, content })).unwrap();
       setCommentEdit((prev) => ({ ...prev, [commentId]: "" }));
     } catch (err) {
       console.error("Failed to edit comment:", err);
@@ -129,7 +163,11 @@ const NailedPostsTab = ({ posts, userId }: NailedPostsTabProps) => {
   };
 
   const handleDeleteComment = async (postId: number, commentId: number) => {
-    await deleteComment(postId, commentId);
+    try {
+      await dispatch(deleteComment({ postId, commentId })).unwrap();
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+    }
   };
 
   const closePostModal = () => setSelectedPostIndex(null);
